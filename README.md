@@ -16,7 +16,9 @@ Below is a list of all dependencies required, and links to relevant information 
 * Line Segment Detector from IPOL (Image Processing On Line)
    * Website link: http://www.ipol.im/pub/art/2012/gjmr-lsd/
    * Download link: http://www.ipol.im/pub/art/2012/gjmr-lsd/lsd_1.6.zip
-   * A copy of the LSD headers currently resides in this repository
+   * A copy of the LSD header (version 1.5 lsd.h) currently resides in this repository
+   * *Version 1.5 is required for the current state of this project*
+   * The latest version (1.6), moved many of the header's declarations out of the lsd.h and into lsd.c
 * LevMar, an implementation of Levenberg-Marquardt Nonlinear Least Squares Algorithms
    * Website link: http://users.ics.forth.gr/~lourakis/levmar/
    * Download link: http://users.ics.forth.gr/~lourakis/levmar/levmar-2.6.tgz
@@ -35,7 +37,7 @@ Below is a list of all dependencies required, and links to relevant information 
    ```
 
 There is a script to automate the process of installing dependencies in bin/install-deps.sh
-* TODO: create this script
+* **TODO: create this script**
 
 
 Build Instructions
