@@ -7,13 +7,13 @@ definations are in 'mfg.cpp' file.
 
 #include <iostream>
 #include <fstream>
-#include <cv.h>
-#include <cxcore.h>
-#include <highgui.h>
+#include <opencv/cv.h>
+#include <opencv/cxcore.h>
+#include <opencv/highgui.h>
 #include <opencv2/nonfree/nonfree.hpp>
-#include <eigen3/Eigen/Dense>
-#include <eigen3/Eigen/Eigenvalues>
-#include <eigen3/Eigen/Geometry>
+#include <Eigen/Dense>
+#include <Eigen/Eigenvalues>
+#include <Eigen/Geometry>
 
 #include "lsd/lsd.h"
 #include "levmar-2.6/levmar.h"

@@ -4,9 +4,11 @@
 #include <stdint.h>
 
 #ifdef _MSC_VER
-#include <unordered_set>
+//#include <unordered_set>
+#include <unordered_map>
 #else
-#include <tr1/unordered_set>
+//#include <tr1/unordered_set>
+#include <tr1/unordered_map>
 #endif
 
 #include "g2o/config.h"
@@ -29,9 +31,9 @@
 #include "g2o/types/sba/sbacam.h"
 //#include "edge_se3_lineendpts.h"
 #include <fstream>
-#include "levmar-2.6\lm.h"
-#include "levmar-2.6\levmar.h"
-#include <Windows.h>
+//#include "levmar-2.6\lm.h"
+#include "levmar-2.6/levmar.h"
+//#include <Windows.h>
 
 using namespace Eigen;
 extern SysPara syspara;

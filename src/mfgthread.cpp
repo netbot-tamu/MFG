@@ -1,6 +1,19 @@
 #include <QtGui>
-#include <QtOpenGL>
-#include <gl/GLU.h>
+#include <QtOpenGL/QtOpenGL>
+
+//#include <gl/GLU.h>
+// replaced with:
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#include <OpenGL/gl.h>
+#elif __linux__
+#include <GL/glut.h>
+#include <GL/gl.h>
+#else
+#include <gl/glut.h>
+#include <gl/gl.h>
+#endif
+
 #include <math.h>
 #include <fstream>
 

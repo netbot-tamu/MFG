@@ -35,6 +35,20 @@ Below is a list of all dependencies required, and links to relevant information 
    ```
    sudo apt-get install libeigen3-dev
    ```
+* g2o: A General Framework for Graph Optimization
+   * Website link: https://openslam.org/g2o.html
+   * GitHub download link: https://github.com/RainerKuemmerle/g2o
+   * Note that the github code includes CSparse (http://people.sc.fsu.edu/~jburkardt/c_src/csparse/csparse.html)
+   * On a UNIX system:
+   ```
+   git clone https://github.com/RainerKuemmerle/g2o
+   cd g2o
+   mkdir build
+   cd build
+   cmake ..
+   make
+   make install
+   ```
 
 There is a script to automate the process of installing dependencies in bin/install-deps.sh
 * **TODO: create this script**
@@ -51,6 +65,12 @@ This project uses CMake (http://www.cmake.org), a cross-platform build system.
 
 TODO
 ----
+0. compile and build cross-platform
+   0. include copy of all libraries that cannot be installed via package managers
+   1. check licenses for above step
+   2. create an APT package
+   3. create a MacPorts package?
+   4. create an RPM package
 1. apply g2o to lba
 2. speed up: feature points types?
 3. feature points distribution?

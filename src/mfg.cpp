@@ -3,8 +3,21 @@ This file contains the definations of functions/modules used in MFG;
 delarations are in 'mfg.h' file.
 ------------------------------------------------------------------------------*/
 #include <QtGui>
-#include <QtOpenGL>
-#include <gl/GLU.h>
+//#include <QtOpenGL/QtOpenGL>
+
+//#include <gl/GLU.h>
+// replaced with:
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#include <OpenGL/gl.h>
+#elif __linux__
+#include <GL/glut.h>
+#include <GL/gl.h>
+#else
+#include <gl/glut.h>
+#include <gl/gl.h>
+#endif
+
 #include <math.h>
 #include <fstream>
 #ifdef _MSC_VER
@@ -937,7 +950,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
 				R, t, K,	featPtMatches[i][0], featPtMatches[i][1]);
 
 			cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
-#ifndef HIGH_SPEED_NO_GRAPHICS{
+#ifndef HIGH_SPEED_NO_GRAPHICS
 			if (parallaxDeg > parallaxDegThresh) {
 				cv::circle(canv1, featPtMatches[i][0], 2, color, 2);
 				cv::circle(canv2, featPtMatches[i][1], 2, color, 2);

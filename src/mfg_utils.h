@@ -2,6 +2,12 @@
 #define MFG_UTILS_HEADER
 
 //#include <Windows.h>
+// C++ 11
+//#include <chrono>
+// Boost Chrono
+//#include <boost/chrono/system_clocks.hpp>
+// Qt QTime
+#include <QTime>
 #include "lsd/lsd.h"
 #include "mfg.h"
 
@@ -23,17 +29,29 @@ cv::Mat normalizeLines (cv::Mat& src, cv::Mat& dst);
 class MyTimer
 {
 public:
-	MyTimer() {	QueryPerformanceFrequency(&TickPerSec);	}
+	MyTimer() {
+      //QueryPerformanceFrequency(&TickPerSec);	}
+   }
 
-	LARGE_INTEGER TickPerSec;        // ticks per second
-	LARGE_INTEGER Tstart, Tend;           // ticks
+	//long long int TickPerSec;     // ticks per second
+	//boost::chrono::system_clock::time_point Tstart, Tend;   // ticks
+   QTime Tstart, Tend;
 	double time_ms;
 	double time_s;
-	void start()  {	QueryPerformanceCounter(&Tstart);}
+	void start()  {
+      //QueryPerformanceCounter(&Tstart);
+      //Tstart = boost::chrono::system_clock::now();
+      Tstart = QTime::currentTime();
+   }
 	void end() 	{
-		QueryPerformanceCounter(&Tend);
-		time_ms = (Tend.QuadPart-Tstart.QuadPart)*1000.0/TickPerSec.QuadPart;
-		time_s = time_ms/1000.0;
+		//QueryPerformanceCounter(&Tend);
+		//time_ms = (Tend-Tstart)*1000.0/TickPerSec;
+		//time_s = time_ms/1000.0;
+      //Tend = boost::chrono::system_clock::now();
+      Tend = QTime::currentTime();
+      int elapsed = Tstart.msecsTo(Tend);
+      time_ms = (double) elapsed;
+      time_s = (double) elapsed/1000;
 	}
 };
 
