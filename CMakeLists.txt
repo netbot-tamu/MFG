@@ -89,6 +89,11 @@ FIND_PACKAGE(OpenGL REQUIRED)
 FIND_PACKAGE(GLUT REQUIRED)
 FIND_PACKAGE(Eigen3 REQUIRED)
 FIND_PACKAGE(CSparse REQUIRED)
+FIND_PACKAGE(G2O REQUIRED)
+FIND_PACKAGE(BLAS REQUIRED)
+FIND_PACKAGE(LAPACK REQUIRED)
+#FIND_PACKAGE( REQUIRED)
+#FIND_PACKAGE( REQUIRED)
 
 
 ################################################################################
@@ -96,8 +101,9 @@ FIND_PACKAGE(CSparse REQUIRED)
 ################################################################################
 SET(LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 SET(HEADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/includes)
+SET(EXTERN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext)
 SET(LSD_HEADERS ${HEADER_DIR}/lsd/lsd.h)
-SET(LM_HEADER_DIR ${HEADER_DIR}/levmar-2.6)
+SET(LM_HEADER_DIR ${EXTERN_DIR}/levmar-2.6)
 SET(LM_HEADERS 
    ${LM_HEADER_DIR}/compiler.h
    ${LM_HEADER_DIR}/levmar.h
@@ -111,12 +117,28 @@ INCLUDE_DIRECTORIES(${HEADER_DIR}
    ${EIGEN3_INCLUDE_DIR}
    ${CSPARSE_INCLUDE_DIR}
 )
+
+
 #message(STATUS "csparse_include_dir = ${CSPARSE_INCLUDE_DIR}")
-#message(STATUS "qt_include_dir = ${Qt5OpenGL_INCLUDE_DIR}")
-message(STATUS "qt_*********** = ${Qt5OpenGL_LIBRARIES}")
-message(STATUS "GL_*********** = ${OPENGL_LIBRARIES}")
-message(STATUS "GL_*********** = ${GLUT_LIBRARIES}")
+#message(STATUS "qt_include_dir***** = ${Qt5OpenGL_INCLUDE_DIR}")
+message(STATUS "qt_**************** = ${Qt5OpenGL_LIBRARIES}")
+message(STATUS "OPENGL_************ = ${OPENGL_LIBRARIES}")
+message(STATUS "GLUT_************** = ${GLUT_LIBRARIES}")
+message(STATUS "CSPARSE_*********** = ${CSPARSE_LIBRARY}")
+message(STATUS "G2O_CORE_********** = ${G2O_CORE_LIBRARY}")
+message(STATUS "G2O_STUFF_********* = ${G2O_STUFF_LIBRARY}")
+message(STATUS "G2O_SLAM3D_******** = ${G2O_TYPES_SLAM3D}")
+message(STATUS "G2O_SBA_*********** = ${G2O_TYPES_SBA}")
+message(STATUS "G2O_CSPARSE_******* = ${G2O_SOLVER_CSPARSE}")
+message(STATUS "G2O_CSPARSE_EXT_*** = ${G2O_SOLVER_CSPARSE_EXTENSION}")
+message(STATUS "BLAS_************** = ${BLAS_LIBRARIES}")
+message(STATUS "LAPACK_************ = ${LAPACK_LIBRARIES}")
 
 
+# Make dependencies first
+ADD_SUBDIRECTORY(ext/levmar-2.6)
+ADD_SUBDIRECTORY(ext/lsd-1.5)
+
+# Make this project
 ADD_SUBDIRECTORY(src)
 

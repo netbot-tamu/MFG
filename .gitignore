@@ -27,6 +27,7 @@
 *.toc
 *(busy)
 [Bb]uild/
+bin/
 nbproject/
 CMakeFiles/
 CMakeCache.txt

@@ -30,7 +30,8 @@ Below is a list of all dependencies required, and links to relevant information 
    ```
    TARGET_LINK_LIBRARIES(lmdemo ${LIBS} -lm)
    ```
-   * Also note that copies of the levmar-2.6 headers have been included in this project
+   * ~~Also note that copies of the levmar-2.6 headers have been included in this project~~
+   * Also note that levmar-2.6 has been included and will build with MFG, and includes a slightly modified CMakeLists.txt from the original in order to link correctly
 * Eigen3: http://eigen.tuxfamily.org/
    ```
    sudo apt-get install libeigen3-dev

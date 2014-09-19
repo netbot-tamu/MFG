@@ -5,12 +5,13 @@
 #include "g2o/stuff/opengl_wrapper.h"
 #endif
 
+#include <Eigen/SparseCore>
 #include <typeinfo>
 
 namespace g2o {
 
   bool VertexVanishPoint::read(std::istream& is) {
-    Vector3d lv;
+    Eigen::Vector3d lv;
     for (int i=0; i<estimateDimension(); i++)
       is >> lv[i];
     setEstimate(lv);
@@ -18,7 +19,7 @@ namespace g2o {
   }
 
   bool VertexVanishPoint::write(std::ostream& os) const {
-    Vector3d lv=estimate();
+    Eigen::Vector3d lv=estimate();
     for (int i=0; i<estimateDimension(); i++){
       os << lv[i] << " ";
     }

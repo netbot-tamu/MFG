@@ -5,6 +5,7 @@
 #include "g2o/types/slam3d/g2o_types_slam3d_api.h"
 #include "g2o/core/base_vertex.h"
 #include "g2o/core/hyper_graph_action.h"
+#include <Eigen/SparseCore>
 
 namespace g2o {
   /**
@@ -21,18 +22,18 @@ namespace g2o {
       virtual void setToOriginImpl() { _estimate.fill(0.); }
 
       virtual void oplusImpl(const double* update_) {
-        Map<const VectorXd> update(update_, 6);
+        Eigen::Map<const Eigen::VectorXd> update(update_, 6);
         _estimate += update;
       }
 
       virtual bool setEstimateDataImpl(const double* est){
-        Map<const VectorXd> _est(est, 6);
+        Eigen::Map<const Eigen::VectorXd> _est(est, 6);
         _estimate = _est;
         return true;
       }
 
       virtual bool getEstimateData(double* est) const{
-        Map<VectorXd> _est(est, 6);
+        Eigen::Map<Eigen::VectorXd> _est(est, 6);
         _est = _estimate;
         return true;
       }
@@ -42,12 +43,12 @@ namespace g2o {
       }
 
       virtual bool setMinimalEstimateDataImpl(const double* est){
-        _estimate = Map<const VectorXd>(est, 6);
+        _estimate = Eigen::Map<const Eigen::VectorXd>(est, 6);
         return true;
       }
 
       virtual bool getMinimalEstimateData(double* est) const{
-        Map<VectorXd> v(est, 6);
+        Eigen::Map<Eigen::VectorXd> v(est, 6);
         v = _estimate;
         return true;
       }

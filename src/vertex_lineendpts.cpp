@@ -5,12 +5,13 @@
 #include "g2o/stuff/opengl_wrapper.h"
 #endif
 
+#include <Eigen/SparseCore>
 #include <typeinfo>
 
 namespace g2o {
 
   bool VertexLineEndpts::read(std::istream& is) {
-    VectorXd lv;
+    Eigen::VectorXd lv;
     for (int i=0; i<estimateDimension(); i++)
       is >> lv[i];
     setEstimate(lv);
@@ -18,7 +19,7 @@ namespace g2o {
   }
 
   bool VertexLineEndpts::write(std::ostream& os) const {
-    VectorXd lv=estimate();
+    Eigen::VectorXd lv=estimate();
     for (int i=0; i<estimateDimension(); i++){
       os << lv[i] << " ";
     }
