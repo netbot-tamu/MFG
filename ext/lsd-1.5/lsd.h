@@ -28,6 +28,9 @@
 #ifndef LSD_HEADER
 #define LSD_HEADER
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*----------------------------------------------------------------------------*/
 /*----------------------- 'list of n-tuple' data type ------------------------*/
@@ -241,6 +244,11 @@ ntuple_list lsd_scale(image_double image, double scale);
     @return a 5-tuple list of detected line segments.
  */
 ntuple_list lsd(image_double image);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !LSD_HEADER */
 /*----------------------------------------------------------------------------*/

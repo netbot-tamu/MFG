@@ -142,7 +142,8 @@ void MfgThread::run()
 #endif
 			int fid = atoi (imgName.substr(imgName.size()-imIdLen-4, imIdLen).c_str());
 			cout<<"frame:"<<fid<<endl;
-			pMap->expand(View(imgName,K,distCoeffs, -1),fid);
+         View imgView(imgName,K,distCoeffs,-1);
+			pMap->expand(imgView,fid);
 		}
 	}
 	timer.end();

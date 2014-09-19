@@ -27,7 +27,7 @@ set(SOURCES
    #mfg-pos-ba.cpp
    # TODO: guessing for below comments
    #MfgSingleView.cpp
-   #mfgthread.cpp
+   mfgthread.cpp
    #MfgTwoView.cpp
    mfg_utils.cpp
    #mfgwin.cpp
@@ -41,6 +41,8 @@ set(SOURCES
    window.cpp
    # External source - TODO: find a better way
    #lsd.c
+   #../ext/lsd-1.5/lsd.c
+
 )
 
 set(HEADERS
@@ -73,9 +75,6 @@ add_executable(mfglib
 target_link_libraries(mfglib 
    ${OPENGL_LIBRARIES}
    ${GLUT_LIBS}
-   ${Qt5OpenGL_LIBRARIES}
-   ${Qt5GUI_LIBRARIES}
-   ${OpenCV_LIBS}
    ${Eigen3_LIBS}
    ${CSPARSE_LIBRARY}
    ${G2O_CORE_LIBRARY}
@@ -93,6 +92,10 @@ target_link_libraries(mfglib
 
    # LSD (Line Segment Detector) 1.5 is included in this project for simplicity
    lsd
+
+   ${Qt5OpenGL_LIBRARIES}
+   ${Qt5GUI_LIBRARIES}
+   ${OpenCV_LIBS}
 )
 qt5_use_modules(mfglib Core Widgets)
 

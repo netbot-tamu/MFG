@@ -4,7 +4,10 @@ This file contains the definations of functions/modules used in MFG
 #include <math.h>
 #include <fstream>
 #include "mfg_utils.h"
+extern "C"
+{
 #include "lsd/lsd.h"
+}
 
 #ifdef _MSC_VER
 #include <unordered_map>
