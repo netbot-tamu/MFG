@@ -51,7 +51,7 @@ Below is a list of all dependencies required, and links to relevant information 
    make install
    ```
 
-There is a script to automate the process of installing dependencies in bin/install-deps.sh
+There ~~is~~ will be a script to automate the process of installing dependencies in bin/install-deps.sh
 * **TODO: create this script**
 
 

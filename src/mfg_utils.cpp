@@ -12,7 +12,8 @@ extern "C"
 #ifdef _MSC_VER
 #include <unordered_map>
 #else
-#include <tr1/unordered_map>
+// TODO: FIXME
+#include <unordered_map>
 #endif
 
 extern int IDEAL_IMAGE_WIDTH;
@@ -936,7 +937,8 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 		cv::Mat R = Rn*map.views.back().R.inv();
 		double angle = acos(abs((R.at<double>(0,0) + R.at<double>(1,1) + R.at<double>(2,2) - 1)/2));
 		cout<<angle*180/PI<<'\t';
-		tr1::unordered_map<int,int> tracked_lid_id;
+      // TODO: needs tr1 namespace???
+		unordered_map<int,int> tracked_lid_id;
 			for (int i=0; i<tracked_idx.size();++i) {
 				tracked_lid_id[tracked_idx[i]] = i;
 			}

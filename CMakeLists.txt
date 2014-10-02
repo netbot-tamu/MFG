@@ -59,17 +59,25 @@ ELSEIF(UNIX)
    MESSAGE(STATUS "Compiling on Unix")
 ENDIF(WIN32)
 
+#SET(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
+
 
 ################################################################################
 # C++11 support
+# 
+# Notes:
+# OS X 10.8 Mountain Lion and above default to using the clang compiler,
+# which does not use C++ 11 unless explicitly told to, as below.
 ################################################################################
 INCLUDE(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
 IF(COMPILER_SUPPORTS_CXX11)
-   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
+   MESSAGE(STATUS "The compiler ${CMAKE_CXX_COMPILER} supports C++11")
 ELSEIF(COMPILER_SUPPORTS_CXX0X)
-   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -stdlib=libc++")
+   MESSAGE(STATUS "The compiler ${CMAKE_CXX_COMPILER} supports C++0X")
 ELSE()
    MESSAGE(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 ENDIF()

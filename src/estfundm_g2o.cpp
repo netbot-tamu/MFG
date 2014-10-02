@@ -6,7 +6,8 @@
 #ifdef _MSC_VER
 #include <unordered_set>
 #else
-#include <tr1/unordered_set>
+// TODO: FIXME
+#include <unordered_set>
 #endif
 
 #include "g2o/config.h"

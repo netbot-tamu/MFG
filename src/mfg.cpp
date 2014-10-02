@@ -23,7 +23,8 @@ delarations are in 'mfg.h' file.
 #ifdef _MSC_VER
 #include <unordered_map>
 #else
-#include <tr1/unordered_map>
+// TODO: FIXME
+#include <unordered_map>
 #endif
 #include "glwidget.h"
 #include "mfg.h"
@@ -41,7 +42,7 @@ extern SysPara syspara;
 extern vector<vector<double>> planeColors;
 struct cvpt2dCompare
 {
-	bool operator() (const cv::Point2d& lhs, const cv::Point2d& rhs)
+	bool operator() (const cv::Point2d& lhs, const cv::Point2d& rhs) const
    {
       if(cv::norm(lhs-rhs) > 1e-7 && lhs.x < rhs.x )
 		  return true;

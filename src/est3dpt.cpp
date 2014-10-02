@@ -3,10 +3,14 @@
 #include <Eigen/StdVector>
 #include <stdint.h>
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
 //#include <unordered_set>
 #include <unordered_map>
+//#ifdef __APPLE__
+#elif defined(__APPLE__)
+#include <unordered_map>
 #else
+// TODO: FIXME
 //#include <tr1/unordered_set>
 #include <tr1/unordered_map>
 #endif
@@ -167,7 +171,11 @@ void est3dpt_g2o (vector<cv::Mat> Rs, vector<cv::Mat> ts, cv::Mat K, vector<cv::
 
 	// ----- set g2o vertices ------
 	int vertex_id = 0;  
+#ifdef __APPLE__
+	unordered_map<int,int> camfid2vid;
+#else
 	tr1::unordered_map<int,int> camfid2vid;
+#endif
 
 	int n = Rs.size(); //number of observations
 	// ----- optimization parameters -----

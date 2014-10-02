@@ -7,8 +7,9 @@
 //#include <unordered_set>
 #include <unordered_map>
 #else
+// TODO: FIXME
 //#include <tr1/unordered_set>
-#include <tr1/unordered_map>
+#include <unordered_map>
 #endif
 
 #include "g2o/config.h"
@@ -85,7 +86,7 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 	
 	// ---- camera pose parameters ----
 	vector<g2o::VertexCam*> camvertVec;
-	tr1::unordered_map<int,int> camvid2fid, camfid2vid;
+	unordered_map<int,int> camvid2fid, camfid2vid;
 	for(int i = frontVptIdx; i < views.size(); ++i) {	
 		Eigen:: Quaterniond q = r2q(views[i].R);
 		Eigen::Isometry3d pose;
@@ -110,7 +111,7 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 	
 	// ---- structure parameters ----
 	// ---- keypoints ----
-	tr1::unordered_map<int,int> ptvid2gid, ptgid2vid;
+	unordered_map<int,int> ptvid2gid, ptgid2vid;
 	vector<g2o::VertexSBAPointXYZ*> ptvertVec;
 	vector<int> kptIdx2Opt; // keyPoint idx to optimize 
 	vector<int> kptIdx2Rpj_notOpt; // keypoint idx to reproject but not optimize
@@ -144,7 +145,7 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 		}		
 	}
 	// ---- vanishing points ----
-	tr1::unordered_map<int,int> vpgid2vid, vpvid2gid;
+	unordered_map<int,int> vpgid2vid, vpvid2gid;
 	vector<int> vpIdx2Opt;
 	vector<g2o::VertexVanishPoint*> vpvertVec;
 	// vp that is observed in current window
@@ -166,7 +167,7 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 		}
 	}
 	// ---- ideal lines ----
-	tr1::unordered_map<int,int> lngid2vid, lnvid2gid;
+	unordered_map<int,int> lngid2vid, lnvid2gid;
 	vector<int> lnIdx2Opt, lnIdx2Rpj_notOpt;
 	vector<g2o::VertexSBAPointXYZ*> lnvertVec;
 	for(int i=0; i < idealLines.size(); ++i) {
@@ -200,7 +201,7 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 	}
 
 	// ---- primary planes ----
-	tr1::unordered_map<int,int> plgid2vid, plvid2gid;
+	unordered_map<int,int> plgid2vid, plvid2gid;
 	vector<int> plIdx2Opt;
 	vector<g2o::VertexPlane3d*> plvertVec;
 	for(int i=0; i < primaryPlanes.size(); ++i) {

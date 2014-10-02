@@ -7,8 +7,9 @@
 //#include <unordered_set>
 #include <unordered_map>
 #else
+// TODO: FIXME
 //#include <tr1/unordered_set>
-#include <tr1/unordered_map>
+#include <unordered_map>
 #endif
 
 #include "g2o/config.h"
@@ -71,7 +72,8 @@ void Mfg::adjustBundle_Pt_G2O (int numPos, int numFrm)
 
 	// ----- set g2o vertices ------
 	int vertex_id = 0;  
-	tr1::unordered_map<int,int> camvid2fid, camfid2vid, ptvid2gid, ptgid2vid;
+   // TODO: needs tr1 namespace???
+	unordered_map<int,int> camvid2fid, camfid2vid, ptvid2gid, ptgid2vid;
   
 	int frontPosIdx = max(1, (int)views.size() - numPos);
 	int frontFrmIdx = max(0, (int)views.size() - numFrm);
