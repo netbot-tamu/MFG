@@ -94,6 +94,10 @@ int main(int argc, char *argv[])
 	int increment = syspara.frm_increment;
 	int totalImg = 12500;
 	getConfigration (&imgName, K, distCoeffs, syspara.use_img_width) ;
+
+   // Fix problem with image name ending in '\r'
+   if (imgName[imgName.size()-1] == '\r')
+      imgName.erase(imgName.size()-1);
 	
 	//------- initialize -------
 	View view0(imgName, K, distCoeffs, 0);

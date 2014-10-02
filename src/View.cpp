@@ -710,3 +710,4 @@ void View::drawPointandLine()
 	showImage("view"+num2str(id)+":line segments",&canvas);
 	cv::waitKey(0);
 }
+
