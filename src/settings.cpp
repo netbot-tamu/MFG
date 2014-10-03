@@ -14,9 +14,10 @@ cameraID(_cameraID)
    QDir mfgDir(mfgDirStr);
    // ...so move the path up to the root [mfg location]
    mfgDir.cdUp();
+   configDir = mfgDir.absolutePath();
 
    // ...and enter the config directory for the settings
-   settingsFile = mfgDir.absolutePath() + "/config/mfgSettings.ini";
+   settingsFile = configDir + "/config/mfgSettings.ini";
    if (!QFile::exists(settingsFile))
    {
       qWarning() << "Warning: File" << settingsFile << "does not exist, exiting";
@@ -40,22 +41,40 @@ MfgSettings::~MfgSettings()
 
 void MfgSettings::loadSettings()
 {
-   //siftThreshold = mfgSettings.value("sift/threshold").toString();
    LOAD_DOUBLE(siftThreshold, "sift/threshold")
    
    // If no camera ID was specified, use the default ID in the settings
+   cameraID = "cam-00";
    if (cameraID == "")
    {
-      //cameraID = mfgSettings.value("default/camera").toString();
       LOAD_STR(cameraID, "default/camera")
    }
+   qDebug() << "Using camera settings:" << cameraID;
+   /*
+   qDebug() << "stuff..."
+            << mfgSettings->childKeys()
+            << mfgSettings->childGroups();
+   // */
 
    // Read the settings for this cameraID
    mfgSettings->beginGroup(cameraID);
-   //imageWidth = mfgSettings.value("width").toInt();
-   //initialImage = mfgSettings.value("image").toString();
    LOAD_DOUBLE(imageWidth, "width")
    LOAD_STR(initialImage, "image")
+   qDebug() << "Image path:" << initialImage 
+            << mfgSettings->childKeys()
+            << mfgSettings->childGroups()
+            << mfgSettings->contains("image")
+            << mfgSettings->contains("width")
+            << mfgSettings->contains("intrinsics");
+
+   // if the initial image starts with a slash or windows drive, assume it
+   // is an absolute path, otherwise assume it is relative, from the user's
+   // home directory
+   if (!initialImage.startsWith("/"))
+   {
+      initialImage = QDir::home().absolutePath() + "/" + initialImage;
+   }
+   qDebug() << "Image path:" << initialImage;
 
    // Read the intrinsics values and generate the matrix
    mfgSettings->beginGroup("intrinsics");

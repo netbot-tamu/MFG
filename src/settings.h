@@ -34,8 +34,9 @@ public:
    CoeffMatrix       getDistCoeffs() const {return distCoeffs;}
 
 private:
-   QString     settingsFile; // path
-   QSettings*  mfgSettings; // settings object
+   QString     configDir;     // path to config directory
+   QString     settingsFile;  // path to settings file
+   QSettings*  mfgSettings;   // settings object
 
    // General settings
    double   siftThreshold;
