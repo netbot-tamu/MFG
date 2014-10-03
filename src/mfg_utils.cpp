@@ -217,7 +217,7 @@ int sgn(double x)
 }
 
 
-void getConfigration (string* img1, cv::Mat& K, cv::Mat& distCoeffs,
+void getConfiguration (string* img1, cv::Mat& K, cv::Mat& distCoeffs,
 	int& imgwidth) {
 		string thres, width, cam;
 		ifstream config("../config/mfgSettings.ini");

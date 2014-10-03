@@ -43,6 +43,7 @@ set(SOURCES
    #lsd.c
    #../ext/lsd-1.5/lsd.c
 
+   settings.cpp
 )
 
 set(HEADERS
@@ -59,11 +60,13 @@ set(HEADERS
    vertex_plane.h
    vertex_vnpt.h
    window.h
+
+   settings.h
 )
 
 
 #add_library(mfglib STATIC
-add_executable(mfglib
+add_executable(${PROJECT_NAME}
    main.cpp
    ${SOURCES}
    ${LSD_HEADERS}
@@ -72,7 +75,7 @@ add_executable(mfglib
 )
 
 # Link the mfglib to all dependencies
-target_link_libraries(mfglib 
+target_link_libraries(${PROJECT_NAME}
    ${OPENGL_LIBRARIES}
    ${GLUT_LIBS}
    ${Eigen3_LIBS}
@@ -97,7 +100,11 @@ target_link_libraries(mfglib
    ${Qt5GUI_LIBRARIES}
    ${OpenCV_LIBS}
 )
-qt5_use_modules(mfglib Core Widgets)
+
+qt5_use_modules(${PROJECT_NAME}
+   Core
+   Widgets
+)
 
 
 #add_executable(mfg-qt main.cpp
@@ -121,5 +128,5 @@ qt5_use_modules(mfglib Core Widgets)
 
 
 install(FILES ${HEADERS} DESTINATION ${CMAKE_SOURCE_DIR}/includes/mfg)
-install(TARGETS mfglib DESTINATION ${CMAKE_SOURCE_DIR}/lib)
+install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_SOURCE_DIR}/lib)
 #install(TARGETS mfg-qt DESTINATION ${CMAKE_SOURCE_DIR}/bin)
