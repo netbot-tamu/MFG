@@ -50,7 +50,7 @@ void MfgSettings::loadSettings()
       LOAD_STR(cameraID, "default/camera")
    }
    qDebug() << "Using camera settings:" << cameraID;
-   /*
+   //*
    qDebug() << "stuff..."
             << mfgSettings->childKeys()
             << mfgSettings->childGroups();
@@ -60,7 +60,7 @@ void MfgSettings::loadSettings()
    mfgSettings->beginGroup(cameraID);
    LOAD_DOUBLE(imageWidth, "width")
    LOAD_STR(initialImage, "image")
-   /*
+   //*
    qDebug() << "Image path:" << initialImage 
             << mfgSettings->childKeys()
             << mfgSettings->childGroups()
@@ -76,7 +76,7 @@ void MfgSettings::loadSettings()
    {
       initialImage = QDir::home().absolutePath() + "/" + initialImage;
    }
-   //qDebug() << "Image path:" << initialImage;
+   qDebug() << "Image path:" << initialImage;
 
    // Read the intrinsics values and generate the matrix
    mfgSettings->beginGroup("intrinsics");
