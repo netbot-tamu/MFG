@@ -42,9 +42,9 @@ MfgSettings::~MfgSettings()
 void MfgSettings::loadSettings()
 {
    LOAD_DOUBLE(siftThreshold, "sift/threshold")
+   qDebug() << "SIFT Threshold:" << siftThreshold;
    
    // If no camera ID was specified, use the default ID in the settings
-   cameraID = "cam-00";
    if (cameraID == "")
    {
       LOAD_STR(cameraID, "default/camera")
@@ -60,12 +60,14 @@ void MfgSettings::loadSettings()
    mfgSettings->beginGroup(cameraID);
    LOAD_DOUBLE(imageWidth, "width")
    LOAD_STR(initialImage, "image")
+   /*
    qDebug() << "Image path:" << initialImage 
             << mfgSettings->childKeys()
             << mfgSettings->childGroups()
             << mfgSettings->contains("image")
             << mfgSettings->contains("width")
             << mfgSettings->contains("intrinsics");
+   // */
 
    // if the initial image starts with a slash or windows drive, assume it
    // is an absolute path, otherwise assume it is relative, from the user's
@@ -74,7 +76,7 @@ void MfgSettings::loadSettings()
    {
       initialImage = QDir::home().absolutePath() + "/" + initialImage;
    }
-   qDebug() << "Image path:" << initialImage;
+   //qDebug() << "Image path:" << initialImage;
 
    // Read the intrinsics values and generate the matrix
    mfgSettings->beginGroup("intrinsics");
