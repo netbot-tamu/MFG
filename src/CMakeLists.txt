@@ -37,12 +37,8 @@ set(SOURCES
    vertex_plane.cpp
    vertex_vnpt.cpp
    vpcov_helper.cpp
-   View.cpp
+   view.cpp
    window.cpp
-   # External source - TODO: find a better way
-   #lsd.c
-   #../ext/lsd-1.5/lsd.c
-
    settings.cpp
 )
 
@@ -59,6 +55,7 @@ set(HEADERS
    vertex_lineendpts.h
    vertex_plane.h
    vertex_vnpt.h
+   view.h
    window.h
 
    settings.h
@@ -91,7 +88,6 @@ target_link_libraries(${PROJECT_NAME}
    
    # Levmar 2.6 is included in this project for simplicity
    levmar
-   #${CMAKE_SOURCE_DIR}/ext/levmar-2.6/build/liblevmar.a
 
    # LSD (Line Segment Detector) 1.5 is included in this project for simplicity
    lsd

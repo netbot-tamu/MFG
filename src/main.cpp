@@ -15,11 +15,13 @@
 #include <QApplication>
 // TODO: would like to remove this
 #include <QDesktopWidget>
+#include <QDebug>
 
 #include <iostream>
 #include <math.h>
 
 #include "settings.h"
+#include "view.h"
 #include "window.h"
 #include "mfg.h"
 #include "mfg_utils.h"
@@ -103,7 +105,7 @@ int main(int argc, char *argv[])
    int totalImg = 12500;
    //getConfiguration (&imgName, K, distCoeffs, syspara.use_img_width) ;
 
-   // *** UPDATING ***
+   // *** TODO: UPDATING ***
    imgName     = config.getInitialImage().toStdString();
    K           = cv::Mat(config.getIntrinsics()); // TODO: remove conversion
    distCoeffs  = cv::Mat(config.getDistCoeffs()); // TODO: remove conversion
@@ -120,6 +122,7 @@ int main(int argc, char *argv[])
 
    //------- initialize -------
    View view0(imgName, K, distCoeffs, 0);
+   qDebug() << "View initialized";
    view0.frameId = atoi (imgName.substr(imgName.size()-imIdLen-4, imIdLen).c_str());
    imgName = nextImgName(imgName, imIdLen, ini_incrt);
    View view1(imgName, K, distCoeffs, 1);

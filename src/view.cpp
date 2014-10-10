@@ -1,3 +1,5 @@
+#include "view.h"
+
 #include "mfg.h"
 #include "mfg_utils.h"
 
