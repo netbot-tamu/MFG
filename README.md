@@ -5,7 +5,7 @@ Multi-Layer Feature Graph Implementation
 
 Dependencies
 ------------
-Below is a list of all dependencies required, and links to relevant information such as downloads.
+Below is a list of all dependencies required, and links to relevant information such as downloads.  There are also instructions for installing the required packages on a Ubuntu system, specifically, but which should also work on most Debian-based systems.
 * Qt5: http://qt-project.org/
    ```
    sudo apt-get install qt5-default
@@ -30,8 +30,7 @@ Below is a list of all dependencies required, and links to relevant information 
    ```
    TARGET_LINK_LIBRARIES(lmdemo ${LIBS} -lm)
    ```
-   * ~~Also note that copies of the levmar-2.6 headers have been included in this project~~
-   * Also note that levmar-2.6 has been included and will build with MFG, and includes a slightly modified CMakeLists.txt from the original in order to link correctly
+   * Also note that levmar-2.6 has been included and will build with MFG, and includes a slightly modified CMakeLists.txt from the original in order to compile with our code and link correctly
 * Eigen3: http://eigen.tuxfamily.org/
    ```
    sudo apt-get install libeigen3-dev
@@ -51,10 +50,6 @@ Below is a list of all dependencies required, and links to relevant information 
    make install
    ```
 
-There ~~is~~ will be a script to automate the process of installing dependencies in bin/install-deps.sh
-* **TODO: create this script**
-
-
 Build Instructions
 ------------------
 This project uses CMake (http://www.cmake.org), a cross-platform build system.
@@ -67,14 +62,10 @@ This project uses CMake (http://www.cmake.org), a cross-platform build system.
 TODO
 ----
 0. compile and build cross-platform
-   0. include copy of all libraries that cannot be installed via package managers
-   1. check licenses for above step
-   2. create an APT package
-   3. create a MacPorts package?
-   4. create an RPM package
-1. apply g2o to lba
-2. speed up: feature points types?
-3. feature points distribution?
-4. plane detection
-5. when use lk track, still need to detect blur image
+1. check licenses for above step
+2. apply g2o to lba
+3. speed up: feature points types?
+4. feature points distribution?
+5. plane detection
+6. when use lk track, still need to detect blur image
 
