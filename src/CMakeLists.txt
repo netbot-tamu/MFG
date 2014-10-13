@@ -43,6 +43,7 @@ set(SOURCES
 )
 
 set(HEADERS
+   consts.h
    edge_line_vp_cam.h
    edge_line_vp_plane.h
    edge_point_plane.h
