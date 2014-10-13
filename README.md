@@ -16,9 +16,9 @@ Below is a list of all dependencies required, and links to relevant information 
 * Line Segment Detector from IPOL (Image Processing On Line)
    * Website link: http://www.ipol.im/pub/art/2012/gjmr-lsd/
    * Download link: http://www.ipol.im/pub/art/2012/gjmr-lsd/lsd_1.6.zip
-   * A copy of the LSD header (version 1.5 lsd.h) currently resides in this repository
+   * A copy of the LSD project (version 1.5) resides in this repository and will build with MFG, and includes a custom CMakeLists.txt in order to compile with our code and link correctly
    * *Version 1.5 is required for the current state of this project*
-   * The latest version (1.6), moved many of the header's declarations out of the lsd.h and into lsd.c
+      * The latest version (1.6), moved many of the header's declarations out of the lsd.h and into lsd.c
 * LevMar, an implementation of Levenberg-Marquardt Nonlinear Least Squares Algorithms
    * Website link: http://users.ics.forth.gr/~lourakis/levmar/
    * Download link: http://users.ics.forth.gr/~lourakis/levmar/levmar-2.6.tgz
@@ -30,7 +30,7 @@ Below is a list of all dependencies required, and links to relevant information 
    ```
    TARGET_LINK_LIBRARIES(lmdemo ${LIBS} -lm)
    ```
-   * Also note that levmar-2.6 has been included and will build with MFG, and includes a slightly modified CMakeLists.txt from the original in order to compile with our code and link correctly
+   * Also note that levmar-2.6 has been included and will build with MFG, and contains a slightly modified CMakeLists.txt from the original in order to compile with our code and link correctly
 * Eigen3: http://eigen.tuxfamily.org/
    ```
    sudo apt-get install libeigen3-dev
@@ -61,7 +61,7 @@ This project uses CMake (http://www.cmake.org), a cross-platform build system.
 
 TODO
 ----
-0. compile and build cross-platform
+0. ~~compile and build cross-platform~~
 1. check licenses for above step
 2. apply g2o to lba
 3. speed up: feature points types?
