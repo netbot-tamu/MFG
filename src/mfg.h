@@ -36,6 +36,8 @@ using namespace std;
 //#define HIGH_SPEED_NO_GRAPHICS
 //#define DEBUG
 
+class MfgSettings;
+
 class TwoView
 {
 public:
@@ -142,53 +144,11 @@ public:
    int increment;
    int totalImg;
 
-   MfgThread(){}
+   MfgThread(MfgSettings* _settings) : mfgSettings(_settings) {}
+
+private:
+   MfgSettings* mfgSettings;
 };
 
-
-struct SysPara // system parameters
-{
-int		use_img_width; // user designated image width
-int		kpt_detect_alg; // feature point detection algorithm// 1: SIFT, 2: SURF, 3: GoodFeat
-
-
-// === parameters for gftt ===
-int		gftt_max_ptnum; // image 
-double  gftt_qual_levl; // quality level, default 0.01
-double	gftt_min_ptdist;//min dist between two features
-
-// === parameters for opticflow-lk ===
-double	oflk_min_eigval; // default 0.0001, minEignVal threshold for the 2x2 spatial motion matrix, to eleminate bad points
-int		oflk_win_size;
-
-// === keypoint region radius for descriptor ===
-double	kpt_desc_radius;
-
-int		frm_increment;
-int		ini_increment; // first step size
-int		nFrm4VptBA; // number of frames used for vp in BA
-
-// === mfg discover 3d planes ===
-double  mfg_pt2plane_dist; //
-int		mfg_num_recent_pts; // use recent points to discover planes
-int		mfg_num_recent_lns;
-int		mfg_min_npt_plane; // min num of points to claim a new plane
-
-// === ba ===
-double ba_weight_vp;
-double ba_weight_ln;
-double ba_weight_pl;
-bool   ba_use_kernel;
-double ba_kernel_delta_pt;
-double ba_kernel_delta_vp;
-double ba_kernel_delta_ln;
-double ba_kernel_delta_pl;
-
-double angle_thresh_vp2d3d; // degree, match local 2d vp to existing 3d vp
-
-SysPara() {}
-void init();
-
-};
 
 #endif //MFG_HEADER

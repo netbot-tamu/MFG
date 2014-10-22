@@ -61,8 +61,8 @@ void showImage(string, cv::Mat *img, int width=800);
 
 int sgn(double x); 
 
-void getConfiguration (string* img1, cv::Mat& K, cv::Mat& distCoeffs,
-						int& imgwidth);
+//void getConfiguration (string* img1, cv::Mat& K, cv::Mat& distCoeffs,
+//						int& imgwidth);
 string nextImgName (string name, int n, int step=1);
 string prevImgName (string name, int n, int step=1);
 

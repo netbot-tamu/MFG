@@ -2,6 +2,7 @@
 This file contains the definations of functions/modules used in MFG 
 ------------------------------------------------------------------------------*/
 #include "mfg_utils.h"
+#include "settings.h"
 
 #include <math.h>
 #include <fstream>
@@ -20,7 +21,7 @@ extern "C"
 
 extern int IDEAL_IMAGE_WIDTH;
 extern double THRESH_POINT_MATCH_RATIO;
-extern SysPara syspara;
+extern MfgSettings* mfgSettings;
 
 //////////////////////////// Utility functions /////////////////////////
 
@@ -219,6 +220,7 @@ int sgn(double x)
 }
 
 
+/*
 void getConfiguration (string* img1, cv::Mat& K, cv::Mat& distCoeffs,
 	int& imgwidth) {
 		string thres, width, cam;
@@ -310,6 +312,7 @@ void getConfiguration (string* img1, cv::Mat& K, cv::Mat& distCoeffs,
 			;
 		}
 }
+// */
 
 string nextImgName (string name, int n, int step)
 {
@@ -812,7 +815,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 	vector<cv::Point2f> add_curr_pts;
 	vector<int> add_curr_idx_in_lastview;
 
-	if (syspara.kpt_detect_alg < 3) // sift/surf
+	if (mfgSettings->getKeypointAlgorithm() < 3) // sift/surf
 		pairIdx = matchKeyPoints (v0.featurePoints, v1.featurePoints, ptmatches);
 	else {
 		vector<cv::Point2f> prev_pts, curr_pts;
@@ -834,11 +837,11 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 			curr_pts, // output point positions in the 2nd
 			status,    // tracking success
 			err,      // tracking error
-			cv::Size(syspara.oflk_win_size,syspara.oflk_win_size),
+			cv::Size(mfgSettings->getOflkWindowSize(),mfgSettings->getOflkWindowSize()),
 			3,
 			cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 30, 0.01),
 			0,
-			syspara.oflk_min_eigval  // minEignVal threshold for the 2x2 spatial motion matrix, to eleminate bad points
+			mfgSettings->getOflkMinEigenval()  // minEignVal threshold for the 2x2 spatial motion matrix, to eleminate bad points
 			);
 		vector<cv::Point2f> prev_pts_rvs = prev_pts, curr_pts_rvs = curr_pts;
 		vector<uchar> status_reverse;
@@ -848,11 +851,11 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 			prev_pts_rvs,
 			status_reverse,    // tracking success
 			err,      // tracking error
-			cv::Size(syspara.oflk_win_size,syspara.oflk_win_size),
+			cv::Size(mfgSettings->getOflkWindowSize(),mfgSettings->getOflkWindowSize()),
 			3,
 			cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 30, 0.01),
 			0,
-			syspara.oflk_min_eigval  // minEignVal threshold for the 2x2 spatial motion matrix, to eleminate bad points
+			mfgSettings->getOflkMinEigenval()  // minEignVal threshold for the 2x2 spatial motion matrix, to eleminate bad points
 			);
 		
 		for(int i=0; i<status.size(); ++i) {
@@ -945,7 +948,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 				tracked_lid_id[tracked_idx[i]] = i;
 			}
 
-		if(syspara.kpt_detect_alg>=3 &&
+		if(mfgSettings->getKeypointAlgorithm()>=3 &&
 			(X.size() < min3Dtrack || angle > 10*PI/180) &&
 			X.size() > 8 // reliable pnp estimate
 			) {
@@ -1000,7 +1003,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 				}
 			}		
 		}
-		if(syspara.kpt_detect_alg>=3 && 
+		if(mfgSettings->getKeypointAlgorithm()>=3 && 
 			map.trackFrms.size() > 0 && 
 			(X.size() < min3Dtrack || map.rotateMode())
 			) {
@@ -1027,11 +1030,11 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 				curr_pts, // output point positions in the 2nd
 				status,    // tracking success
 				err,      // tracking error
-				cv::Size(syspara.oflk_win_size,syspara.oflk_win_size),
+				cv::Size(mfgSettings->getOflkWindowSize(),mfgSettings->getOflkWindowSize()),
 				3,
 				cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 30, 0.01),
 				0,
-				syspara.oflk_min_eigval  // minEignVal threshold for the 2x2 spatial motion matrix, to eleminate bad points
+				mfgSettings->getOflkMinEigenval()  // minEignVal threshold for the 2x2 spatial motion matrix, to eleminate bad points
 				);
 			cv::calcOpticalFlowPyrLK(
 				v1.grayImg, pp_img,  // 2 consecutive images
@@ -1039,11 +1042,11 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 				pp_pts2, // output point positions in the 2nd
 				status2,    // tracking success
 				err,      // tracking error
-				cv::Size(syspara.oflk_win_size,syspara.oflk_win_size),
+				cv::Size(mfgSettings->getOflkWindowSize(),mfgSettings->getOflkWindowSize()),
 				3,
 				cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 30, 0.01),
 				0,
-				syspara.oflk_min_eigval  // minEignVal threshold for the 2x2 spatial motion matrix, to eleminate bad points
+				mfgSettings->getOflkMinEigenval()  // minEignVal threshold for the 2x2 spatial motion matrix, to eleminate bad points
 				);
 
 			for(int i=0; i<status.size(); ++i) {
@@ -1079,7 +1082,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 	int count=0;
 	for(int i=0; i<pairIdx.size(); ++i) { 
 		int gid;
-		if(syspara.kpt_detect_alg <3) {
+		if(mfgSettings->getKeypointAlgorithm() <3) {
 			gid = v0.featurePoints[pairIdx[i][0]].gid;
 		} else {
 			if (map.trackFrms.size()==0) {
@@ -1104,7 +1107,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 			}
 			return true;
 	} else {	
-		if(syspara.kpt_detect_alg >=3) {
+		if(mfgSettings->getKeypointAlgorithm() >=3) {
 			map.trackFrms.push_back(frm);
 		}
 		return false;
@@ -1550,8 +1553,8 @@ void find3dPlanes_pts_lns_VPs (vector<KeyPoint3d> pts, vector<IdealLine3d> lns, 
 	// input: pts, lines
 {
 	int maxIterNo = 500;
-	double pt2planeDistThresh = syspara.mfg_pt2plane_dist;
-	int planeSetSizeThresh = syspara.mfg_min_npt_plane;	
+	double pt2planeDistThresh = mfgSettings->getMfgPointToPlaneDistance();
+	int planeSetSizeThresh = mfgSettings->getMfgPointsPerPlane();	
 	double normal_tolerance_deg = 2; 
 	// ===== find possible plane normal vectors compatible with VPs =====
 	vector<cv::Point3d> normals;

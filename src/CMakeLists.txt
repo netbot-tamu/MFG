@@ -1,6 +1,9 @@
 # project is defined in the parent CMakeLists
 project(mfglib)
 
+# TODO: make this an optional flag
+set(CMAKE_BUILD_TYPE debug)
+
 set(SOURCES
    edge_line_vp_cam.cpp
    edge_line_vp_plane.cpp
@@ -43,6 +46,7 @@ set(SOURCES
 )
 
 set(HEADERS
+   consts.h
    edge_line_vp_cam.h
    edge_line_vp_plane.h
    edge_point_plane.h
@@ -57,7 +61,6 @@ set(HEADERS
    vertex_vnpt.h
    view.h
    window.h
-
    settings.h
 )
 

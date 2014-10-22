@@ -1,5 +1,6 @@
 #include "mfg.h"
 #include "mfg_utils.h"
+#include "settings.h"
 #include <Eigen/StdVector>
 #include <stdint.h>
 
@@ -42,7 +43,7 @@
 //#include <Windows.h>
 
 using namespace Eigen;
-extern SysPara syspara;
+extern MfgSettings* mfgSettings;
 
 void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 // local bundle adjustment: points+vp
@@ -80,7 +81,7 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 	int vertex_id = 0;    
 	int frontPosIdx = max(1, (int)views.size() - numPos);
 	int frontFrmIdx = max(0, (int)views.size() - numFrm);
-	int frontVptIdx = max(0, (int)views.size() - syspara.nFrm4VptBA); // first frame used for keep VP estimate consistent
+	int frontVptIdx = max(0, (int)views.size() - mfgSettings->getBaNumFramesVPoint()); // first frame used for keep VP estimate consistent
 	frontVptIdx = min(frontFrmIdx,frontVptIdx); 
 	// ----- optimization parameters -----
 	
@@ -265,9 +266,9 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 				}
 				Eigen::Vector2d meas(views[fid].featurePoints[lid].x,views[fid].featurePoints[lid].y);
 				e->setMeasurement(meas);
-				if(syspara.ba_use_kernel) {
+				if(mfgSettings->getBaUseKernel()) {
 					g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
-					rk->setDelta(syspara.ba_kernel_delta_pt);
+					rk->setDelta(mfgSettings->getBaKernelDeltaPoint());
 					e->setRobustKernel(rk);
 				}
                 e->information() = Matrix2d::Identity();				
@@ -297,9 +298,9 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 				Eigen::Vector2d meas(views[fid].featurePoints[lid].x,views[fid].featurePoints[lid].y);
 				e->setMeasurement(meas);
                 e->information() = Matrix2d::Identity();
-				if(syspara.ba_use_kernel) {
+				if(mfgSettings->getBaUseKernel()) {
 					g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
-					rk->setDelta(syspara.ba_kernel_delta_pt);
+					rk->setDelta(mfgSettings->getBaKernelDeltaPoint());
 					e->setRobustKernel(rk);
 				}
 				optimizer.addEdge(e);
@@ -345,10 +346,10 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 				cov(0,1) = views[fid].vanishPoints[lid].cov_ab.at<double>(0,1) * 0;
 				cov(1,0) = views[fid].vanishPoints[lid].cov_ab.at<double>(1,0) * 0;
 				cov(1,1) = max(views[fid].vanishPoints[lid].cov_ab.at<double>(1,1), 1e-3);				
-				e->information() = syspara.ba_weight_vp * cov.inverse(); // observaion info
-				if(syspara.ba_use_kernel) {
+				e->information() = mfgSettings->getBaWeightVPoint() * cov.inverse(); // observaion info
+				if(mfgSettings->getBaUseKernel()) {
 					g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
-					rk->setDelta(syspara.ba_kernel_delta_vp);
+					rk->setDelta(mfgSettings->getBaKernelDeltaVPoint());
 					e->setRobustKernel(rk);
 				}
 				optimizer.addEdge(e);			
@@ -383,10 +384,10 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 				}
 				double meas = 0;
 				e->setMeasurement(meas);
-				e->information() = e->information() * syspara.ba_weight_ln;
-				if(syspara.ba_use_kernel) {
+				e->information() = e->information() * mfgSettings->getBaWeightLine();
+				if(mfgSettings->getBaUseKernel()) {
 					g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
-					rk->setDelta(syspara.ba_kernel_delta_ln);
+					rk->setDelta(mfgSettings->getBaKernelDeltaLine());
 					e->setRobustKernel(rk);
 				}
 				e->segpts = views[fid].idealLines[lid].lsEndpoints;
@@ -421,11 +422,11 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 				}
 				double meas = 0;
 				e->setMeasurement(meas);
-				e->information() = e->information() * syspara.ba_weight_ln; 	
+				e->information() = e->information() * mfgSettings->getBaWeightLine(); 	
 				e->segpts = views[fid].idealLines[lid].lsEndpoints;
-				if(syspara.ba_use_kernel) {
+				if(mfgSettings->getBaUseKernel()) {
 					g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
-					rk->setDelta(syspara.ba_kernel_delta_ln);
+					rk->setDelta(mfgSettings->getBaKernelDeltaLine());
 					e->setRobustKernel(rk);
 				}
 				optimizer.addEdge(e);
@@ -457,10 +458,10 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 			}
 			e->setMeasurement(0);				
 			e->information().setIdentity();
-			e->information() = syspara.ba_weight_pl * e->information(); // observaion info
-			if(syspara.ba_use_kernel) {
+			e->information() = mfgSettings->getBaWeightPlane() * e->information(); // observaion info
+			if(mfgSettings->getBaUseKernel()) {
 				g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
-				rk->setDelta(syspara.ba_kernel_delta_pl);
+				rk->setDelta(mfgSettings->getBaKernelDeltaPlane());
 				e->setRobustKernel(rk);
 			}
 			optimizer.addEdge(e);			
@@ -492,12 +493,12 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 			}
 			e->setMeasurement(0);				
 			e->information().setIdentity();
-			e->information() = e->information() * syspara.ba_weight_pl; // observaion info
+			e->information() = e->information() * mfgSettings->getBaWeightPlane(); // observaion info
 			e->endptA = idealLines[lnGid].extremity1();
 			e->endptB = idealLines[lnGid].extremity2();
-			if(syspara.ba_use_kernel) {
+			if(mfgSettings->getBaUseKernel()) {
 				g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
-				rk->setDelta(syspara.ba_kernel_delta_pl*sqrt(2.0));
+				rk->setDelta(mfgSettings->getBaKernelDeltaPlane()*sqrt(2.0));
 				e->setRobustKernel(rk);
 			}
 			optimizer.addEdge(e);			

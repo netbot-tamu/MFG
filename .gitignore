@@ -54,6 +54,12 @@ cmake_install.cmake
 *.sql
 *.sqlite
 
+# MFG Generated logs #
+######################
+camPose.txt
+debug.txt
+mfgNode.txt
+
 # OS generated files #
 ######################
 .DS_Store
