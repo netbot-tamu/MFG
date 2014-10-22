@@ -1,5 +1,6 @@
 #include "mfg.h"
 #include "mfg_utils.h"
+#include "settings.h"
 #include <Eigen/StdVector>
 #include <stdint.h>
 
@@ -230,7 +231,7 @@ void est3dpt_g2o (vector<cv::Mat> Rs, vector<cv::Mat> ts, cv::Mat K, vector<cv::
 		e->setMeasurement(meas);
 		e->information() = Matrix2d::Identity();
 		/*				g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
-		rk->setDelta(syspara.ba_kernel_delta_pt);
+		rk->setDelta(mfgSettings->getBaKernelDeltaPoint());
 		e->setRobustKernel(rk);
 
 		*/			

@@ -20,11 +20,11 @@
 #include "glwidget.h"
 #include "mfg.h"
 #include "mfg_utils.h"
-#include "opencv2/nonfree/nonfree.hpp" // For opencv2.4+,
+#include "settings.h"
+#include <opencv2/nonfree/nonfree.hpp> // For opencv2.4+,
 
 #define DETECT_BLUR
 //#define FIX_KEYFRAME
-extern SysPara syspara;
 
 vector<int> keyFrameIdx ();
 void MfgThread::run()
@@ -45,7 +45,7 @@ void MfgThread::run()
 		}
 		string imgName = head + idxStr + tail;
 		cout<<"\n<"<<i<<","<<idx<<"> \n";
-		pMap->expand(View(imgName,K,distCoeffs, -1), idx);
+		pMap->expand(View(imgName,K,distCoeffs, -1, mfgSettings), idx);
 	}
 
 	timer.end();
@@ -62,17 +62,17 @@ void MfgThread::run()
 	timer.start();
 	for(int i=0; true; ++i) {		
 		if(pMap->rotateMode()||pMap->angleSinceLastKfrm > 10*PI/180) {
-			increment = max(1, syspara.frm_increment/2);
+			increment = max(1, mfgSettings->getFrameStep()/2);
 			interval_ratio = 0.5;
 		} else {
-			increment = syspara.frm_increment;
+			increment = mfgSettings->getFrameStep();
 			interval_ratio = 1;
 		}
 		cout<<"<"<<i<<"> ";
 		bool toExpand = false;
 		imgName = nextImgName(imgName, imIdLen, increment);
 		if (!isFileExist(imgName)) break;
-		View v(imgName, K, distCoeffs);
+		View v(imgName, K, distCoeffs, mfgSettings);
 		int fid = atoi (imgName.substr(imgName.size()-imIdLen-4, imIdLen).c_str());
 
 		if(fid-pMap->views[0].frameId > totalImg)			break;
@@ -90,8 +90,8 @@ void MfgThread::run()
 				int tryinc = max(int(increment/4),1);
 				imgName = nextImgName(imgName, imIdLen, tryinc);				
 				if (!isFileExist(imgName)) break;
-				View v(imgName, K, distCoeffs);
-				if(!isKeyframe(*pMap, View(imgName, K, distCoeffs), 50, thresh3dPtNum)) {
+				View v(imgName, K, distCoeffs, mfgSettings);
+				if(!isKeyframe(*pMap, View(imgName, K, distCoeffs, mfgSettings), 50, thresh3dPtNum)) {
 					selName = imgName;
 					found = true;
 					break;
@@ -142,7 +142,7 @@ void MfgThread::run()
 #endif
 			int fid = atoi (imgName.substr(imgName.size()-imIdLen-4, imIdLen).c_str());
 			cout<<"frame:"<<fid<<endl;
-         View imgView(imgName,K,distCoeffs,-1);
+         View imgView(imgName,K,distCoeffs,-1, mfgSettings);
 			pMap->expand(imgView,fid);
 		}
 	}

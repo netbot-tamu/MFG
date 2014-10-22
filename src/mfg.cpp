@@ -29,6 +29,7 @@
 #include "glwidget.h"
 #include "mfg.h"
 #include "mfg_utils.h"
+#include "settings.h"
 
 //#define USE_PT_ONLY_FOR_LBA
 #define PREDICT_POSE_USE_R_AND_T
@@ -38,7 +39,7 @@
 
 extern double THRESH_POINT_MATCH_RATIO, SIFT_THRESH, SIFT_THRESH_HIGH, SIFT_THRESH_LOW;
 extern int IDEAL_IMAGE_WIDTH;
-extern SysPara syspara;
+extern MfgSettings* mfgSettings;
 extern vector<vector<double>> planeColors;
 struct cvpt2dCompare
 {
@@ -365,7 +366,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
    vector<vector<cv::Point2d>> featPtMatches;
    vector<vector<int>> pairIdx;
 
-   if(syspara.kpt_detect_alg <3) // sift surf
+   if(mfgSettings->getKeypointAlgorithm() <3) // sift surf
       pairIdx = matchKeyPoints (prev.featurePoints, nview.featurePoints, featPtMatches);
    else {
       bool found_in_track = false;
@@ -389,11 +390,11 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
                curr_pts, // output point positions in the 2nd
                status,    // tracking success
                err,      // tracking error
-               cv::Size(syspara.oflk_win_size,syspara.oflk_win_size),
+               cv::Size(mfgSettings->getOflkWindowSize(),mfgSettings->getOflkWindowSize()),
                3,
                cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 30, 0.01),
                0,
-               syspara.oflk_min_eigval  // minEignVal threshold for the 2x2 spatial motion matrix, to eleminate bad points
+               mfgSettings->getOflkMinEigenval()  // minEignVal threshold for the 2x2 spatial motion matrix, to eleminate bad points
                );
          for(int i=0; i<status.size(); ++i) {
             if(status[i]
@@ -411,7 +412,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       vector<cv::KeyPoint> kpts;
       for(int j=0; j < frm_same_nview.featpts.size(); ++j) {//build a map
          pt_idx[frm_same_nview.featpts[j]] = frm_same_nview.pt_lid_in_last_view[j];
-         kpts.push_back(cv::KeyPoint(frm_same_nview.featpts[j], syspara.kpt_desc_radius));
+         kpts.push_back(cv::KeyPoint(frm_same_nview.featpts[j], mfgSettings->getFeatureDescriptorRadius()));
       }
 
       for(int j=0; j < nview.featurePoints.size(); ++j) {
@@ -420,13 +421,13 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          for(int k=0; k <frm_same_nview.featpts.size(); ++k) {
             float dx = frm_same_nview.featpts[k].x - nview.featurePoints[j].x;
             float dy = frm_same_nview.featpts[k].y - nview.featurePoints[j].y;
-            if (sqrt(dx*dx+dy*dy) < syspara.gftt_min_ptdist) {
+            if (sqrt(dx*dx+dy*dy) < mfgSettings->getGfttMinimumPointDistance()) {
                pt_exist = true;
                break;
             }
          }
          if(!pt_exist) {				
-            kpts.push_back(cv::KeyPoint(nview.featurePoints[j].cvpt(), syspara.kpt_desc_radius));				
+            kpts.push_back(cv::KeyPoint(nview.featurePoints[j].cvpt(), mfgSettings->getFeatureDescriptorRadius()));				
          }
       }
 
@@ -1170,7 +1171,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       // try matching with existing 3d vp
       for (int j=0; j < vanishingPoints.size(); ++j) {// existing vp 3d	
          cv::Mat vpj = vanishingPoints[j].mat(0)/cv::norm(vanishingPoints[j].mat(0));
-         if(abs(vpi.dot(vpj)) > cos(syspara.angle_thresh_vp2d3d *PI/180) ) {// degree
+         if(abs(vpi.dot(vpj)) > cos(mfgSettings->getVPointAngleThresh() *PI/180) ) {// degree
             // matched
             nview.vanishPoints[i].gid = vanishingPoints[j].gid;
             vector<int> vid_vpid;
@@ -1342,7 +1343,7 @@ void Mfg::update3dIdealLine(vector<vector<int>> ilinePairIdx, View& nview)
 void Mfg::updatePrimPlane()
 {
    // ======== 0. set prameters/thresholds ========
-   double pt2PlaneDistThresh = syspara.mfg_pt2plane_dist;
+   double pt2PlaneDistThresh = mfgSettings->getMfgPointToPlaneDistance();
    // ======== 1. check if any newly added points/lines belong to existing planes =======
    // ---- 1.1 check points ----
    for (int i=0; i<keyPoints.size(); ++i) {
@@ -1390,14 +1391,14 @@ void Mfg::updatePrimPlane()
 
    // ========== 2. discover new planes (using seq-ransac) =========
    vector<KeyPoint3d> lonePts; // used for finding new planes
-   int ptNumLimit = syspara.mfg_num_recent_pts;
+   int ptNumLimit = mfgSettings->getMfgNumRecentPoints();
    for(int i=keyPoints.size()-1; i>=0; --i) {
       if (!keyPoints[i].is3D || keyPoints[i].gid < 0 || keyPoints[i].pGid >= 0) continue;
       lonePts.push_back(keyPoints[i]);
       if(lonePts.size()>ptNumLimit) break;
    }
    vector<IdealLine3d> loneLns;
-   int lnNumLimit = syspara.mfg_num_recent_lns;
+   int lnNumLimit = mfgSettings->getMfgNumRecentLines();
    for (int i=idealLines.size()-1; i>=0; --i) {
       if(!idealLines[i].is3D || idealLines[i].gid<0 || idealLines[i].pGid >= 0) continue;
       loneLns.push_back(idealLines[i]);

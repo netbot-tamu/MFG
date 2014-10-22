@@ -20,9 +20,22 @@ typedef cv::Mat_<double> CoeffMatrix;
 class MfgSettings : QObject {
    Q_OBJECT
 public:
+   //---------------------------------------------------------------------------
+   // TODO: move this out of here
+   //---------------------------------------------------------------------------
+   //double   angle_thresh_vp2d3d; // degree, match local 2d vp to existing 3d vp
+
+
    MfgSettings(QString _cameraID="", QObject* _parent=0);
    ~MfgSettings();
+   
+   void printAllSettings() const;
+   void setKeypointAlgorithm(FeatureDetectionAlgorithm _alg);
 
+   //---------------------------------------------------------------------------
+   // Access functions
+   //---------------------------------------------------------------------------
+   // General settings
    int   getImageWidth() const {return imageWidth;}
 
    QString getCameraID() const {return cameraID;}
@@ -112,12 +125,6 @@ private:
    // to eleminate bad points
    double   oflkMinEigenval; 
    int      oflkWindowSize;
-
-
-   //---------------------------------------------------------------------------
-   // 
-   //---------------------------------------------------------------------------
-   double   angle_thresh_vp2d3d; // degree, match local 2d vp to existing 3d vp
 
 
    //---------------------------------------------------------------------------

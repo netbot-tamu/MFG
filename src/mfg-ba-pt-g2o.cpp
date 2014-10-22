@@ -1,5 +1,6 @@
 #include "mfg.h"
 #include "mfg_utils.h"
+#include "settings.h"
 #include <Eigen/StdVector>
 #include <stdint.h>
 
@@ -37,7 +38,7 @@
 //#include <Windows.h>
 
 using namespace Eigen;
-extern SysPara syspara;
+extern MfgSettings* mfgSettings;
 
 void Mfg::adjustBundle_Pt_G2O (int numPos, int numFrm)
 // local bundle adjustment: points
@@ -161,9 +162,9 @@ void Mfg::adjustBundle_Pt_G2O (int numPos, int numFrm)
 				meas<<views[fid].featurePoints[lid].x,views[fid].featurePoints[lid].y;
 				e->setMeasurement(meas);
                 e->information() = Matrix2d::Identity();
-				if(syspara.ba_use_kernel) {
+				if(mfgSettings->getBaUseKernel()) {
 					g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
-					rk->setDelta(syspara.ba_kernel_delta_pt);
+					rk->setDelta(mfgSettings->getBaKernelDeltaPoint());
 					e->setRobustKernel(rk);
 				}
 				optimizer.addEdge(e);
@@ -194,9 +195,9 @@ void Mfg::adjustBundle_Pt_G2O (int numPos, int numFrm)
 				meas<<views[fid].featurePoints[lid].x,views[fid].featurePoints[lid].y;
 				e->setMeasurement(meas);
                 e->information() = Matrix2d::Identity();
-				if(syspara.ba_use_kernel) {
+				if(mfgSettings->getBaUseKernel()) {
 					g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
-					rk->setDelta(syspara.ba_kernel_delta_pt);
+					rk->setDelta(mfgSettings->getBaKernelDeltaPoint());
 					e->setRobustKernel(rk);
 				}
 				optimizer.addEdge(e);

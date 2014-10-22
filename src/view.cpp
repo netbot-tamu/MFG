@@ -5,16 +5,17 @@
 
 #include "mfg.h"
 #include "mfg_utils.h"
+#include "settings.h"
 
 extern int IDEAL_IMAGE_WIDTH;
 extern double SIFT_THRESH;
-extern SysPara syspara;
 
 using namespace std;
 
 //#define VPDETECT_USE_JLINK
 
-View::View (string imgName, cv::Mat _K, cv::Mat dc)
+View::View (string imgName, cv::Mat _K, cv::Mat dc, MfgSettings* _settings)
+: mfgSettings(_settings)
    // only deal with points
 {	
    filename = imgName;
@@ -26,8 +27,8 @@ View::View (string imgName, cv::Mat _K, cv::Mat dc)
       cv::undistort(oriImg, tmpImg, _K, dc);
    }
    // resize image and ajust camera matrix
-   if (syspara.use_img_width > 1) {
-      double scl = syspara.use_img_width/double(tmpImg.cols);
+   if (mfgSettings->getImageWidth() > 1) {
+      double scl = mfgSettings->getImageWidth()/double(tmpImg.cols);
       cv::resize(tmpImg,img,cv::Size(),scl,scl,cv::INTER_AREA);
       K = _K * scl;
       K.at<double>(2,2) = 1;	
@@ -47,7 +48,8 @@ View::View (string imgName, cv::Mat _K, cv::Mat dc)
    detectFeatPoints ();	
 }
 
-View::View (string imgName, cv::Mat _K, cv::Mat dc, int _id)
+View::View (string imgName, cv::Mat _K, cv::Mat dc, int _id, MfgSettings* _settings)
+: mfgSettings(_settings)
 {	
    filename = imgName;
    id = _id;
@@ -60,8 +62,8 @@ View::View (string imgName, cv::Mat _K, cv::Mat dc, int _id)
       cv::undistort(oriImg, tmpImg, _K, dc);
    }
    // resize image and ajust camera matrix
-   if (syspara.use_img_width > 1) {
-      double scl = syspara.use_img_width/double(tmpImg.cols);
+   if (mfgSettings->getImageWidth() > 1) {
+      double scl = mfgSettings->getImageWidth()/double(tmpImg.cols);
       cv::resize(tmpImg,img,cv::Size(),scl,scl,cv::INTER_AREA);
       K = _K * scl;
       K.at<double>(2,2) = 1;	
@@ -143,8 +145,8 @@ void View::detectFeatPoints()
    cv::Mat 							descs;
    vector<cv::Point2f>					ptpos;
    // Only work for opencv 2.3.1
-   switch (syspara.kpt_detect_alg) {
-      case 1: {
+   switch (mfgSettings->getKeypointAlgorithm()) {
+      case KPT_SIFT: {
                  // opencv 2.3
                  //cv::SiftFeatureDetector		siftFeatDetector(SIFT_THRESH, 10);	// 0.05 surpress point num
                  //cv::SiftDescriptorExtractor siftDeatExtractor; 
@@ -157,36 +159,36 @@ void View::detectFeatPoints()
                  pfeatExtractor->compute(img, poses, descs);	
               }
               break;
-      case 2: {
+      case KPT_SURF: {
                  cv::SurfFeatureDetector		surfFeatDetector(200);
                  cv::SurfDescriptorExtractor  surfFeatExtractor;
                  surfFeatDetector.detect(img,  poses);
                  surfFeatExtractor.compute(img,  poses,  descs);
               }
               break;
-      case 3: { 
+      case KPT_GFTT: { 
                  if (id==-2) break; // don't detect features when tracking between key frames
                  detect_featpoints_buckets(grayImg, // the image 
                        3,
                        ptpos,   // the output detected features
-                       syspara.gftt_max_ptnum,  // the maximum number of features 
-                       syspara.gftt_qual_levl,     // quality level
-                       syspara.gftt_min_ptdist     // min distance between two features		
+                       mfgSettings->getGfttMaxPoints(),  // the maximum number of features 
+                       mfgSettings->getGfttQualityLevel(),     // quality level
+                       mfgSettings->getGfttMinimumPointDistance()     // min distance between two features		
                        );
               }
               break;
       default:	;
    }	
 
-   switch (syspara.kpt_detect_alg) {
-      case 1:
-      case 2:
+   switch (mfgSettings->getKeypointAlgorithm()) {
+      case KPT_SIFT:
+      case KPT_SURF:
          for (int i=0; i< poses.size(); ++i) {
             featurePoints.push_back(
                   FeatPoint2d(poses[i].pt.x, poses[i].pt.y, descs.row(i).t(), i, -1));
          }
          break;
-      case 3: {
+      case KPT_GFTT: {
                  /*		vector<cv::KeyPoint> kpts;
                         for(int i=0; i<ptpos.size(); ++i) {
                         kpts.push_back(cv::KeyPoint(ptpos[i], 21));// no angle info provided

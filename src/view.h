@@ -7,6 +7,8 @@
 
 #include "features2d.h"
 
+class MfgSettings;
+
 // View class collects information from a single view, including points,
 // lines etc
 class View 
@@ -39,8 +41,8 @@ public:
 
    // ***** methods *****
    View () {}	
-   View (std::string imgName, cv::Mat _K, cv::Mat dc);
-   View (std::string imgName, cv::Mat _K, cv::Mat dc, int _id);
+   View (std::string imgName, cv::Mat _K, cv::Mat dc, MfgSettings* _settings);
+   View (std::string imgName, cv::Mat _K, cv::Mat dc, int _id, MfgSettings* _settings);
    void detectFeatPoints ();			// detect feature points from image
    void detectLineSegments (IplImage);			// detect line segments from image
    void compMsld4AllSegments (cv::Mat grayImg);
@@ -51,6 +53,9 @@ public:
    void drawIdealLineGroup(std::vector<IdealLine2d>);
    void drawIdealLines();
    void drawPointandLine();
+
+private:
+   MfgSettings* mfgSettings;
 };
 
 #endif

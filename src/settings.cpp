@@ -36,6 +36,66 @@ MfgSettings::~MfgSettings()
    delete mfgSettings;
 }
 
+void MfgSettings::printAllSettings() const
+{
+   qDebug() << "--- General Settings ---";
+   qDebug() << "Image Path                   :" << initialImage;
+   qDebug() << "Feature Detection Algorithm  :" << featureAlg;
+   qDebug() << "";
+   qDebug() << "--- Scale-Invariant Features (SIFT) Settings ---";
+   qDebug() << "SIFT Threshold               :" << siftThreshold;
+   qDebug() << "";
+   qDebug() << "--- Good Features to Track (GFTT) Settings ---";
+   qDebug() << "GFTT Max points              :" << gfttMaxPoints;
+   qDebug() << "GFTT Quality Level           :" << gfttQuality;
+   qDebug() << "GFTT Minimum Point Distance  :" << gfttMinPointDistance;
+   qDebug() << "";
+   qDebug() << "--- Optic Flow (Lukas-Kanade) (OFLK) Settings) ---";
+   qDebug() << "OFLK Minimum Eigenval        :" << oflkMinEigenval;
+   qDebug() << "OFLK Window Size             :" << oflkWindowSize;
+   qDebug() << "";
+   qDebug() << "--- Multi-Layer Feature Graph (MFG) Settings ---";
+   qDebug() << "MFG Point to Plane Distance  :" << mfgPointToPlaneDist;
+   qDebug() << "MFG Num Recent Points        :" << mfgNumRecentPoints;
+   qDebug() << "MFG Num Recent Lines         :" << mfgNumRecentLines;
+   qDebug() << "MFG Frame Step               :" << frameStep;
+   qDebug() << "MFG Initial Frame Step       :" << frameStepInitial;
+   qDebug() << "VPoint Angle Threshold       :" << vpointAngleThresh;
+   qDebug() << "";
+   qDebug() << "--- Bundle Adjustment (BA) Settings ---";
+   qDebug() << "BA Weight VPoint             :" << baWeightVPoint;
+   qDebug() << "BA Weight Line               :" << baWeightLine;
+   qDebug() << "BA Weight Plane              :" << baWeightPlane;
+   qDebug() << "BA Num Frames for VPoints    :" << baNumFramesVPoint;
+   qDebug() << "BA Use Kernel?               :" << baUseKernel;
+   qDebug() << "BA Kernel Delta for VPoints  :" << baKernelDeltaVPoint;
+   qDebug() << "BA Kernel Delta for Points   :" << baKernelDeltaPoint;
+   qDebug() << "BA Kernel Delta for Lines    :" << baKernelDeltaLine;
+   qDebug() << "BA Kernel Delta for Planes   :" << baKernelDeltaPlane;
+}
+
+void MfgSettings::setKeypointAlgorithm(FeatureDetectionAlgorithm _alg)
+{
+   featureAlg = _alg;
+   mfgSettings->beginGroup("features");
+   switch(featureAlg)
+   {
+      case KPT_SIFT:
+         loadSIFTSettings();
+         break;
+      case KPT_SURF:
+         loadSURFSettings();
+         break;
+      case KPT_GFTT:
+         loadGFTTSettings();
+         break;
+      default:
+         qDebug() << "Error: invalid keypoint detection algorithm";
+         exit(1);
+   }
+   mfgSettings->endGroup(); // "features"
+}
+
 #define LOAD_STR(var, key) var = mfgSettings->value(key).toString();
 #define LOAD_INT(var, key) var = mfgSettings->value(key).toInt();
 #define LOAD_BOOL(var, key) var = mfgSettings->value(key).toBool();
@@ -52,24 +112,13 @@ void MfgSettings::loadSettings()
 
    // Load the keypoint detection settings
    mfgSettings->beginGroup("features");
-   LOAD_INT(featureAlg, "algorithm");
+   int featureAlgInt = 0;
+   LOAD_INT(featureAlgInt, "algorithm");
    LOAD_INT(featureDescriptorRadius, "descriptor_radius");
-   switch(featureAlg)
-   {
-      case KPT_SIFT:
-         loadSIFTSettings();
-         break;
-      case KPT_SURF:
-         loadSURFSettings();
-         break;
-      case KPT_GFTT:
-         loadGoodFeatSettings();
-         break;
-      default:
-         qDebug() << "Error: invalid keypoint detection algorithm";
-         system.exit(1);
-   }
    mfgSettings->endGroup(); // end group "features"
+   // now that we are OUTSIDE the 'features' group, set the algorithm
+   // since it re-enters the 'features' group
+   setKeypointAlgorithm((FeatureDetectionAlgorithm) featureAlgInt);
 
    // Load Optic Flow settings
    LOAD_DOUBLE(oflkMinEigenval, "optic-flow/min_eigenval");
@@ -114,44 +163,48 @@ void MfgSettings::loadSettings()
    mfgSettings->endGroup(); // end [cameraID]
 }
 
-void loadSIFTSettings()
+void MfgSettings::loadSIFTSettings()
 {
    qDebug() << "Detecting features with SIFT";
    LOAD_DOUBLE(siftThreshold, "sift/threshold")
    qDebug() << "   Threshold:" << siftThreshold;
 }
 
-void loadSURFSettings()
+void MfgSettings::loadSURFSettings()
 {
    qDebug() << "Detecting features with SURF";
 }
 
-void loadGFTTSettings()
+void MfgSettings::loadGFTTSettings()
 {
    qDebug() << "Detecting features with GoodFeat";
    mfgSettings->beginGroup("gftt");
+   qDebug() << "GFTT keys:" << mfgSettings->childKeys();
    LOAD_INT(gfttMaxPoints, "max_points");
    LOAD_DOUBLE(gfttQuality, "quality");
    LOAD_DOUBLE(gfttMinPointDistance, "min_point_distance");
-   mfgSettings->endGroup();
+   mfgSettings->endGroup(); // "gfft"
 }
 
-void loadMFGSettings()
+void MfgSettings::loadMFGSettings()
 {
    mfgSettings->beginGroup("mfg");
+   qDebug() << "MFG keys:" << mfgSettings->childKeys();
    LOAD_DOUBLE(mfgPointToPlaneDist, "point_to_plane_dist");
    LOAD_INT(mfgNumRecentPoints, "num_recent_points");
    LOAD_INT(mfgNumRecentLines, "num_recent_lines");
    LOAD_INT(mfgPointsPerPlane, "points_per_plane");
    LOAD_INT(frameStep, "frame_step");
-   LOAD_INT(frameStepInitial, "frame_step_initial");
+   LOAD_INT(frameStepInitial, "frame_step_init");
    LOAD_DOUBLE(vpointAngleThresh, "vpoint_angle_thresh");
-   mfgSettings->endGroup();
+   mfgSettings->endGroup(); // "mfg"
 }
 
-void loadBASettings()
+void MfgSettings::loadBASettings()
 {
+   qDebug() << "Loading BA Settings";
    mfgSettings->beginGroup("ba");
+   qDebug() << "BA keys:" << mfgSettings->childKeys();
    LOAD_DOUBLE(baWeightVPoint, "weight_vpoint");
    LOAD_DOUBLE(baWeightLine, "weight_line");
    LOAD_DOUBLE(baWeightPlane, "weight_plane");
@@ -160,6 +213,7 @@ void loadBASettings()
 
    if (baUseKernel)
    {
+      qDebug() << "Loading BA Kernel Settings";
       mfgSettings->beginGroup("kernel");
       LOAD_DOUBLE(baKernelDeltaVPoint, "delta_vpoint");
       LOAD_DOUBLE(baKernelDeltaPoint, "delta_point");
@@ -171,7 +225,7 @@ void loadBASettings()
 }
 
 // Read the intrinsics values and generate the matrix
-void loadIntrinsicsSettings()
+void MfgSettings::loadIntrinsicsSettings()
 {
    mfgSettings->beginGroup("intrinsics");
    LOAD_DOUBLE(cameraIntrinsics(0,0), "alpha_x")
@@ -187,7 +241,7 @@ void loadIntrinsicsSettings()
 }
 
 // Read the distance coefficients
-void loadDistCoeffSettings()
+void MfgSettings::loadDistCoeffSettings()
 {
    mfgSettings->beginGroup("distCoeffs");
    if (mfgSettings->contains("c4"))
