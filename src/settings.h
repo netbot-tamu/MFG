@@ -97,7 +97,6 @@ private:
    // Initial image settings
    int      imageWidth;
    QString  initialImage;
-   //int    use_img_width; // user designated image width
    
 
    //---------------------------------------------------------------------------
