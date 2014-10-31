@@ -56,6 +56,7 @@ set(HEADERS
    mfg.h
    mfg_utils.h
    mfgwin.h
+   twoview.h
    vertex_lineendpts.h
    vertex_plane.h
    vertex_vnpt.h

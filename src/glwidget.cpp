@@ -1,9 +1,9 @@
-#include <QtGui>
-
-#include <math.h>
-
 #include "glwidget.h"
 
+#include <QtGui>
+#include <math.h>
+
+#include "twoview.h"
 
 #ifndef GL_MULTISAMPLE
 #define GL_MULTISAMPLE  0x809D

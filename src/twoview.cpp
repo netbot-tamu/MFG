@@ -1,3 +1,6 @@
+
+#include "twoview.h"
+
 #include <QtGui>
 #include <QtOpenGL>
 //#include <gl/GLU.h>

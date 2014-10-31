@@ -5,6 +5,7 @@
 #include "mfg.h"
 
 // class QtLogo;
+class TwoView;
 
 class GLWidget : public QGLWidget
 {

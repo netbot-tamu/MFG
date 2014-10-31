@@ -38,34 +38,6 @@ using namespace std;
 
 class MfgSettings;
 
-class TwoView
-{
-public:
-   View view1, view2;
-   vector< vector<cv::Point2d> > featPtMatches;
-   vector< vector<int> >			vpPairIdx;
-   vector< vector<int> >			ilinePairIdx;
-   cv::Mat						E, F, R, t;
-
-   vector <KeyPoint3d>			keyPoints;
-   vector <IdealLine3d>		idealLines;
-   vector <PrimPlane3d>		primaryPlanes;
-   vector <VanishPnt3d>		vanishingPoints;
-
-   TwoView(){}
-   TwoView(View&, View&);
-
-   vector< vector<int> > matchVanishPts();
-   void matchIdealLines(bool usePtMatch = false);
-   void triangulateIdealLines();
-   void triangulateFeatPoints();
-   void detectPlanes();
-   void optimize();
-
-   void drawFeatPointMatches();
-   void draw3D ();
-};
-
 class Frame // raw frame, not key image, for feature tacking use 
 {
 public:

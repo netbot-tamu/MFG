@@ -1,3 +1,5 @@
+#include "window.h"
+
 //#include <QtGui>
 #include <QHBoxLayout>
 #include <QKeyEvent>
@@ -5,8 +7,10 @@
 #include <QWidget>
 
 #include "glwidget.h"
-#include "window.h"
+#include "twoview.h"
+
 extern double scale_const;
+
 Window::Window()
 {
    glWidget = new GLWidget;

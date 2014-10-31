@@ -5,8 +5,8 @@
 #include "mfg.h"
 
 class QSlider;
-
 class GLWidget;
+class TwoView;
 
 class Window : public QWidget
 {
