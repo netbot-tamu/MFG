@@ -166,4 +166,3 @@ ADD_SUBDIRECTORY(ext/lsd-1.5)
 
 # Make this project
 ADD_SUBDIRECTORY(src)
-
