@@ -63,11 +63,11 @@ ntuple_list callLsd (Mat* src, bool bShow)
 	unsigned int w = src->size().width;
 	unsigned int h = src->size().height;
 	image = new_image_double(w,h);
-	CvScalar s;// to get image values
-	for (int x=0;x<w;++x){
-		for(int y=0;y<h;++y){
-			s=cvGet2D(src_gray,y,x);
-			image->data[x+y*image->xsize] = s.val[0];
+	unsigned char s = 0;//to get image values
+   for (int x = 0; x < w; ++x) {
+		for(int y = 0; y < h; ++y) {
+			s=src_gray->at<char>(x, y);//cvGet2D(src_gray,y,x);
+			image->data[x + y*image->xsize] = s;//.val[0];
 		}
 	}
 	lsd_out = lsd(image);

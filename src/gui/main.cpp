@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
 
    mthread.start();
    // ------- plot ---------
-   /*
+   //*
    win.setMfgScene(&map);
    int desktopArea = QApplication::desktop()->width() *
       QApplication::desktop()->height();

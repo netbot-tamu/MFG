@@ -62,7 +62,7 @@ View::View (string imgName, cv::Mat _K, cv::Mat dc, int _id, MfgSettings* _setti
    filename = imgName;
    id = _id;
    QString fnStr(imgName.c_str());
-   cv::Mat oriImg = cv::imread(imgName,1);
+   cv::Mat oriImg = cv::imread(imgName, CV_LOAD_IMAGE_COLOR);
    cv::Mat tmpImg;
    tmpImg = oriImg.clone();
 
@@ -94,7 +94,7 @@ View::View (string imgName, cv::Mat _K, cv::Mat dc, int _id, MfgSettings* _setti
    detectFeatPoints ();
    timer.end();
    cout<<"Keypoint detection time:" << timer.time_ms << " ms"<<endl;
-   cv::Mat pImg = img;
+   cv::Mat pImg = img.clone();
    timer.start();
    detectLineSegments(pImg);
    timer.end();
@@ -219,7 +219,7 @@ void View::detectFeatPoints()
 void View::detectLineSegments(cv::Mat pImg)
 {
    ntuple_list  lsdOut;
-   lsdOut = callLsd(&pImg, 0);// use LSD method
+   lsdOut = callLsd(&pImg, false);// use LSD method
    int dim = lsdOut->dim;
    double a,b,c,d;
    for(int i=0; i<lsdOut->size; i++) {// store LSD output to lineSegments
