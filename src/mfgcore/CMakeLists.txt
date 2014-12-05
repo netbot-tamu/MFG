@@ -1,5 +1,5 @@
 # project is defined in the parent CMakeLists
-project(mfglib)
+project(mfgcore)
 
 # TODO: make this an optional flag
 set(CMAKE_BUILD_TYPE debug)
@@ -20,7 +20,6 @@ set(SOURCES
 )
 
 set(HEADERS
-   consts.h
    export.h
    mfg.h
    mfgutils.h
@@ -57,4 +56,4 @@ qt5_use_modules(${PROJECT_NAME}
 )
 
 install(FILES ${HEADERS} DESTINATION ${CMAKE_SOURCE_DIR}/includes/mfg/core)
-install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_SOURCE_DIR}/lib)
+#install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_SOURCE_DIR}/lib)

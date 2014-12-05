@@ -29,6 +29,7 @@
 [Bb]uild/
 bin/
 nbproject/
+includes/mfg/
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake

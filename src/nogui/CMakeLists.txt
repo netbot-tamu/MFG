@@ -22,12 +22,12 @@ target_link_libraries(${PROJECT_NAME}
 
    features
    utils
-   mfglib
+   mfgcore
 )
 
 qt5_use_modules(${PROJECT_NAME}
    Core
 )
 
-install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_SOURCE_DIR}/lib)
+#install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_SOURCE_DIR}/lib)
 

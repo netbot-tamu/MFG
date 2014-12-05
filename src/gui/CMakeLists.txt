@@ -40,7 +40,7 @@ target_link_libraries(${PROJECT_NAME}
 
    utils
    features
-   mfglib
+   mfgcore
 )
 
 qt5_use_modules(${PROJECT_NAME}
@@ -49,4 +49,4 @@ qt5_use_modules(${PROJECT_NAME}
 )
 
 #install(FILES ${HEADERS} DESTINATION ${CMAKE_SOURCE_DIR}/includes/mfg/gui)
-install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_SOURCE_DIR}/lib)
+#install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_SOURCE_DIR}/bin)
