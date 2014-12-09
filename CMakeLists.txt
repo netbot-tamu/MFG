@@ -65,8 +65,6 @@ ELSEIF(UNIX)
    MESSAGE(STATUS "Compiling on Unix")
 ENDIF(WIN32)
 
-#SET(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
-
 
 ################################################################################
 # C++11 support
