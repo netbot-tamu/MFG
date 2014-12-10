@@ -25,7 +25,8 @@
 
 #if defined G2O_HAVE_CHOLMOD
 #include "g2o/solvers/cholmod/linear_solver_cholmod.h"
-#elif defined G2O_HAVE_CSPARSE
+#endif
+#if defined G2O_HAVE_CSPARSE
 #include "g2o/solvers/csparse/linear_solver_csparse.h"
 #endif
 

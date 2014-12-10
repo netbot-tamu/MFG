@@ -3,20 +3,20 @@
 FIND_PATH(CSPARSE_INCLUDE_DIR NAMES cs.h
    PATHS
    /usr/include
-   /usr/include/suitesparse
+   /usr/include/suitesparse   
    /usr/include/ufsparse
-   /opt/local/include
-   /usr/local/include
+   /opt/local/include   
    /sw/include
    /sw/include/ufsparse
+   /usr/local/include   
    /opt/local/include/ufsparse
    /usr/local/include/ufsparse
 # G2o installs its csparse headers in the following locations
    /opt/local/include/EXTERNAL/csparse
-   /usr/local/include/EXTERNAL/csparse
+   /usr/local/include/EXTERNAL/csparse	
 )
 
-FIND_LIBRARY(CSPARSE_LIBRARY NAMES g2o_ext_csparse#cxsparse
+FIND_LIBRARY(CSPARSE_LIBRARY NAMES cxsparse
    PATHS
    /usr/lib
    /usr/local/lib

@@ -31,7 +31,8 @@
 
 #if defined G2O_HAVE_CHOLMOD
 #include "g2o/solvers/cholmod/linear_solver_cholmod.h"
-#elif defined G2O_HAVE_CSPARSE
+#endif
+#if defined G2O_HAVE_CSPARSE
 #include "g2o/solvers/csparse/linear_solver_csparse.h"
 #endif
 
@@ -66,7 +67,7 @@ void costFun_EST3D(double *p, double *error, int numPara, int numMeas, void *ada
 		cost = cost + error[i*2]*error[i*2] + error[i*2+1]*error[i*2+1];
 
 	}
-	cout<<cost<<"\t";
+	
 }
 
 
@@ -90,7 +91,7 @@ void costFun_EST3D2(double *p, double *error, int numPara, int numMeas, void *ad
 
 //		cout<<pi.x - xh/zh<<"\t"<<pi.y -yh/zh <<endl;
 	}
-	cout<<cost<<"\t";
+	
 }
 
 void est3dpt (vector<cv::Mat> Rs, vector<cv::Mat> ts, cv::Mat K, vector<cv::Point2d> pt, cv::Mat& X, int maxIter)
@@ -298,7 +299,7 @@ void costFun_Scale(double *p, double *error, int numPara, int numMeas, void *ada
 
 		cost += error[i*2]*error[i*2] + error[i*2+1]*error[i*2+1];
 	}
-	cout<<cost<<"\t";
+	
 }
 
 double optimizeScale (vector<cv::Point3d> X, vector<cv::Point2d> x, cv::Mat K,
