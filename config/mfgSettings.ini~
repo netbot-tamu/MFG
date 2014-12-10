@@ -1,0 +1,321 @@
+; MFG settings file, which contains both the SIFT threshold to use and details
+; about the cameras and image data.
+;
+; Basic INI format for a camera with (user-assigned) ID 00:
+; Note that camera IDs/names should be unique
+[cam-00]
+; A width of zero means use the image's actual width
+width = 0
+
+; The MFG executable will:
+;  1) automatically prepend the user's home directory and a slash
+;     ** IF the following string does NOT begin with a slash '/',
+;     so the 'image' setting only needs the data's relative path from $HOME
+image = "testdata/undistort/image04100.png"
+;  2) assume the following string is the ABSOLUTE path
+;     ** IF the string begins with a slash '/' (unix),
+;        OR the string begins with a windows disk location 'C:/'
+;image = "/some/absolute/path/to/initial/image"
+;image = "C:/some/windows/absolute/path"
+
+; The Intrinsics Matrix for this camera:
+; TODO: FIXME: may be backwards for u_0 and v_0
+;     [ alpha_x   gamma    u_0 ]
+;     [    0      alpha_y  v_0 ]
+;     [    0         0     1   ]
+; (explanation of values below)
+; (copied from camera 3)
+[cam-00/intrinsics]
+alpha_x = 194.8847
+alpha_y = 194.8847
+gamma = 0
+u_0 = 172.1608
+v_0 = 125.0859
+;  Where:
+;     alpha_x  = f*m_x, focal length in pixels, x
+;     alpha_y  = f*m_y, focal length in pixels, y
+;     gamma    = skew coefficient (between x and y axes)
+;     u_0      = principle point, x
+;     v_0      = principle point, y
+;
+;  And
+;     f        = focal length (in terms of distance)
+;     m_x      = x-axis scaling factor (distance to pixels)
+;     m_y      = y-axis scaling factor (distance to pixels)
+
+; Camera Distortion Coefficients
+[cam-00/distCoeffs]
+c0 = 0
+c1 = 0
+c2 = 0
+c3 = 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Now that cameras have been explained, here are the useful settings:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[default]
+; The default camera value should match one of the cameras specified below
+; This default is useful if you do not want to add a command-line argument
+; every time you run the executable for the same input.
+camera = "cam-01"
+
+
+[features]
+; Key Point/Feature Detection Algorithm to use:
+;  1 = SIFT
+;  2 = SURF
+;  3 = GoodFeat
+algorithm = 1
+; Feature Descriptor radius
+; For our test data: 11 for Bicocca, 21 for HRBB
+descriptor_radius = 11
+; Scale Invariant Feature Transform (SIFT) settings
+[features/sift]
+threshold = 0.6
+; Good Features to Track (GFTT) settings
+[features/gftt]
+max_points = 300
+quality = 0.01
+; 3 for bicocca, 5 for HRBB
+min_point_distance = 3
+
+
+; Lucas-Kanade Optic Flow settings
+[optic-flow]
+min_eigenval = 0.001
+; Window size
+; For our test data: 15 for Bicocca, 19 for HRBB
+window_size = 15
+
+
+; Multi-Layer Feature Graph settings
+[mfg]
+point_to_plane_dist = 0.16
+; Number of recent points to discover a plane
+num_recent_points = 400
+; Number of recent lines to discover a plane
+num_recent_lines = 50
+; Minimum number of points to define a plane
+points_per_plane = 100
+; Frame step size
+; Our test data: 2 for Bicocca, 4 for HRBB
+frame_step = 4
+; Initial frame step size
+; Our test data: 60 for Bicocca, 80 for HRBB
+frame_step_init = 80
+; Threshold angle for matching 2D Vanishing Points to 3D (in degrees)
+vpoint_angle_thresh = 5
+
+
+; Bundle Adjustment settings
+[ba]
+; Weights for Vanishing Points, Lines and Planes
+weight_vpoint = 15.0
+weight_line = 1.0
+weight_plane = 100.0
+; Number of frames to use for Vanishing Points
+num_frames = 10
+; Use kernel? true/false
+use_kernel = true
+; Kernel deltas for Vanishing Points, Points, Lines and Planes
+[ba/kernel]
+delta_vpoint = 1.0
+delta_point = 1.0
+delta_line = 3.0
+delta_plane = 1.0
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Camera settings below
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Camera 1: Nikon Video Camera, 640x360, Rectified
+[cam-01]
+width = 0
+image = "/media/AAFE7DB1FE7D7683/Study/Research/Database/Image/MFG/nikon/HRBB4/image00000.png"
+[cam-01/intrinsics]
+alpha_x = 505.3815
+alpha_y = 500.4342
+gamma = 0
+u_0 = 319.5203
+v_0 = 178.0134
+[cam-01/distCoeffs]
+c0 = 0
+c1 = 0
+c2 = 0
+c3 = 0
+
+
+; Camera 2: Vivitar, 2048x1536
+[cam-02]
+width = 800
+image = "E:/Research/Database/Image/MFG/vivitar/DSCF0019.jpg"
+[cam-02/intrinsics]
+alpha_x = 2937.17440327
+alpha_y = 2928.9957350
+gamma = 0
+u_0 = 917.13723376
+v_0 = 742.9170240
+[cam-02/distCoeffs]
+c0 = 0.080684693988438
+c1 = -0.660487779737259
+c2 = -0.001307999210724
+c3 = -0.001309766409259
+
+
+; Camera 3: Biccoca, Left Rectified
+[cam-03]
+width = 0
+image = "/media/AAFE7DB1FE7D7683/Study/Research/Database/Image/Rawseeds/Bicocca_2009-02-25b/FRONTAL/undistort/image04100.png"
+[cam-03/intrinsics]
+alpha_x = 194.8847
+alpha_y = 194.8847
+gamma = 0
+u_0 = 172.1608
+v_0 = 125.0859
+[cam-03/distCoeffs]
+c0 = 0
+c1 = 0
+c2 = 0
+c3 = 0
+
+
+; Camera 4: Vivitar Video Camera, AVI format, 640x480
+[cam-04]
+width = 640
+image = "E:\\Research\\Database\\Image\\MFG\\vivitar\\640x480\\DSCF0186\\IMG0031.jpg"
+[cam-04/intrinsics]
+alpha_x = 939.862927899644770
+alpha_y = 935.924350909257330
+gamma = 0
+u_0 = 297.062247962229150
+v_0 = 249.059297577933960
+[cam-04/distCoeffs]
+c0 = 0.015815829287608
+c1 = 0.149897630494776
+c2 = 0.001574225347026
+c3 = 0.001882342878874
+
+
+; Camera 5: Nikon, 18mm, 4928x3264
+[cam-05]
+width = 1000
+image = "E:\\Research\\Database\\Image\\Hilgur\\Image+IMU\\dataset_1\\images\\Image004.jpg"
+[cam-05/intrinsics]
+alpha_x = 3874.369166824621500
+alpha_y = 3861.262762520646000
+gamma = 0
+u_0 = 2468.302464580188400
+v_0 = 1621.242150845430800
+[cam-05/distCoeffs]
+c0 = 0.006217883989721
+c1 = 0.010816752814396
+c2 = 0.001154308790294
+c3 = 0.001229218233751
+
+
+; Camera 6: Nikon, 24mm, 4928x3264
+[cam-06]
+width = 640
+image = "E:/Research/Database/Image/MFG/nikon/bio0829/DSC_0243.JPG"
+[cam-06/intrinsics]
+alpha_x = 5019.715982433081100
+alpha_y = 4995.294406742888000
+gamma = 0
+u_0 = 2465.1502754143908
+v_0 = 1614.6487387626137
+[cam-06/distCoeffs]
+c0 = -0.059105034548580
+c1 = 0.008495179626034
+c2 = 0.001090312366940
+c3 = -0.000396511354348
+
+
+; Camera 7: Nikon, 18mm Video Camera, 1920x1080
+[cam-07]
+width = 640
+image = "C:/Study/Research/Database/Image/Hilgur/Video+IMU/img_from_video/Image09700.jpg"
+image2 = "C:/Study/Research/Database/Image/MFG/nikon/20130522_001/img00001.jpg"
+[cam-07/intrinsics]
+alpha_x = 1516.14437
+alpha_y = 1501.30250
+gamma = 0
+u_0 = 958.56092
+v_0 = 534.04023
+[cam-07/distCoeffs]
+c0 = -0.06260
+c1 = -0.10806
+c2 = 0.00242
+c3 = -0.00253
+
+
+; Camera 8: Malaga Urban Extract6, 800x600, Left Rectified
+[cam-08]
+width = 0
+image = "C:/Study/Research/Database/Image/Malaga/urban-extract-06/rectified_800x600/left-order/img00001.jpg"
+[cam-08/intrinsics]
+alpha_x = 630.10534
+alpha_y = 630.10534
+gamma = 0
+u_0 = 420.95269
+v_0 = 316.90031
+[cam-08/distCoeffs]
+c0 = 0
+c1 = 0
+c2 = 0
+c3 = 0
+
+
+; Camera 9: Rawseeds Frontal (Bovisa)
+[cam-09]
+width = 320
+image = "C:/Study/Research/Database/Image/Rawseeds/Bovisa_2008-10-04/FRONTAL/FRONTAL_1223134363.305290.png"
+[cam-09/intrinsics]
+alpha_x = 195.7243
+alpha_y = 195.7243
+gamma = 0
+u_0 = 171.9186
+v_0 = 127.4102
+[cam-09/distCoeffs]
+c0 = -0.3430
+c1 = 0.1502
+c2 = 0.0004
+c3 = 0
+c4 = -0.0341
+
+
+; Camera 10: Biccoca, Left
+[cam-10]
+width = 0
+image = "C:/Study/Research/Database/Image/Rawseeds/Bicocca_2009-02-25b/FRONTAL/order/FRONTAL_04100.png"
+[cam-10/intrinsics]
+alpha_x = 194.8847
+alpha_y = 194.8847
+gamma = 0
+u_0 = 172.1608
+v_0 = 125.0859
+[cam-10/distCoeffs]
+c0 = -0.3375
+c1 = 0.1392
+c2 = 0.0004
+c3 = 0
+c4 = -0.0289
+
+
+; Camera 11: Kitti, Left
+[cam-11]
+width = 0
+image = "C:/Study/Research/Database/Image/KITTI/dataset/sequences/06/image_0/000000.png"
+[cam-11/intrinsics]
+alpha_x = 718.8560
+alpha_y = 718.8560
+gamma = 0
+u_0 = 607.1928
+v_0 = 185.2157
+[cam-11/distCoeffs]
+c0 = 0
+c1 = 0
+c2 = 0
+c3 = 0
+
