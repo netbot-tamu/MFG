@@ -66,7 +66,7 @@ ntuple_list callLsd (Mat* src, bool bShow)
 	unsigned char s = 0;//to get image values
    for (int x = 0; x < w; ++x) {
 		for(int y = 0; y < h; ++y) {
-			s=src_gray->at<char>(x, y);//cvGet2D(src_gray,y,x);
+			s=src_gray->at<uchar>(y, x);//cvGet2D(src_gray,y,x);
 			image->data[x + y*image->xsize] = s;//.val[0];
 		}
 	}

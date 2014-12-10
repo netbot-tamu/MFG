@@ -58,7 +58,7 @@ c3 = 0
 ; The default camera value should match one of the cameras specified below
 ; This default is useful if you do not want to add a command-line argument
 ; every time you run the executable for the same input.
-camera = "cam-01"
+camera = "cam-03"
 
 
 [features]
@@ -100,10 +100,10 @@ num_recent_lines = 50
 points_per_plane = 100
 ; Frame step size
 ; Our test data: 2 for Bicocca, 4 for HRBB
-frame_step = 4
+frame_step = 2
 ; Initial frame step size
 ; Our test data: 60 for Bicocca, 80 for HRBB
-frame_step_init = 80
+frame_step_init = 60
 ; Threshold angle for matching 2D Vanishing Points to 3D (in degrees)
 vpoint_angle_thresh = 5
 
