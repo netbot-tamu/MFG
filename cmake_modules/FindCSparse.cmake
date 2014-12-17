@@ -16,7 +16,7 @@ FIND_PATH(CSPARSE_INCLUDE_DIR NAMES cs.h
    /usr/local/include/EXTERNAL/csparse	
 )
 
-FIND_LIBRARY(CSPARSE_LIBRARY NAMES cxsparse
+FIND_LIBRARY(CSPARSE_LIBRARY NAMES cxsparse g2o_ext_csparse
    PATHS
    /usr/lib
    /usr/local/lib
