@@ -10,6 +10,10 @@ Below is a list of all dependencies required, and links to relevant information 
    ```
    sudo apt-get install qt5-default
    ```
+* OpenGL: freeglut (http://freeglut.sourceforge.net/)
+   ```
+   sudo apt-get install freeglut3-dev
+   ```
 * OpenCV: http://opencv.org
    * Note that on Ubuntu-based systems, the nonfree module has been removed to avoid potential patent issues (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=734373)
    * This means OpenCV should be installed manually from source on Ubuntu systems
@@ -24,7 +28,7 @@ Below is a list of all dependencies required, and links to relevant information 
    * Download link: http://users.ics.forth.gr/~lourakis/levmar/levmar-2.6.tgz
    * Requires lapack, f2c and OpenBlas
    ```
-   sudo apt-get install liblapack-dev f2c openblas
+   sudo apt-get install liblapack-dev f2c libopenblas-base libopenblas-dev
    ```
    * Note that some issues have arisen during the LevMar compilation regarding an `undefined reference to symbol 'exp@@GLIBC...'`, which can be fixed by adding ` -lm` to the `TARGET_LINK_LIBRARIES` line in the levmar CMakeLists.txt file, making it look like:
    ```
@@ -49,6 +53,8 @@ Below is a list of all dependencies required, and links to relevant information 
    make
    make install
    ```
+
+Ensure all installation paths are defined appropriately in the cmake_modules directory's Find[Library].cmake files, if they were installed manually.  If the library's path cannot be found, add a line to that library's Find[Library].cmake file for your specific installation path, but please do not commit it to the repository unless it is a generic path (is not under your home directory or in an obscure location).
 
 Build Instructions
 ------------------
