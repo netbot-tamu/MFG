@@ -138,6 +138,7 @@ private:
    int      frameStep;           // step size
    int      frameStepInitial;    // first step size
    double   vpointAngleThresh;   // vpoint angle threshold (2d -> 3d mapping)
+   double   depthLimit;          // if triangulated point is too far, ignore it
 
    //---------------------------------------------------------------------------
    // Bundle Adjustment settings

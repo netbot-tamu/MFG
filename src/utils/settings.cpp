@@ -8,7 +8,8 @@
 // TODO: make these settings better
 MfgSettings::MfgSettings(QString _cameraID, QObject* parent)
 : QObject(parent),
-cameraID(_cameraID)
+cameraID(_cameraID),
+depthLimit(15)
 {
    // The application should be located in [mfg location]/bin/
    QString mfgDirStr = QCoreApplication::applicationDirPath();//.left(0);

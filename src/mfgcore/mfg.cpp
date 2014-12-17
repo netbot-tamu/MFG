@@ -360,7 +360,6 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
    double numPtpairLB = 30; // lower bound of pair number to trust epi than vp
    double reprjThresh = 5 * IDEAL_IMAGE_WIDTH/640.0; // projected point distance threshold
    double scale = -1;  // relative scale of baseline
-   double depthLimit = 15; // if triangulated point is too far, ignore it
    double vpLnAngleThrseh = 50; // degree, tolerance angle between 3d line direction and vp direction
    double ilineLenLimit = 10;  // length limit of 3d line, ignore too long lines
    double maxNumNew3dPt = 200;
