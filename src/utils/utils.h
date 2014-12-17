@@ -17,6 +17,8 @@
 #include "features2d.h"
 #include "features3d.h"
 
+#include "random.h"
+
 
 cv::Mat* grayImage(cv::Mat*); // output GRAY scale images
 
@@ -236,7 +238,7 @@ bidiiter random_unique(bidiiter begin, bidiiter end, size_t num_random) {
 	size_t left = std::distance(begin, end);
 	while (num_random--) {
 		bidiiter r = begin;
-		std::advance(r, rand()%left);
+		std::advance(r, xrand()%left);
 		std::swap(*begin, *r);
 		++begin;
 		--left;

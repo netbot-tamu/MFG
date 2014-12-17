@@ -97,12 +97,9 @@ ENDIF()
 
 ################################################################################
 # Project Dependencies:
-# TODO: make sure all req packages are found
 ################################################################################
-# Qt5
 FIND_PACKAGE(Qt5Core REQUIRED)
 FIND_PACKAGE(Qt5OpenGL REQUIRED)
-
 FIND_PACKAGE(OpenCV REQUIRED)
 FIND_PACKAGE(OpenGL REQUIRED)
 FIND_PACKAGE(GLUT REQUIRED)
@@ -111,8 +108,6 @@ FIND_PACKAGE(CSparse REQUIRED)
 FIND_PACKAGE(G2O REQUIRED)
 FIND_PACKAGE(BLAS REQUIRED)
 FIND_PACKAGE(LAPACK REQUIRED)
-#FIND_PACKAGE( REQUIRED)
-#FIND_PACKAGE( REQUIRED)
 
 
 ################################################################################

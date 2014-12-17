@@ -40,6 +40,7 @@ public:
 
    QString getCameraID() const {return cameraID;}
    QString getInitialImage() const {return initialImage;}
+   uint64_t getPRNGSeed() const {return prngSeed;}
 
    IntrinsicsMatrix  getIntrinsics() const {return cameraIntrinsics;}
    CoeffMatrix       getDistCoeffs() const {return distCoeffs;}
@@ -98,6 +99,10 @@ private:
    // Initial image settings
    int      imageWidth;
    QString  initialImage;
+
+   // PRNG seed for XOR Shift* 64-bit algorithm, which in turn seeds the
+   // 1024-bit algorithm, providing a 64-bit seed for a 1024-bit PRNG.
+   uint64_t prngSeed;
 
 
    //---------------------------------------------------------------------------

@@ -25,6 +25,7 @@
 #include "window.h"
 #include "mfg.h"
 #include "utils.h"
+#include "random.h"
 //#include "mfgutils.h"
 
 using namespace std;
@@ -55,13 +56,14 @@ int main(int argc, char *argv[])
 
    for (int i=0; i<100; ++i) {
       vector<double> color(3);
-      color[0] = 1;//(rand()%100)/100.0;
-      color[1] = 1;//(rand()%100)/100.0;
-      color[2] = 1;//(rand()%100)/100.0;
+      color[0] = 1;//(xrand()%100)/100.0;
+      color[1] = 1;//(xrand()%100)/100.0;
+      color[2] = 1;//(xrand()%100)/100.0;
       planeColors.push_back(color);
    }
 
-   srand(1);
+   seed_xrand(mfgSettings->getPRNGSeed());
+   //srand(1);
    //	srand((unsigned)time(NULL));
    string imgName;			// first image name
    cv::Mat K, distCoeffs;	// distortion coeff: k1, k2, p1, p2

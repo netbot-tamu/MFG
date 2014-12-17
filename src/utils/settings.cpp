@@ -8,8 +8,7 @@
 // TODO: make these settings better
 MfgSettings::MfgSettings(QString _cameraID, QObject* parent)
 : QObject(parent),
-cameraID(_cameraID),
-depthLimit(15)
+cameraID(_cameraID)
 {
    // The application should be located in [mfg location]/bin/
    QString mfgDirStr = QCoreApplication::applicationDirPath();//.left(0);
@@ -42,6 +41,7 @@ void MfgSettings::printAllSettings() const
    qDebug() << "--- General Settings ---";
    qDebug() << "Image Path                   :" << initialImage;
    qDebug() << "Feature Detection Algorithm  :" << featureAlg;
+   qDebug() << "PRNG Seed                    :" << prngSeed;
    qDebug() << "";
    qDebug() << "--- Scale-Invariant Features (SIFT) Settings ---";
    qDebug() << "SIFT Threshold               :" << siftThreshold;
@@ -62,6 +62,7 @@ void MfgSettings::printAllSettings() const
    qDebug() << "MFG Frame Step               :" << frameStep;
    qDebug() << "MFG Initial Frame Step       :" << frameStepInitial;
    qDebug() << "VPoint Angle Threshold       :" << vpointAngleThresh;
+   qDebug() << "Depth Limit                  :" << depthLimit;
    qDebug() << "";
    qDebug() << "--- Bundle Adjustment (BA) Settings ---";
    qDebug() << "BA Weight VPoint             :" << baWeightVPoint;
@@ -110,6 +111,9 @@ void MfgSettings::loadSettings()
       LOAD_STR(cameraID, "default/camera")
    }
    qDebug() << "Using camera settings:" << cameraID;
+
+   // Load general settings
+   LOAD_INT(prngSeed, "general/prng_seed");
 
    // Load the keypoint detection settings
    mfgSettings->beginGroup("features");
@@ -198,6 +202,7 @@ void MfgSettings::loadMFGSettings()
    LOAD_INT(frameStep, "frame_step");
    LOAD_INT(frameStepInitial, "frame_step_init");
    LOAD_DOUBLE(vpointAngleThresh, "vpoint_angle_thresh");
+   LOAD_DOUBLE(depthLimit, "depth_limit");
    mfgSettings->endGroup(); // "mfg"
 }
 

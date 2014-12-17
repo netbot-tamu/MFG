@@ -4,6 +4,7 @@
 
 #include "utils.h"
 #include "settings.h"
+#include "random.h"
 
 #include <math.h>
 #include <iostream>
@@ -624,7 +625,7 @@ void drawLineMatches(cv::Mat im1,cv::Mat im2, vector<IdealLine2d>lines1,
 	cv::Mat canv2 = im2.clone();
 	for (int i=0; i < pairs.size(); ++i)
 	{
-		cv::Scalar color(rand()/200+55,rand()/200+55,rand()/200+55,0);
+		cv::Scalar color(xrand()/200+55,xrand()/200+55,xrand()/200+55,0);
 		cv::line(canv1, lines1[pairs[i][0]].extremity1,
               lines1[pairs[i][0]].extremity2,color,2);
 
@@ -1093,7 +1094,7 @@ void find3dPlanes_pts_lns_VPs (vector<KeyPoint3d> pts, vector<IdealLine3d> lns, 
 		for(int iter=0; iter<maxIterNo; iter++) {
 			vector<int> insetpt, insetln;
 			cv::Point3d pt0, pt1, pt2;
-			int solMode = rand()%10;
+			int solMode = xrand()%10;
          // 0-4: 3 pts, 5-7: 1 pt + 1 line, 8-9: 2 lines
 			if (solMode < 5) {// use 3 points
 				if (pts.size() < 3) continue;
@@ -1103,7 +1104,7 @@ void find3dPlanes_pts_lns_VPs (vector<KeyPoint3d> pts, vector<IdealLine3d> lns, 
 				pt2 = pts[ptIdxes[2]].cvpt();
 			} else if(solMode<8) {// 1 pt + 1 line
 				if(pts.size()<1 || lns.size()<1) continue;
-				int a = rand()%pts.size(), b = rand()%lns.size();
+				int a = xrand()%pts.size(), b = xrand()%lns.size();
 				pt0 = pts[a].cvpt();
 				pt1 = lns[b].extremity1();
 				pt2 = lns[b].extremity2();

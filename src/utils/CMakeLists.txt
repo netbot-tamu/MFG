@@ -5,12 +5,14 @@ project(utils)
 set(CMAKE_BUILD_TYPE debug)
 
 set(SOURCES
+   random.c
    utils.cpp
    settings.cpp
 )
 
 set(HEADERS
    consts.h
+   random.h
    utils.h
    settings.h
 )
