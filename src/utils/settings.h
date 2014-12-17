@@ -69,6 +69,7 @@ public:
    int      getFrameStep() const {return frameStep;}
    int      getFrameStepInitial() const {return frameStepInitial;}
    double   getVPointAngleThresh() const {return vpointAngleThresh;}
+   double   getDepthLimit() const {return depthLimit;}
 
    // BA
    double   getBaWeightVPoint() const {return baWeightVPoint;}

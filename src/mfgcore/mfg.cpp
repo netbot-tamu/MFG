@@ -965,8 +965,8 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          }
 #endif
          if(parallaxDeg < parallaxDegThresh
-               || (cv::norm(Xw+nview.R.t()*nview.t) > depthLimit &&
-                  cv::norm(Xc) > depthLimit * 1) // depth too large
+               || (cv::norm(Xw+nview.R.t()*nview.t) > mfgSettings->getDepthLimit() &&
+                  cv::norm(Xc) > mfgSettings->getDepthLimit() * 1) // depth too large
                || new3dPtNum > maxNumNew3dPt
                || cv::norm(featPtMatches[i][1] - ep2) < epNeibRds
            )
@@ -1098,7 +1098,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          }
          est3dpt (Rs, ts, K, pt, bestKeyPt); // nonlinear estimation
          //est3dpt_g2o (Rs, ts, K, pt, bestKeyPt); // nonlinear estimation
-         if(cv::norm(bestKeyPt+nview.R.t()*nview.t) > depthLimit ) continue;
+         if(cv::norm(bestKeyPt+nview.R.t()*nview.t) > mfgSettings->getDepthLimit() ) continue;
 
          // --- 3) establish 3d pt ---
          keyPoints[ptGid].is3D = true;
