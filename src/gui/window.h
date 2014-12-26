@@ -6,7 +6,6 @@
 
 class QSlider;
 class GLWidget;
-class TwoView;
 
 class Window : public QWidget
 {
@@ -14,7 +13,6 @@ class Window : public QWidget
 
 public:
 	Window();
-	void setMfgScene(TwoView* pMfg);
 	void setMfgScene(Mfg* pMap);
 
 protected:

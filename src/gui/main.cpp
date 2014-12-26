@@ -6,8 +6,7 @@
    Author: Yan Lu (sinoluyan@gmail.com)
    @ NetBot Lab, TAMU (http://telerobot.cs.tamu.edu/)
    Created on Oct. 22, 2011
-   Current version: 1.0
-   History:
+
 -----------------------------------------------------------------------------*/
 
 //------------------------------ Header files ---------------------------------
@@ -39,8 +38,6 @@ double SIFT_THRESH_LOW  = 0.03; // for turning
 
 double SIFT_THRESH = SIFT_THRESH_HIGH;
 
-vector< vector<double> > planeColors;
-
 MfgSettings* mfgSettings;
 
 //------------------------------- Main function -------------------------------
@@ -54,24 +51,15 @@ int main(int argc, char *argv[])
    //MfgSettings mfgSettings; // TODO: arg-parse a cameraID (optional arg)
    mfgSettings = new MfgSettings();
 
-   for (int i=0; i<100; ++i) {
-      vector<double> color(3);
-      color[0] = 1;//(xrand()%100)/100.0;
-      color[1] = 1;//(xrand()%100)/100.0;
-      color[2] = 1;//(xrand()%100)/100.0;
-      planeColors.push_back(color);
-   }
-
+   
    seed_xrand(1); // TODO: use mfgSettings->getPRNGSeed()
    //srand(1);
-   //	srand((unsigned)time(NULL));
    string imgName;			// first image name
    cv::Mat K, distCoeffs;	// distortion coeff: k1, k2, p1, p2
    int imIdLen = 5;			// n is the image number length,
    int ini_incrt = mfgSettings->getFrameStepInitial();
    int increment = mfgSettings->getFrameStep();
    int totalImg = 12500;
-   //getConfiguration (&imgName, K, distCoeffs, mfgSettings->getImageWidth()) ;
 
    // *** TODO: UPDATING ***
    imgName     = mfgSettings->getInitialImage().toStdString();

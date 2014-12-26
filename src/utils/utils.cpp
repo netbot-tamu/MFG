@@ -56,7 +56,7 @@ Mat* grayImage(Mat* src)
 // use LSD to extract line segments from an image
 // input : an image color/grayscale
 // output: a list of line segments - endpoint x-y coords + ...
-ntuple_list callLsd (Mat* src, bool bShow)
+ntuple_list callLsd (Mat* src)
 {
 	Mat* src_gray = grayImage(src);
 	image_double image; //image_double is a struct defined in 'lsd.h'
@@ -67,28 +67,11 @@ ntuple_list callLsd (Mat* src, bool bShow)
 	unsigned char s = 0;//to get image values
    for (int x = 0; x < w; ++x) {
 		for(int y = 0; y < h; ++y) {
-			s=src_gray->at<uchar>(y, x);//cvGet2D(src_gray,y,x);
-			image->data[x + y*image->xsize] = s;//.val[0];
+			s=src_gray->at<uchar>(y, x);
+			image->data[x + y*image->xsize] = s;
 		}
 	}
-	lsd_out = lsd(image);
-
-	if(bShow){ 		// print output and plot in image
-		Mat *canvas = new Mat(w, h, CV_8UC3);
-		printf("%u Line segments found by LSD.\n",lsd_out->size);
-		int dim = lsd_out->dim;
-		for(int i=0;i<lsd_out->size;i++){
-			cvLine(src,
-                 cvPoint(lsd_out->values[i*dim],    lsd_out->values[i*dim+1]),
-                 cvPoint(lsd_out->values[i*dim+2],  lsd_out->values[i*dim+3]),
-                 cvScalar(255, 255, 255, 0),
-                 1.5, 8, 0);
-		}
-		cvNamedWindow("LSD Result",1);
-		cvShowImage("LSD Result",src);
-		//cvWaitKey();
-		//cvDestroyWindow("LSD Result");
-	}
+	lsd_out = lsd(image);	
 	free_image_double(image);
 	return lsd_out;
 }

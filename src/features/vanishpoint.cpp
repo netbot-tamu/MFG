@@ -35,7 +35,6 @@ void refineVanishPt (const vector<LineSegmt2d>& allLs, vector<int>& lsIdx,
 	if(ls.size() >= 3) {
 		optimizeVainisingPoint (ls, vp);
 	}
-//	cout<<vp<<endl;
 	// 2. filter out outliers
 	for (int i=0; i<ls.size(); ++i)	{
 	//	if (mleVp2LineDist (vp, ls[i]) > distThresh) {
@@ -134,14 +133,10 @@ void optimizeVainisingPoint (vector<LineSegmt2d>& lines, cv::Mat& vp)
 	vp.at<double>(0) = para[0];
 	vp.at<double>(1) = para[1];
 	vp.at<double>(2) = para[2];
-//	cout<<vp<<cv::norm(vp)<<endl;
 	cv::Mat covar(3,3,CV_64F, cov);
-//	cout<<covar<<endl;
 	cv::Mat J = (cv::Mat_<double>(2,3) << 1/para[2], 0, -para[0]/para[2]/para[2],
 										  0, 1/para[2], -para[1]/para[2]/para[2]);
-//	cout<<"["<<para[0]/para[2]<<","<<para[1]/para[2]<<"]"<<endl;
 	cv::Mat COV = J*covar*J.t();
-//	cout<<sqrt(COV.at<double>(0,0))<<","<<sqrt(COV.at<double>(1,1))<<endl;
 
 	delete[] measurement;
 }

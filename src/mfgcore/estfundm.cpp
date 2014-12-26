@@ -40,7 +40,7 @@ int essn_ransac (cv::Mat* pts1, cv::Mat* pts2, cv::Mat* E, cv::Mat K,
 		for (int i=0; i < mss1.cols; ++i) {
 			pts1->col(rnd[i]).copyTo(mss1.col(i));
 			pts2->col(rnd[i]).copyTo(mss2.col(i));
-			// DEGENERATE COFIGURATION ????????????????????s
+			// DEGENERATE COFIGURATION ?
 		}
 		// compute minimal solution by 5-point
 		vector<cv::Mat> Es;   // multiple results from 5point alg.
@@ -67,7 +67,6 @@ int essn_ransac (cv::Mat* pts1, cv::Mat* pts2, cv::Mat* E, cv::Mat K,
 //			/log(1-pow(double(maxInlierSet.size())/N,5.0)));
 	}
 	if (maxInlierSet.size() < mss1.cols) {
-		//cout<< <<endl;
 		cout<<"essn_ransac: Largest concensus set is too small for minimal estimation."
 			<<endl;
 		return 0;
@@ -155,7 +154,7 @@ void essn_ransac (cv::Mat* pts1, cv::Mat* pts2, vector<cv::Mat>& bestEs, cv::Mat
 			for (int i=0; i<mss1.cols; ++i) {
 				pts1->col(rnd[i]).copyTo(mss1.col(i));
 				pts2->col(rnd[i]).copyTo(mss2.col(i));
-				// DEGENERATE COFIGURATION ????????????????????s
+				// DEGENERATE COFIGURATION ??
 			}
 			// compute minimal solution by 5-point
 			vector<cv::Mat> Es;   // multiple results from 5point alg.
@@ -222,7 +221,6 @@ void essn_ransac (cv::Mat* pts1, cv::Mat* pts2, vector<cv::Mat>& bestEs, cv::Mat
 				pts1->col(maxInlierSet[i]).copyTo(inliers1.col(i));
 				pts2->col(maxInlierSet[i]).copyTo(inliers2.col(i));
 			}
-		//	optimize_E_g2o(inliers1, inliers2, K, &tmpE);
 			optimizeEmat (inliers1, inliers2, K, &tmpE);
 			vector<int> curInlierSet;
 			double resd = 0;
@@ -314,15 +312,7 @@ double fund_samperr (cv::Mat x1, cv::Mat x2, cv::Mat F)
 	// sampson error for fundmental matrix F between two image points x1, x2 from
 	// I1 and I2, respectively
 	// Result unit is sum of squred distance
-{/*
-	cv::Mat fx1 = F*x1, fx2 = F.t()*x2;
-	double d = (x2.t()*F*x1).dot(x2.t()*F*x1)
-		/(fx1.at<double>(0)*fx1.at<double>(0)+
-		  fx1.at<double>(1)*fx1.at<double>(1)+
-		  fx2.at<double>(0)*fx2.at<double>(0)+
-		  fx2.at<double>(1)*fx2.at<double>(1));
-*/
-	// faster version, same value as above
+{
 	double x10 = x1.at<double>(0), x11 = x1.at<double>(1), x12,
 		   x20 = x2.at<double>(0), x21 = x2.at<double>(1), x22,
 		   f00 = F.at<double>(0,0),f01 = F.at<double>(0,1),f02 = F.at<double>(0,2),
@@ -393,10 +383,8 @@ void costfun_essn_pts (double *p, double *error, int m, int n, void *adata)
 		error[i] = sqrt(fund_samperr (dptr->p1.col(i), dptr->p2.col(i), E));
 		cost = cost+error[i]*error[i];
 	}
-	//	cout<<cost<<"\t";
-	//		<<"t=["<<-tx.at<double>(1,2)<<","<<tx.at<double>(0,2)<<","<<
-	//		-tx.at<double>(0,1)<<"]"<<endl;
 }
+
 void opt_essn_pts (cv::Mat p1, cv::Mat p2, cv::Mat *E)
 	// input: p1, p2, normalized image points correspondences
 {
@@ -447,30 +435,7 @@ void opt_essn_pts (cv::Mat p1, cv::Mat p2, cv::Mat *E)
 		para[6], 0 ,  -para[4],
 		-para[5], para[4], 0 );
 	tx = tx/sqrt(para[4]*para[4]+para[5]*para[5]+para[6]*para[6]);
-	*E = tx * R;
-	/*	cout<<"optimal t=["<<-tx.at<double>(1,2)<<","<<tx.at<double>(0,2)<<","<<
-	-tx.at<double>(0,1)<<"]"<<endl;
-
-	switch(int(info[6])) {
-	case 1:
-	{cout<<"Termination reason 1: stopped by small gradient J^T e."<<endl;break;}
-	case 2:
-	{cout<<"Termination reason 2: stopped by small Dp."<<endl;break;}
-	case 3:
-	{cout<<"Termination reason 3: stopped by itmax."<<endl;break;}
-	case 4:
-	{cout<<"Termination reason 4: singular matrix. Restart from current p with increased mu."<<endl;break;}
-	case 5:
-	{cout<<"Termination reason 5: no further error reduction is possible. Restart with increased mu."<<endl;break;}
-	case 6:
-	{cout<<"Termination reason 6: stopped by small ||e||_2."<<endl;break;}
-	case 7:
-	{cout<<"Termination reason 7: stopped by invalid (i.e. NaN or Inf) 'func' values; a user error."<<endl;break;}
-	default:
-	{cout<<"Termination reason: Unknown..."<<endl;}
-
-	}
-	*/
+	*E = tx * R;	
 }
 
 struct data_optimizeEmat

@@ -4,8 +4,6 @@
 #include <QtOpenGL/QGLWidget>
 #include "mfg.h"
 
-// class QtLogo;
-class TwoView;
 
 class GLWidget : public QGLWidget
 {
@@ -18,7 +16,6 @@ public:
    QSize minimumSizeHint() const;
    QSize sizeHint() const;
 
-   TwoView *scene;
    Mfg*	  map;	
 
 public slots:

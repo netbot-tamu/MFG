@@ -22,7 +22,7 @@
 
 cv::Mat* grayImage(cv::Mat*); // output GRAY scale images
 
-ntuple_list callLsd(cv::Mat*,bool); // detect line segments by LSD
+ntuple_list callLsd(cv::Mat*); // detect line segments by LSD
 
 double point2LineDist(double l[3], cv::Point2d p);
 double point2LineDist(cv::Mat l, cv::Point2d p);
@@ -37,25 +37,15 @@ cv::Mat normalizeLines (cv::Mat& src, cv::Mat& dst);
 class MyTimer
 {
 public:
-	MyTimer() {
-      //QueryPerformanceFrequency(&TickPerSec);	}
-   }
+	MyTimer() {}
 
-	//long long int TickPerSec;     // ticks per second
-	//boost::chrono::system_clock::time_point Tstart, Tend;   // ticks
    QTime Tstart, Tend;
 	double time_ms;
 	double time_s;
 	void start()  {
-      //QueryPerformanceCounter(&Tstart);
-      //Tstart = boost::chrono::system_clock::now();
       Tstart = QTime::currentTime();
    }
 	void end() 	{
-		//QueryPerformanceCounter(&Tend);
-		//time_ms = (Tend-Tstart)*1000.0/TickPerSec;
-		//time_s = time_ms/1000.0;
-      //Tend = boost::chrono::system_clock::now();
       Tend = QTime::currentTime();
       int elapsed = Tstart.msecsTo(Tend);
       time_ms = (double) elapsed;
@@ -69,8 +59,6 @@ void showImage(std::string, cv::Mat *img, int width=800);
 
 int sgn(double x);
 
-//void getConfiguration (std::string* img1, cv::Mat& K, cv::Mat& distCoeffs,
-//						int& imgwidth);
 std::string nextImgName (std::string name, int n, int step=1);
 std::string prevImgName (std::string name, int n, int step=1);
 
@@ -265,7 +253,6 @@ double compParallaxDeg (cv::Point2d x1, cv::Point2d x2, cv::Mat K, cv::Mat R1, c
 double rotateAngleDeg(cv::Mat R) ;
 double rotateAngle(cv::Mat R) ;
 
-void optimize_E_g2o (cv::Mat p1, cv::Mat p2, cv::Mat K, cv::Mat *E);
 bool fund_ransac (cv::Mat pts1, cv::Mat pts2, cv::Mat F, std::vector<uchar>& mask, double distThresh, double confidence);
 
 #endif

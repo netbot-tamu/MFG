@@ -382,12 +382,6 @@ vector<vector<int>> F_guidedLinematch (cv::Mat F, vector<IdealLine2d> lines1,
 		vector<cv::Point2d> pts1 = sampleFromLine (lines1[i], sampleNum);
 
 		for (int j=0; j<lines2.size(); ++j) {
-
-//			cv::Mat canv1 = img1.clone(), canv2 = img2.clone();
-//			cv::Scalar color(200,200,100,0);
-//			cv::line(canv1, lines1[i].extremity1,lines1[i].extremity2,color,2);
-//			cv::line(canv2, lines2[j].extremity1,lines2[j].extremity2,color,2);
-
 			// compute matching score for each pair
 			double angle_j = -1;
 			vector<cv::KeyPoint> kpts1(0), kpts2(0);
@@ -428,12 +422,6 @@ vector<vector<int>> F_guidedLinematch (cv::Mat F, vector<IdealLine2d> lines1,
 				cv::Point2d p2 = mat2cvpt(
 					lines2[j].lineEq().cross(F*cvpt2mat(pts1[k],1)));
 
-	//			cv::circle(canv1, pts1[k], 3, color, 2);
-	//			cv::circle(canv2, p2, 3, color, 2);
-	//			showImage("I1", &canv1);
-	//			showImage("I2", &canv2);
-	//			cv::waitKey(2);
-
 				// ensure sift-descriptor can be computed
 				if (p2.x + patchDiameter/2 > img1.cols ||
 					p2.x - patchDiameter/2 < 1 ||
@@ -463,22 +451,8 @@ vector<vector<int>> F_guidedLinematch (cv::Mat F, vector<IdealLine2d> lines1,
 			}
 
 			scores.at<double>(i,j) = sum/kpts1.size();
-
-//			if (minScore > scores.at<double>(i,j)) {
-//				minScore = scores.at<double>(i,j);
-//				minj = j;
-//				showImage("I1", &canv1);
-//				showImage("I2", &canv2);
-//				cout<<minScore<<'\t';
-//				cv::waitKey();
-//			}
 		}
 
-		if (minScore < 0.5) {
-//			cout<<"minScore = "<<minScore<<",msldDif="<<
-//				compMsldDiff(lines1[i],lines2[minj])<< endl;
-//			cv::waitKey();
-		}
 	}
 		// ============  Identify matches based on simlarity matrix ==========
 	for (int i=0; i<scores.rows; ++i) {

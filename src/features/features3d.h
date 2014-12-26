@@ -159,14 +159,6 @@ public:
       cv::Mat d = direct/cv::norm(direct);
       return midpt - 0.5*length*cv::Point3d(d.at<double>(0),d.at<double>(1),d.at<double>(2));
    }
-
-   /*
-   cv::Mat dirVec() {
-      cv::Mat d = (cv::Mat_<double>(3,1)<<(extremity1 - extremity2).x,
-      (extremity1 - extremity2).y, (extremity1 - extremity2).z);
-      return d/cv::norm(d);
-   }
-   // */	
 };
 
 #endif

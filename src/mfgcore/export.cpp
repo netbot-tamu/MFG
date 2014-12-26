@@ -26,13 +26,7 @@ void exportCamPose(Mfg& m, string fname) {
               << m.views[i].errPl << '\t'
               << m.views[i].errLnMean << '\n';
    }
-
-   /*   // ----- 3d key points -----
-      file << m.keyPoints.size() << '\n';
-      for(int i=0; i < m.keyPoints.size(); ++i) {
-         file << m.keyPoints[i].x << '\t' << m.keyPoints[i].y << '\t' << m.keyPoints[i].z << '\n';
-      }
-    */
+  
    file.close();
 }
 

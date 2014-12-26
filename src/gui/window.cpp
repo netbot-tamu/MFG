@@ -7,7 +7,7 @@
 #include <QWidget>
 
 #include "glwidget.h"
-#include "twoview.h"
+
 
 extern double scale_const;
 
@@ -72,11 +72,6 @@ void Window::keyPressEvent(QKeyEvent *e)
       close();
    else
       QWidget::keyPressEvent(e);
-}
-
-void Window::setMfgScene (TwoView* pMfg)
-{
-   glWidget->scene = pMfg;
 }
 
 void Window::setMfgScene (Mfg* pMap)
