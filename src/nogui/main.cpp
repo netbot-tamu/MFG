@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
       planeColors.push_back(color);
    }
 
+   seed_xrand(1); // TODO: use mfgSettings->getPRNGSeed()	
    srand(1);
    //	srand((unsigned)time(NULL));
    string imgName;			// first image name
