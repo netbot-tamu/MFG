@@ -5,7 +5,7 @@ project(utils)
 set(CMAKE_BUILD_TYPE debug)
 
 set(SOURCES
-   random.c
+   random.cpp
    utils.cpp
    settings.cpp
 )
