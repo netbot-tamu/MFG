@@ -338,7 +338,7 @@ void drawFeatPointMatches(View& view1, View& view2, vector<vector<cv::Point2d>> 
            canv2 = view2.img.clone();
 	for (int i=0; i<featPtMatches.size(); ++i)
 	{
-		cv::Scalar color(xrand()%255,xrand()%255,xrand()%255,0);
+		cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
 		cv::circle(canv1, featPtMatches[i][0], 2,color, 2);
 		cv::circle(canv2, featPtMatches[i][1], 2,color, 2);
 		cv::putText(canv1, num2str(i),  featPtMatches[i][0], cv::FONT_HERSHEY_COMPLEX, 0.5,color);

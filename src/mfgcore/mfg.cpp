@@ -294,7 +294,7 @@ void Mfg::initialize()
          idealLines.push_back(line);
          cout<<line.gid<<'\t';
 #ifdef PLOT_MID_RESULTS
-         cv::Scalar color(xrand()%255,xrand()%255,xrand()%255,0);
+         cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
          cv::line(canv1, a.extremity1, a.extremity2, color, 2);
          cv::line(canv2, b.extremity1, b.extremity2, color, 2);
 #endif         
@@ -470,10 +470,9 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
    vector<cv::Point3d> pt3d, pt3d_old;
    vector<cv::Point2d> pt2d, pt2d_old;
    for(int i=0; i < featPtMatches.size(); ++i) {
-      int gid = prev.featurePoints[pairIdx[i][0]].gid;
-      cv::Scalar color(xrand()%255,xrand()%255,xrand()%255,0);
+      int gid = prev.featurePoints[pairIdx[i][0]].gid;      
 #ifdef PLOT_MID_RESULTS
-
+      cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
       if (gid >= 0 && keyPoints[gid].is3D) { // observed 3d pts
          cv::circle(canv1, featPtMatches[i][0], 4, color, 2);
          cv::circle(canv2, featPtMatches[i][1], 4, color, 2);
@@ -621,7 +620,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
    if(maxInliers_Rt.size() > 0) {
       // ------ re-compute scale on largest concensus set --------
       nview.R = R*prev.R;
-      cv::Scalar color(xrand()%255,xrand()%255,xrand()%255,0);
+      cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
       double wsum = 0, tw = 0, sum3 =0;
       vector<double> scales, scales3;
       for(int i=0; i < maxInliers_Rt.size(); ++i) {
@@ -748,7 +747,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
             break;
       }
       // ------ re-compute scale on largest concensus set --------
-      cv::Scalar color(xrand()%255,xrand()%255,xrand()%255,0);
+      cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
 
       vector<cv::Point3d> inlierPt3d;
       vector<cv::Point2d> inlierPt2d;
@@ -779,7 +778,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          vector<vector<int>> vpPairIdx = matchVanishPts_withR(prev, nview, Ri, isRgood);
          if (!isRgood && featPtMatches.size() < numPtpairLB) {
             // when point matches are inadequate, E (R,t) are not reliable, even errant
-            // if R is not consistent with VPs, reestimate with VPs)
+            // if R is not consistent with xVPs, reestimate with VPs)
             cout<<"R is inconsistent with vanishing point correspondences****"<<endl;
             vector<vector<cv::Mat>> vppairs;
             for(int i = 0; i < vpPairIdx.size(); ++i) {
@@ -842,7 +841,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          break;
    }
    // ------ re-compute scale on largest concensus set --------
-   cv::Scalar color(xrand()%255,xrand()%255,xrand()%255,0);
+   cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
 
    vector<cv::Point3d> inlierPt3d;
    vector<cv::Point2d> inlierPt2d;
@@ -939,7 +938,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
                R, t, K,	featPtMatches[i][0], featPtMatches[i][1]);
 
 #ifdef PLOT_MID_RESULTS
-         cv::Scalar color(xrand()%255,xrand()%255,xrand()%255,0);
+         cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
          if (parallaxDeg > parallaxDegThresh) {
             cv::circle(canv1, featPtMatches[i][0], 2, color, 2);
             cv::circle(canv2, featPtMatches[i][1], 2, color, 2);
@@ -1006,7 +1005,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       if ( ptGid >= 0 && keyPoints[ptGid].is3D ) { // points represented in 3D form
       }
       else if (ptGid >= 0 && !keyPoints[ptGid].is3D) {// point exist as 2D track
-         cv::Scalar color(xrand()%255,xrand()%255,xrand()%255,0);
+         cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
          double parallax = compParallax (featPtMatches[i][0], featPtMatches[i][1], K, cv::Mat::eye(3,3,CV_64F), R);
          double parallaxDeg = compParallaxDeg(featPtMatches[i][0], featPtMatches[i][1], K, cv::Mat::eye(3,3,CV_64F), R);
 #ifdef PLOT_MID_RESULTS
@@ -1205,7 +1204,7 @@ void Mfg::update3dIdealLine(vector<vector<int>> ilinePairIdx, View& nview)
       nview.idealLines[ilinePairIdx[i][1]].gid = lnGid;     // pass to current view
       nview.idealLines[ilinePairIdx[i][1]].pGid = prev.idealLines[ilinePairIdx[i][0]].pGid;
 
-      cv::Scalar color(xrand()%255,xrand()%255,xrand()%255,0);
+      cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
       int linewidth = 0;
 
       if (lnGid < 0)	{ // not existent in map, setup a new 2d track, not a 3d line yet

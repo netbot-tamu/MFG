@@ -598,24 +598,24 @@ void View::extractIdealLines()
 void View::drawLineSegmentGroup(vector<int> idx) // draw grouped line segments
 {
    cv::Mat canvas = img.clone();
-   cv::Scalar color(xrand()%255,xrand()%255,xrand()%255,0);
+   cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
    for (int i=0; i<idx.size(); ++i){
       cv::line(canvas,lineSegments[idx[i]].endpt1,
             lineSegments[idx[i]].endpt2, color,2);
    }
-   showImage("Grouped line segments"+xrand(),&canvas);
+   showImage("Grouped line segments"+rand(),&canvas);
    cv::waitKey();
 }
 
 void View::drawAllLineSegments(bool write2file)
 {
    vector<cv::Scalar> colors;
-   colors.push_back(cv::Scalar(xrand()%255,xrand()%255,xrand()%255,0));
+   colors.push_back(cv::Scalar(rand()%255,rand()%255,rand()%255,0));
    colors.push_back(cv::Scalar(0,0,255,0));
    colors.push_back(cv::Scalar(0,255,0,0));
    colors.push_back(cv::Scalar(255,0,0,0));
    for (int i=0; i < vanishPoints.size()+1; ++i)	{
-      colors.push_back(cv::Scalar(xrand()%255,xrand()%255,xrand()%255,0));
+      colors.push_back(cv::Scalar(rand()%255,rand()%255,rand()%255,0));
    }
 
 #ifdef PLOT_MID_RESULTS
@@ -641,7 +641,7 @@ void View::drawAllLineSegments(bool write2file)
 void View::drawIdealLineGroup(vector<IdealLine2d> ilines)
 {
    cv::Mat canvas = img.clone();
-   cv::Scalar color(xrand()%255,xrand()%255,xrand()%255,0);
+   cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
    for (int i=0; i<ilines.size(); ++i) {
       cv::line(canvas,ilines[i].extremity1,ilines[i].extremity2, color,1);
       cv::circle(canvas,ilines[i].extremity1,1,color,1);
@@ -660,7 +660,7 @@ void View::drawIdealLines()
    colors.push_back(cv::Scalar(0,255,0,0));
    colors.push_back(cv::Scalar(255,0,0,0));
    for (int i=0; i < vanishPoints.size()+1; ++i)	{
-      colors.push_back(cv::Scalar(xrand()%255,xrand()%255,xrand()%255,0));
+      colors.push_back(cv::Scalar(rand()%255,rand()%255,rand()%255,0));
    }
    for (int i=0; i<idealLines.size(); ++i) {
       cv::line(canvas, idealLines[i].extremity1,
@@ -677,17 +677,17 @@ void View::drawPointandLine()
    for (int i=0; i<featurePoints.size(); ++i)
    {
       cv::circle(canvas, cv::Point2d(featurePoints[i].x, featurePoints[i].y), 2,
-            cv::Scalar(xrand()%255,xrand()%255,xrand()%255,0), 1);
+            cv::Scalar(rand()%255,rand()%255,rand()%255,0), 1);
    }
 
    vector<cv::Scalar> colors;
 
-   colors.push_back(cv::Scalar(xrand()%255,xrand()%255,xrand()%255,0));
+   colors.push_back(cv::Scalar(rand()%255,rand()%255,rand()%255,0));
    colors.push_back(cv::Scalar(0,255,0,0));
    colors.push_back(cv::Scalar(0,255,0,0));
    colors.push_back(cv::Scalar(0,255,0,0));
    for (int i=0; i < vanishPoints.size()+1; ++i)	{
-      colors.push_back(cv::Scalar(xrand()%255,xrand()%255,xrand()%255,0));
+      colors.push_back(cv::Scalar(rand()%255,rand()%255,rand()%255,0));
    }
    for (int i=0; i<lineSegments.size(); ++i) {
       cv::line(canvas, lineSegments[i].endpt1,

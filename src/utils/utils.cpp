@@ -608,7 +608,7 @@ void drawLineMatches(cv::Mat im1,cv::Mat im2, vector<IdealLine2d>lines1,
 	cv::Mat canv2 = im2.clone();
 	for (int i=0; i < pairs.size(); ++i)
 	{
-		cv::Scalar color(xrand()/200+55,xrand()/200+55,xrand()/200+55,0);
+		cv::Scalar color(rand()/200+55,rand()/200+55,rand()/200+55,0);
 		cv::line(canv1, lines1[pairs[i][0]].extremity1,
               lines1[pairs[i][0]].extremity2,color,2);
 
