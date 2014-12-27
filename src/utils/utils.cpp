@@ -638,16 +638,14 @@ vector<vector<int>>matchKeyPoints (const vector<FeatPoint2d>& kps1,
 		kps2[i].siftDesc.copyTo(sift2.col(i));
 
 	vector<vector<cv::DMatch>> knnMatches;
-	if (1 && kps1.size() * kps2.size() > 3e1) {
+	if (kps1.size() * kps2.size() > 1e8) {
 		cv::FlannBasedMatcher matcher;	// this gives fast inconsistent output
 		matcher.knnMatch(sift1.t(), sift2.t(), knnMatches,2);
-		//		cout<<"flann match"<<endl;
 	}
-	else { // BF is slow but result is consistent
+	else { // BF is slower but result is consistent
 		//cv::BruteForceMatcher<cv::L2<float>> matcher; // for opencv2.3.0
       cv::BFMatcher matcher( cv::NORM_L2, false ); // for opencv2.4.2
 		matcher.knnMatch(sift1.t(), sift2.t(),	knnMatches,2);
-		//		cout<<"bf match"<<endl;
 	}
 	pointMatches.clear();
 	vector<vector<int>> pairIdx;

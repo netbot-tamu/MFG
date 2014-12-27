@@ -75,6 +75,7 @@ void Mfg::initialize()
    cv::Mat F, R, E, t;
 
    pairIdx = matchKeyPoints (view0.featurePoints, view1.featurePoints, featPtMatches);
+   
    allFeatPtMatches = featPtMatches;
    allPairIdx = pairIdx;
    computeEpipolar (featPtMatches, pairIdx, K, F, R, E, t, true);
@@ -123,6 +124,7 @@ void Mfg::initialize()
    view0.epipoleA = ep1;
    view1.epipoleB = ep2;
 
+
    // ----- sort point matches by parallax -----
    vector<valIdxPair> prlxVec;
    for(int i=0; i<featPtMatches.size(); ++i) {
@@ -142,9 +144,10 @@ void Mfg::initialize()
       featPtMatches.push_back(copyFeatPtMatches[prlxVec[i].second]);
    }
 
-
+#ifdef PLOT_MID_RESULTS
    cv::Mat canv1 = view0.img.clone();
    cv::Mat canv2 = view1.img.clone();
+#endif   
    // --- set up 3d key points ---
    int numNew3dPt = 0;
    cv::Mat X(4,1,CV_64F);
@@ -290,9 +293,11 @@ void Mfg::initialize()
          line.viewId_lnLid.push_back(pair);
          idealLines.push_back(line);
          cout<<line.gid<<'\t';
+#ifdef PLOT_MID_RESULTS
          cv::Scalar color(xrand()%255,xrand()%255,xrand()%255,0);
          cv::line(canv1, a.extremity1, a.extremity2, color, 2);
          cv::line(canv2, b.extremity1, b.extremity2, color, 2);
+#endif         
       }
    }
 

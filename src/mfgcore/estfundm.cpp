@@ -36,7 +36,7 @@ int essn_ransac (cv::Mat* pts1, cv::Mat* pts2, cv::Mat* E, cv::Mat K,
 	while (iter < maxIterNum) {
 		++iter;
 		// --- choose minimal solution set: mss1<->mss2
-		random_shuffle(rnd.begin(),rnd.end());
+		random_unique(rnd.begin(),rnd.end(), mss1.cols);
 		for (int i=0; i < mss1.cols; ++i) {
 			pts1->col(rnd[i]).copyTo(mss1.col(i));
 			pts2->col(rnd[i]).copyTo(mss2.col(i));
@@ -150,7 +150,7 @@ void essn_ransac (cv::Mat* pts1, cv::Mat* pts2, vector<cv::Mat>& bestEs, cv::Mat
 		while (iter < maxIterNum) {
 			++iter;
 			// --- choose minimal solution set: mss1<->mss2
-			random_shuffle(rnd.begin(),rnd.end());
+			random_unique(rnd.begin(),rnd.end(), mss1.cols);
 			for (int i=0; i<mss1.cols; ++i) {
 				pts1->col(rnd[i]).copyTo(mss1.col(i));
 				pts2->col(rnd[i]).copyTo(mss2.col(i));
@@ -672,7 +672,7 @@ bool fund_ransac (cv::Mat pts1, cv::Mat pts2, cv::Mat F, vector<uchar>& mask, do
 	while (iter < maxIterNum) {
 		++iter;
 		// --- choose minimal solution set: mss1<->mss2
-		random_shuffle(rnd.begin(),rnd.end());
+		random_unique(rnd.begin(),rnd.end(), mss1.cols);
 		for (int i=0; i < mss1.cols; ++i) {
 			pts1.col(rnd[i]).copyTo(mss1.col(i));
 			pts2.col(rnd[i]).copyTo(mss2.col(i));

@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 
 
    seed_xrand(1); // TODO: use mfgSettings->getPRNGSeed()	
-   srand(1);
+   srand(time(NULL));
 
    string imgName;			// first image name
    cv::Mat K, distCoeffs;	// distortion coeff: k1, k2, p1, p2

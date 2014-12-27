@@ -89,23 +89,19 @@ View::View (string imgName, cv::Mat _K, cv::Mat dc, int _id, MfgSettings* _setti
       grayImg = img;
    lsLenThresh = img.cols/100.0;   // for raw line segments
 
-   MyTimer timer;
-   timer.start();
    detectFeatPoints ();
-   timer.end();
-   cout<<"Keypoint detection time:" << timer.time_ms << " ms"<<endl;
+
    cv::Mat pImg = img.clone();
-   timer.start();
+
    detectLineSegments(pImg);
-   timer.end();
-   //	cout<<"Line segment detection time:" << timer.time_ms << " ms"<<endl;
-   //	drawAllLineSegments();
+
    compMsld4AllSegments (grayImg);
 
    detectVanishPoints();
 
+#ifdef PLOT_MID_RESULTS
    drawAllLineSegments(true);
-
+#endif
    extractIdealLines();
 
    errPt=0; errLn=0; errAll=0;
