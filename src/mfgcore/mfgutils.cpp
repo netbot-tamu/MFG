@@ -111,7 +111,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 		vector<uchar> inSetF;
 		cv::Mat F = cv::findFundamentalMat(pts1.t(), pts2.t(), 8, 2, 0.99, inSetF);
 		if(cv::norm(F) < 1e-10) { // F is invalid (zero matrix)
-			cout<<" 0F ";
+		//	cout<<" 0F ";
 		} else {
 			for(int j = inSetF.size()-1; j>=0; --j) {
 				if (inSetF[j] == 0) {
