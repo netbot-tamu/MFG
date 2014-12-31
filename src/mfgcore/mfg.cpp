@@ -491,8 +491,22 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       }
    }
 
+   ///// apply pnp //////
+   cv::Mat Rn_pnp, tn_pnp, R_pnp, t_pnp;
+   for(int i=0; i<pt3d.size(); ++i) {
+      if (pt2d[i].x < prev.img.cols/16.0 || pt2d[i].x > prev.img.cols*15/16.0)
+      { // don't use pts on border due to distortion
+         pt3d.erase(pt3d.begin()+i);
+         pt2d.erase(pt2d.begin()+i);
+         i--;
+      }
+   }
+   if (pt3d.size()>3) {
+      computePnP(pt3d, pt2d, K, Rn_pnp, tn_pnp);   
+      R_pnp = Rn_pnp * prev.R.t();
+      t_pnp = tn_pnp - R_pnp * prev.t; // relative t, with scale
+   }
 
-#ifdef PREDICT_POSE_USE_R_AND_T
    vector <int> maxInliers_Rt;
    double bestScale = -100;
    vector<KeyPoint3d> localKeyPts;
@@ -666,6 +680,18 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       } else {
          scale = bestScale;
       }
+      ///// compare with pnp result /////
+      if(pt3d.size()>3)      
+         cout<<"based on "<<pt3d.size()<<" 3d-2d pnp, pnp and 5-pt: "<< cv::norm(t_pnp) <<", "<<scale<<endl;
+      if(maxInliers_Rt.size() < 5 
+         && pt3d.size() > 7
+         && (abs(scale - cv::norm(t_pnp)) > 0.7 * scale || abs(scale - cv::norm(t_pnp)) > 0.7 * cv::norm(t_pnp)) 
+        ) {
+         cout<<"Inconsistent pnp and 5-pt: "<< cv::norm(t_pnp) <<", "<<scale<<endl;
+         int tmp;  cin>>tmp;
+         scale = cv::norm(t_pnp);
+      }
+      
       nview.t = R*prev.t + t*scale;
       nview.t_loc = t;
    } else { // small movement, use R-PnP
@@ -747,114 +773,40 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
             break;
       }
       // ------ re-compute scale on largest concensus set --------
+    #ifdef PLOT_MID_RESULTS
       cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
-
-      vector<cv::Point3d> inlierPt3d;
-      vector<cv::Point2d> inlierPt2d;
-      for(int i=0; i < maxInliers_R.size(); ++i) {
-         inlierPt3d.push_back(pt3d[maxInliers_R[i]]);
-         inlierPt2d.push_back(pt2d[maxInliers_R[i]]);
-      }
-      nview.R = R*prev.R;
-      nview.t = pnp_withR (inlierPt3d, inlierPt2d, K, nview.R);
-      nview.t_loc = cv::Mat::zeros(3,1,CV_64F);
-      cout<<nview.frameId-prev.frameId<<" frames,"<<"Scale (2pt_alg)="
-         <<cv::norm(-nview.R.t()*nview.t + prev.R.t()*prev.t)<<", "
-         <<maxInliers_R.size()<<"/"<<pt3d.size()<<endl;
-   }
 #endif
+      if(maxInliers_R.size() >= 5) {
+         vector<cv::Point3d> inlierPt3d;
+         vector<cv::Point2d> inlierPt2d;
+         for(int i=0; i < maxInliers_R.size(); ++i) {
+            inlierPt3d.push_back(pt3d[maxInliers_R[i]]);
+            inlierPt2d.push_back(pt2d[maxInliers_R[i]]);
+         }      
+         nview.R = R*prev.R;
+         nview.t = pnp_withR (inlierPt3d, inlierPt2d, K, nview.R);
+         nview.t_loc = cv::Mat::zeros(3,1,CV_64F);
+         cout<<nview.frameId-prev.frameId<<" frames,"<<"Scale (2pt_alg)="
+            <<cv::norm(-nview.R.t()*nview.t + prev.R.t()*prev.t)<<", "
+            <<maxInliers_R.size()<<"/"<<pt3d.size()<<endl;
+      } else { 
+         cout <<"Insufficient feature info for relative pose estimation...\n";
+         // use pnp or const vel
+         ///// compare with pnp result /////
+         if(pt3d.size() > 7) {
+            cout<<"fallback to pnp : "<< cv::norm(t_pnp) <<endl;     
+            int tmp; cin>>tmp;
+            nview.R = Rn_pnp;
+            nview.t = tn_pnp;  
+            R = R_pnp;
+            t = t_pnp;
+         } else {
+            cout<<"need to use const-vel model ...\n";
 
-#ifdef PREDICT_POSE_USE_R_NOT_T
-   vector <int> maxInliers_R;
-   cv::Mat best_tn;
-   vector<double> sizes;
-   for(int trial=0; trial < 10; ++trial) {
-      maxInliers_R.clear();
-      sizes.clear();
-
-      for(int iter = 0; iter < Rs.size(); ++iter) {
-         cv::Mat Ri = Rs[iter],	ti = ts[iter];
-         bool isRgood = true;
-         vector<vector<int>> vpPairIdx = matchVanishPts_withR(prev, nview, Ri, isRgood);
-         if (!isRgood && featPtMatches.size() < numPtpairLB) {
-            // when point matches are inadequate, E (R,t) are not reliable, even errant
-            // if R is not consistent with xVPs, reestimate with VPs)
-            cout<<"R is inconsistent with vanishing point correspondences****"<<endl;
-            vector<vector<cv::Mat>> vppairs;
-            for(int i = 0; i < vpPairIdx.size(); ++i) {
-               vector<cv::Mat> pair;
-               pair.push_back(prev.vanishPoints[vpPairIdx[i][0]].mat());
-               pair.push_back(nview.vanishPoints[vpPairIdx[i][1]].mat());
-               vppairs.push_back(pair);
-            }
-            optimizeRt_withVP (K, vppairs, 1000, featPtMatches,Ri, ti);
-            matchVanishPts_withR(prev, nview, Ri, isRgood);
-            cout<<"rectified:"<<R<<endl<<t<<endl;
-         }
-
-         cv::Mat Rn = Ri *prev.R;
-
-         // ----- find best R and t based on existent 3D points------
-         int maxIter = 100;
-         vector<int> maxInliers;
-         cv::Mat good_tn;
-         double best_s = -1;
-         for (int it = 0; it < maxIter; ++it) {
-            int i = xrand() % pt3d.size();
-            int j = xrand() % pt3d.size();
-            if(i==j) {--it; continue;}
-            vector<cv::Point3d> samplePt3d;
-            samplePt3d.push_back(pt3d[i]);
-            samplePt3d.push_back(pt3d[j]);
-            vector<cv::Point2d> samplePt2d;
-            samplePt2d.push_back(pt2d[i]);
-            samplePt2d.push_back(pt2d[j]);
-
-            cv::Mat tn = pnp_withR (samplePt3d, samplePt2d, K, Rn);
-
-            vector<int> inliers;
-            for(int j=0; j < pt3d.size(); ++j) {
-               // project 3d to n-th view
-               cv::Mat pt = K*(Rn * cvpt2mat(pt3d[j],0) + tn);
-               if (cv::norm(pt2d[j] - mat2cvpt(pt)) < reprjThresh )
-                  inliers.push_back(j);
-            }
-            if (maxInliers.size() < inliers.size()) {
-               maxInliers = inliers;
-               good_tn = tn;
-            }
-         }
-         cout<<ti<<" "<<maxInliers.size()<<endl;
-         sizes.push_back(maxInliers.size());
-         if (maxInliers.size() > maxInliers_R.size()) {
-            maxInliers_R = maxInliers;
-            best_tn = good_tn;
-            R = Ri;
-            t = ti;
-            F = Fs[iter];
+            exit(0);
          }
       }
-      sort(sizes.begin(), sizes.end());
-      if(sizes.size()>1 && sizes[sizes.size()-2] >= sizes[sizes.size()-1] * 0.95)
-         reprjThresh = reprjThresh * 0.9;
-      else
-         break;
    }
-   // ------ re-compute scale on largest concensus set --------
-   cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
-
-   vector<cv::Point3d> inlierPt3d;
-   vector<cv::Point2d> inlierPt2d;
-   for(int i=0; i < maxInliers_R.size(); ++i) {
-      inlierPt3d.push_back(pt3d[maxInliers_R[i]]);
-      inlierPt2d.push_back(pt2d[maxInliers_R[i]]);
-   }
-   nview.R = R*prev.R;
-   nview.t = pnp_withR (inlierPt3d, inlierPt2d, K, nview.R);
-   cout<<nview.frameId-prev.frameId<<" frames,"<<"Scale (2pt_alg)="
-      <<cv::norm(-nview.R.t()*nview.t + prev.R.t()*prev.t)<<", "
-      <<maxInliers_R.size()<<"/"<<pt3d.size()<<endl;
-#endif
 
    // ---- plot epipoles ----
    cv::Point2d ep1 = mat2cvpt(K*R.t()*t);
