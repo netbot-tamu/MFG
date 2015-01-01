@@ -46,7 +46,7 @@ void MfgThread::run()
 			increment = mfgSettings->getFrameStep();
 			interval_ratio = 1;
 		}
-		cout<<"<"<<i<<"> ";
+//		cout<<"<"<<i<<"> ";
 		bool toExpand = false;
 		imgName = nextImgName(imgName, imIdLen, increment);
 		if (!isFileExist(imgName)) break;
@@ -111,15 +111,15 @@ void MfgThread::run()
 
 			if (prevfeat.size() > 1.5* curtfeat.size() ) {
 				imgName = prev;
-				cout<<"blured image, select previous ";
+	//			cout<<"blured image, select previous ";
 			}	else if (1.5* curtfeat.size() < nextfeat.size()) {
 				imgName = next;
-				cout<<"blured image, select next ";
+	//			cout<<"blured image, select next ";
 			}
 
 #endif
 			int fid = atoi (imgName.substr(imgName.size()-imIdLen-4, imIdLen).c_str());
-			cout<<"frame:"<<fid<<endl;
+			cout<<"\nframe:"<<fid<<endl;
          View imgView(imgName,K,distCoeffs,-1, mfgSettings);
 			pMap->expand(imgView,fid);
 		}

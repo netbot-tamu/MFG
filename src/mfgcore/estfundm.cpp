@@ -287,7 +287,7 @@ void essn_ransac (cv::Mat* pts1, cv::Mat* pts2, vector<cv::Mat>& bestEs, cv::Mat
 		for(int i=0; i<bestEs.size(); ++i) {
 		cv::Mat Ra, Rb, t;
 		decEssential (&bestEs[i], &Ra, &Rb, &t);
-		cout<<t;
+		cout<<t.t();
 		cout<<numInlier_E[i]<<", res="<<resds[i]<<endl;
 		}
 	}

@@ -81,7 +81,6 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
                  // &&(curr_pts[i].x >0 &&  curr_pts[i].y>0 && curr_pts[i].x<v1.img.cols-1 &&curr_pts[i].y<v1.img.rows-1)
                  // &&(prev_pts[i].x>0 && prev_pts[i].y >0 && prev_pts[i].x<v1.img.cols-1 && prev_pts[i].y<v1.img.rows-1 )
                  ) { // match found
-				// todo: verify by ORB descriptor
 				vector<int> pair(2);
 				pair[0] = i; pair[1] = i;
 				pairIdx.push_back(pair);
@@ -97,7 +96,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 			}
 		}
 	}
-	cout<<ptmatches.size()<<'\t';
+//	cout<<ptmatches.size()<<'\t';
 	// === filter out false matches by F matrix ===
 	if (pairIdx.size() > 7) {
 		int nPts = ptmatches.size();
@@ -111,7 +110,6 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 		vector<uchar> inSetF;
 		cv::Mat F = cv::findFundamentalMat(pts1.t(), pts2.t(), 8, 2, 0.99, inSetF);
 		if(cv::norm(F) < 1e-10) { // F is invalid (zero matrix)
-		//	cout<<" 0F ";
 		} else {
 			for(int j = inSetF.size()-1; j>=0; --j) {
 				if (inSetF[j] == 0) {
@@ -122,7 +120,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 			}
 		}
 	}
-	cout<<ptmatches.size()<<'\t';
+//	cout<<ptmatches.size()<<'\t';
 	Frame frm; // probably added to track_frms
 	frm.filename = v1.filename;
 	frm.image = v1.grayImg;
@@ -135,7 +133,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 		}
 	}
 
-	// compute current pose, if rotation large, drop key frame
+	//// compute current pose, if rotation large, drop key frame
 	vector<cv::Point3d> X;
 	vector<cv::Point2d> x;
 	for(int i=0; i<pairIdx.size(); ++i) {
@@ -159,8 +157,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 		computePnP(X,x,map.K,Rn,tn); //current pose Rn, tn
 		cv::Mat R = Rn*map.views.back().R.inv();
 		double angle = acos(abs((R.at<double>(0,0) + R.at<double>(1,1) + R.at<double>(2,2) - 1)/2));
-		cout<<angle*180/PI<<'\t';
-      // TODO: needs tr1 namespace???
+//		cout<<angle*180/PI<<'\t';
 		unordered_map<int,int> tracked_lid_id;
       for (int i=0; i<tracked_idx.size();++i) {
          tracked_lid_id[tracked_idx[i]] = i;
@@ -195,7 +192,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 						partpts.push_back(cv::Point2f(j+pt.x,k+pt.y));
 					}
 				}
-				// extract descriptors
+				//// extract descriptors
 				vector<cv::KeyPoint> kpts;
 				for(int j=0; j<partpts.size(); ++j) {
 					kpts.push_back(cv::KeyPoint(partpts[j], 21));// no angle info provided
@@ -290,7 +287,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 		if (angle > 15 * PI/180
               || cv::norm(-Rn.t()*tn + map.views.back().R.t()*map.views.back().t) > 1.2  // large translation
               ) {
-			cout<<" ,rotation angle large, drop keyframe!!!\n";
+//			cout<<" ,rotation angle large, drop keyframe!!!\n";
 			if(map.trackFrms.size()==0) {
 				map.trackFrms.push_back(frm);
 			}
@@ -315,8 +312,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 		}
 	}
 
-	cout<<"Keypoint Matches: "<<ptmatches.size()<<"/"<<v1.featurePoints.size()
-           <<"   overlap="<<count<<endl;
+//	cout<<"Keypoint Matches: "<<ptmatches.size()<<"/"<<v1.featurePoints.size() <<"   overlap="<<count<<endl;
 
 	if (ptmatches.size() < min((double)th_pair, v0.featurePoints.size()/50.0) ||
            count < min((double)th_overlap, ptmatches.size()/3.0)) {
@@ -367,7 +363,6 @@ vector<vector<int>> matchVanishPts_withR(View& view1, View& view2, cv::Mat R, bo
 			score.at<double>(i,j) = vp1.dot(vp2);
 		}
 	}
-	//cout<<score<<endl;
 	vector<vector<int>> pairIdx;
 	for (int i=0; i<score.rows; ++i) {
 		vector<int> onePairIdx;
@@ -382,7 +377,6 @@ vector<vector<int>> matchVanishPts_withR(View& view1, View& view2, cv::Mat R, bo
 				onePairIdx.push_back(i);
 				onePairIdx.push_back(maxPos.x);
 				pairIdx.push_back(onePairIdx);
-				//		cout<<i<<","<<maxPos.x<<"\t"<<acos(maxV)*180/PI<<endl;
 				////// need a better metric to determine if R is good or not.................
 				if( view1.vanishPoints[i].idlnLids.size() > 15 &&
                     view2.vanishPoints[maxPos.x].idlnLids.size() > 15 &&
