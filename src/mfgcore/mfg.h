@@ -92,6 +92,8 @@ public:
    void updatePrimPlane();
    void draw3D() const;
    bool rotateMode ();
+
+   void exportAll (string root_dir);
 };
 
 
