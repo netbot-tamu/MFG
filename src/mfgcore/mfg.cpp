@@ -455,13 +455,9 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
 //   cout<<t_prev.t()<<endl;
 
    cv::Mat F, R, E, t; // relative pose between last two views
-
-   // compute all potential relative poses from 5-point ransac algorithm
    vector<cv::Mat> Fs, Es, Rs, ts;
-
-   MyTimer timer;	timer.start();
    computePotenEpipolar (featPtMatches,pairIdx,K, Fs, Es, Rs, ts, false, t_prev);
-   timer.end(); //	cout<<pairIdx.size()<<"\t"<<"computePotenEpipolar time:"<<timer.time_ms<<"ms\n";
+   
    // ---- find observed 3D points (and plot)  ------
    vector<cv::Point3d> pt3d, pt3d_old;
    vector<cv::Point2d> pt2d, pt2d_old;
@@ -503,24 +499,8 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       t_pnp = tn_pnp - R_pnp * prev.t; // relative t, with scale
    }
 
-   ////// use const-vel to predict R t ///////
-   cv::Mat R_const, t_const;
-   if(nview.id>2) {
-      Eigen::Quaterniond q_prev = r2q (prev.R_loc);
-      double theta_prev = acos(q_prev.w()) * 2;
-      double theta_curt = theta_prev * (nview.frameId - prev.frameId)/(prev.frameId - views[(prev.id - 1)].frameId);
-      Eigen::Vector3d xyz(q_prev.x(),q_prev.y(),q_prev.z());
-      xyz = xyz/xyz.norm();
-      double q_curt[4] = {cos(theta_curt/2),
-                                xyz(0)*sin(theta_curt/2),
-                                xyz(1)*sin(theta_curt/2),
-                                xyz(2)*sin(theta_curt/2)};
-      R_const =  q2r(q_curt);
-      t_const = (prev.t - (prev.R * views[views.size()-3].R.t()) * views[views.size()-3].t)
-                   * (nview.frameId - prev.frameId)/(prev.frameId - views[(prev.id - 1)].frameId);
-      cout<<"t_const="<<t_const.t()/cv::norm(t_const)<<cv::norm(t_const)<<endl;
-   }
-
+   
+   bool use_const_vel_model = false; // when no enought features or no good estimation
    vector <int> maxInliers_Rt;
    double bestScale = -100;
    vector<KeyPoint3d> localKeyPts;
@@ -812,19 +792,59 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
             nview.t_loc = t;
          } else {
             cout<<"fallback to const-vel model ...press 1 to continue\n";
-            int tmp; cin>>tmp;
-            if (R_const.cols<3) {
-               cout<<"const-vel model not available, system terminated\n"; exit(0);
-            } else {
-               nview.R = R_const * prev.R;
-               nview.t = R_const*prev.t + t_const;
-               R = R_const;
-               t = t_const/cv::norm(t_const);
-               nview.R_loc = R_const;
-               nview.t_loc = cv::Mat::zeros(3,1,CV_64F);
-            }
+            int tmp; cin>>tmp;            
+            use_const_vel_model = true;                           
          }
       }
+   }
+
+   ///// check speed variation //////
+   if (!use_const_vel_model) {
+      double speed_prev = cv::norm(prev.R.t()*prev.t - views[prev.id-1].R.t()*views[prev.id-1].t)
+                         /(prev.frameId - views[(prev.id - 1)].frameId);
+      double speed_curt = cv::norm(prev.R.t()*prev.t - nview.R.t()*nview.t)/(nview.frameId-prev.frameId);   
+      if(abs(speed_curt-speed_prev) > speed_prev * 0.1
+         && maxInliers_Rt.size()< 10) {
+         cout<<"big speed change, press 1 to continue\n";
+         int tmp; cin>>tmp;
+         use_const_vel_model = true;    
+      }
+   }
+   ////// use const-vel to predict R t ///////
+   cv::Mat R_const, t_const;
+   if(nview.id>2) {
+      Eigen::Quaterniond q_prev = r2q (prev.R_loc);
+      double theta_prev = acos(q_prev.w()) * 2;
+      double theta_curt = theta_prev * (nview.frameId - prev.frameId)/(prev.frameId - views[(prev.id - 1)].frameId);
+      Eigen::Vector3d xyz(q_prev.x(),q_prev.y(),q_prev.z());
+      xyz = xyz/xyz.norm();
+      double q_curt[4] = {cos(theta_curt/2),
+                                xyz(0)*sin(theta_curt/2),
+                                xyz(1)*sin(theta_curt/2),
+                                xyz(2)*sin(theta_curt/2)};
+      R_const =  q2r(q_curt);
+      t_const = (prev.t - (prev.R * views[views.size()-3].R.t()) * views[views.size()-3].t)
+                   * (nview.frameId - prev.frameId)/(prev.frameId - views[(prev.id - 1)].frameId);
+      cout<<"t_const="<<t_const.t()/cv::norm(t_const)<<cv::norm(t_const)<<endl;
+   }
+
+   if(use_const_vel_model) {
+      if(R_const.cols<3) {
+         cout<<"R_const not available. Terminated.\n";
+         exit(0);
+      }
+      if(R.cols==3) { // R computed
+         nview.R = R * prev.R;
+         nview.t = R*prev.t + cv::norm(t_const)*t;      
+      } else {
+         nview.R = R_const * prev.R;
+         nview.t = R_const*prev.t + t_const;
+         R = R_const;
+         t = t_const/cv::norm(t_const);               
+      }
+      nview.R_loc = R_const;
+      nview.t_loc = cv::Mat::zeros(3,1,CV_64F);
+
    }
 
 
@@ -967,7 +987,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          }
       }
    }
-   MyTimer tm; tm.start();
+   
 
    for (int i=0; i < featPtMatches.size(); ++i) {
       view_point.clear();
@@ -1064,7 +1084,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          new2_3dPtNum ++;
       }
    }
-   tm.end(); //cout<<"2d->3d: "<<tm.time_ms<<endl;
+   cout<<"new 3d pts "<<new3dPtNum<<"\t"<<new2_3dPtNum<<endl;
    // remove outliers
    for(int i=0; i < maxInliers_Rt.size(); ++i) {
       int j = maxInliers_Rt[i];
