@@ -503,6 +503,24 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       t_pnp = tn_pnp - R_pnp * prev.t; // relative t, with scale
    }
 
+   ////// use const-vel to predict R t ///////
+   cv::Mat R_const, t_const;
+   if(nview.id>2) {
+      Eigen::Quaterniond q_prev = r2q (prev.R_loc);
+      double theta_prev = acos(q_prev.w()) * 2;
+      double theta_curt = theta_prev * (nview.frameId - prev.frameId)/(prev.frameId - views[(prev.id - 1)].frameId);
+      Eigen::Vector3d xyz(q_prev.x(),q_prev.y(),q_prev.z());
+      xyz = xyz/xyz.norm();
+      double q_curt[4] = {cos(theta_curt/2),
+                                xyz(0)*sin(theta_curt/2),
+                                xyz(1)*sin(theta_curt/2),
+                                xyz(2)*sin(theta_curt/2)};
+      R_const =  q2r(q_curt);
+      t_const = (prev.t - (prev.R * views[views.size()-3].R.t()) * views[views.size()-3].t)
+                   * (nview.frameId - prev.frameId)/(prev.frameId - views[(prev.id - 1)].frameId);
+      cout<<"t_const="<<t_const.t()/cv::norm(t_const)<<cv::norm(t_const)<<endl;
+   }
+
    vector <int> maxInliers_Rt;
    double bestScale = -100;
    vector<KeyPoint3d> localKeyPts;
@@ -573,7 +591,6 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
                if (!tmpkp[j].is3D) continue;
                // project 3d to n-th view
                cv::Mat pt = K*Rn*(keyPoints[jGid].mat(0)+Rn.t()*tn);
-               //		cout<<cv::norm(featPtMatches[j][1] - mat2cvpt(pt))<<'\t';
                if (cv::norm(featPtMatches[j][1] - mat2cvpt(pt)) < reprjThresh )
                   inliers.push_back(j);
             }
@@ -664,21 +681,26 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
    //         cout<<nview.frameId-prev.frameId<<" frames,"<<"ave="<<vecSum(scales3)/scales3.size() <<", median="<<vecMedian(scales3)<< ", ["<< scales3.size()<<"]"<<endl;
          }
          scale = (scale + bestScale + vecMedian(scales))/3;
-         cout<<"keyframe "<<nview.id<<", "<<nview.frameId-prev.frameId<<" frames: mixed scale = "<<scale<<endl;
+         cout<<"keyframe "<<nview.id<<", "<<nview.frameId-prev.frameId<<" frames: mixed scale = "<<scale;
       } else {
          scale = bestScale;
       }
-      ///// compare with pnp result /////      
+      ///// compare with pnp result /////   
+      if(pt3d.size()>3) {
+         cout<<", "<<cv::norm(t_pnp)<<"("<<pt3d.size()<<")\n";
+      } else 
+         cout<<endl;
       if(maxInliers_Rt.size() < 5 
          && pt3d.size() > 7
          && (abs(scale - cv::norm(t_pnp)) > 0.7 * scale || abs(scale - cv::norm(t_pnp)) > 0.7 * cv::norm(t_pnp)) 
         ) {
          cout<<"Inconsistent pnp and 5-pt: "<< cv::norm(t_pnp) <<", "<<scale<<endl;
-         int tmp;  cin>>tmp;
+         cout<<"use pnp scale instead\n";
          scale = cv::norm(t_pnp);
       }
 
       nview.t = R*prev.t + t*scale;
+      nview.R_loc = R;
       nview.t_loc = t;
    } else { // small movement, use R-PnP
       vector <int> maxInliers_R;
@@ -771,6 +793,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          }      
          nview.R = R*prev.R;
          nview.t = pnp_withR (inlierPt3d, inlierPt2d, K, nview.R);
+         nview.R_loc = R;
          nview.t_loc = cv::Mat::zeros(3,1,CV_64F);
          cout<<nview.frameId-prev.frameId<<" frames,"<<"Scale (2pt_alg)="
             <<cv::norm(-nview.R.t()*nview.t + prev.R.t()*prev.t)<<", "
@@ -780,19 +803,30 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          // use pnp or const vel
          ///// compare with pnp result /////
          if(pt3d.size() > 7) {
-            cout<<"fallback to pnp : "<< cv::norm(t_pnp) <<endl;     
-            int tmp; cin>>tmp;
+            cout<<"fallback to pnp : "<< cv::norm(t_pnp) <<endl;            
             nview.R = Rn_pnp;
             nview.t = tn_pnp;  
             R = R_pnp;
-            t = t_pnp;
+            t = t_pnp/cv::norm(t_pnp);
+            nview.R_loc = R;
+            nview.t_loc = t;
          } else {
-            cout<<"need to use const-vel model ...\n";
-
-            exit(0);
+            cout<<"fallback to const-vel model ...press 1 to continue\n";
+            int tmp; cin>>tmp;
+            if (R_const.cols<3) {
+               cout<<"const-vel model not available, system terminated\n"; exit(0);
+            } else {
+               nview.R = R_const * prev.R;
+               nview.t = R_const*prev.t + t_const;
+               R = R_const;
+               t = t_const/cv::norm(t_const);
+               nview.R_loc = R_const;
+               nview.t_loc = cv::Mat::zeros(3,1,CV_64F);
+            }
          }
       }
    }
+
 
    // ---- plot epipoles ----
    cv::Point2d ep1 = mat2cvpt(K*R.t()*t);
@@ -1581,3 +1615,4 @@ bool Mfg::rotateMode ()
 
    return mode;
 }
+

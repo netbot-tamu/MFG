@@ -30,7 +30,7 @@
 
 using namespace Eigen;
 using namespace std;
-//#define PLOT_MID_RESULTS
+#define PLOT_MID_RESULTS
 
 class MfgSettings;
 
