@@ -803,8 +803,9 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       double speed_prev = cv::norm(prev.R.t()*prev.t - views[prev.id-1].R.t()*views[prev.id-1].t)
                          /(prev.frameId - views[(prev.id - 1)].frameId);
       double speed_curt = cv::norm(prev.R.t()*prev.t - nview.R.t()*nview.t)/(nview.frameId-prev.frameId);   
-      if(abs(speed_curt-speed_prev) > speed_prev * 0.1
-         && maxInliers_Rt.size()< 10) {
+      if(abs(speed_curt-speed_prev) > speed_prev * 0.2
+         && maxInliers_Rt.size()< 10
+         && rotateMode()) {
          cout<<"big speed change, press 1 to continue\n";
          int tmp; cin>>tmp;
          use_const_vel_model = true;    
