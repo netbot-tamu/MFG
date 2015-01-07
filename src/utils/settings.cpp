@@ -27,6 +27,7 @@ cameraID(_cameraID)
    qDebug() << "Loaded settings file:\n" << settingsFile;
 
    mfgSettings = new QSettings(settingsFile, QSettings::IniFormat);
+   mfgSettings->sync();
 
    loadSettings();
 }
@@ -105,15 +106,18 @@ void MfgSettings::setKeypointAlgorithm(FeatureDetectionAlgorithm _alg)
 
 void MfgSettings::loadSettings()
 {
+   // Load general settings
+   // NOTE: the [general] group in the INI file does not need to be loaded
+   // specifically, as all keys inside it are considered without a group.
+   LOAD_INT(prngSeed, "prng_seed");
+   qDebug() << "PRNG Seed:" << prngSeed;
+
    // If no camera ID was specified, use the default ID in the settings
    if (cameraID == "")
    {
-      LOAD_STR(cameraID, "default/camera")
+      LOAD_STR(cameraID, "camera")
    }
    qDebug() << "Using camera settings:" << cameraID;
-
-   // Load general settings
-   LOAD_INT(prngSeed, "general/prng_seed");
 
    // Load the keypoint detection settings
    mfgSettings->beginGroup("features");
@@ -135,7 +139,7 @@ void MfgSettings::loadSettings()
 
    //*
    // TODO: this should be removed, but it seems to make the program work
-   qDebug() << "stuff..."
+   qDebug() << "Child keys:"
             << mfgSettings->childKeys()
             << mfgSettings->childGroups();
    // */
