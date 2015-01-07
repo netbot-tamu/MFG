@@ -16,6 +16,7 @@ public:
    int			lid;	// local id in view
    int			gid;    // global id = the corresponding 3d keypoint's gid
 
+   FeatPoint2d() {}	
    FeatPoint2d(double x_, double y_) {x = x_; y = y_; lid = -1; gid = -1;}
    FeatPoint2d(double x_, double y_, int _lid) {x = x_; y = y_; lid = -1; lid = _lid; gid = -1;}
    FeatPoint2d(double x_, double y_, cv::Mat des) 
@@ -74,6 +75,8 @@ public:
    cv::Mat			cov; //2x2 inhomo image
    cv::Mat			cov_ab; //2x2 of ab representation
    cv::Mat			cov_homo;//3x3
+
+   VanishPnt2d(){}
    VanishPnt2d(double x_, double y_, double w_, int l, int g)
    {x = x_; y = y_; w = w_; lid = l; gid = g; }
 
@@ -117,7 +120,8 @@ public:
    cv::Point2d			extremity1, extremity2;
 
    cv::Point2d			gradient;
-
+	
+   IdealLine2d() {}
    IdealLine2d(LineSegmt2d s) // cast a linesegment to ideal line
    {
       vpLid = s.vpLid;
