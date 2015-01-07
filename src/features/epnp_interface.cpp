@@ -52,7 +52,7 @@ int computePnP_ransac (vector<cv::Point3d> X, vector<cv::Point2d> x, cv::Mat K,
 		++iter;
 			vector<int> inlier;
 			// --- choose minimal solution set: mss1<->mss2
-			random_shuffle(rnd.begin(),rnd.end());
+			random_unique(rnd.begin(), rnd.end(), n);
 			vector<cv::Point3d> Xmin(n);
 			vector<cv::Point2d> xmin(n);
 			for(int i=0; i<n; ++i) {

@@ -20,179 +20,6 @@
 using namespace std;
 extern MfgSettings* mfgSettings;
 
-void F_guidedLinematch (cv::Mat F, View view1, View view2)
-{
-	vector<vector<IdealLine2d>> lines1(4), lines2(4);
-	for (int i=0; i<view1.idealLines.size(); ++i) {
-		lines1[view1.idealLines[i].vpLid+1].push_back(view1.idealLines[i]);
-	}
-	for (int i=0; i<view2.idealLines.size(); ++i) {
-		lines2[view2.idealLines[i].vpLid+1].push_back(view2.idealLines[i]);
-	}
-	cv::Mat gImg1, gImg2;
-	cv::cvtColor(view1.img, gImg1, CV_RGB2GRAY);
-	cv::cvtColor(view2.img, gImg2, CV_RGB2GRAY);
-
-	double patchDiameter = 20; // point area diameter
-	cv::Mat scores =
-		cv::Mat::zeros(view1.idealLines.size(),view2.idealLines.size(),CV_64F)
-		+ 1e6;
-	cv::SurfDescriptorExtractor featExtractor;
-
-	for (int i=0; i<view1.idealLines.size(); ++i) {
-		if (view1.idealLines[i].vpLid <0) continue;
-		double angle_i = -1; // Should be computed from line gradient, positive
-		double minScore = 1e6;
-		int minj;
-		cv::Point2d direct1 = cv::Point2d(
-			view1.idealLines[i].lineEq().at<double>(0),
-			view1.idealLines[i].lineEq().at<double>(1));
-		direct1 = direct1 * (1/cv::norm(direct1));
-		if(view1.idealLines[i].gradient.dot(direct1) <0)
-			direct1 = direct1*(-1);
-		if( direct1.y >0 )
-			angle_i = acos(direct1.x)*180/PI;
-		else
-			angle_i = (2*PI-acos(direct1.x))*180/PI;
-
-		for (int j=0; j<view2.idealLines.size(); ++j) {
-
-			cv::Mat canv1 = view1.img.clone(), canv2 = view2.img.clone();
-			cv::Scalar color(200,200,100,0);
-			cv::line(canv1, view1.idealLines[i].extremity1,
-				view1.idealLines[i].extremity2, color, 2);
-			cv::line(canv2, view2.idealLines[j].extremity1,
-				view2.idealLines[j].extremity2, color, 2);
-
-			// compute matching score for each pair
-			double angle_j = -1;
-			vector<cv::KeyPoint> kpts1(0), kpts2(0);
-			cv::Mat desc1, desc2;
-			cv::LineIterator iter(gImg1,view1.idealLines[i].extremity1,
-								view1.idealLines[i].extremity2, 8);
-		// iter should be continuous,not discretized as now
-
-			cv::Point2d direct2 = cv::Point2d(
-			view2.idealLines[j].lineEq().at<double>(0),
-			view2.idealLines[j].lineEq().at<double>(1));
-			direct2 = direct2 * (1/cv::norm(direct2));
-			if(view2.idealLines[j].gradient.dot(direct2) <0)
-				direct2 = direct2*(-1);
-			if( direct2.y >0 )
-				angle_j = acos(direct2.x)*180/PI;
-			else
-				angle_j = (2*PI-acos(direct2.x))*180/PI;
-
-			// == orientation check - less than 45d
-			if (direct1.dot(direct2) < cos(30*PI/180))
-				continue;
-
-			// == MSLD similarity check
-			if (compMsldDiff(view1.idealLines[i],view2.idealLines[j]) > 0.8)
-				continue;
-
-			// == line (parallel) distance check
-			if (aveLine2LineDist(view1.idealLines[i],view2.idealLines[j])
-					> view1.img.cols/10.0)
-				continue;
-
-			for (int k=0; k<iter.count; k=k++, iter++) { // point on l1
-				// ensure sift-descriptor can be computed
-				if (iter.pos().x + patchDiameter/2 > view1.img.cols ||
-					iter.pos().x - patchDiameter/2 < 1 ||
-					iter.pos().y + patchDiameter/2 > view1.img.rows ||
-					iter.pos().y - patchDiameter/2 < 1)
-					continue;
-
-				cv::KeyPoint kp1(iter.pos(), patchDiameter, angle_i);
-
-				cv::Point2d p2 = mat2cvpt(
-					view2.idealLines[j].lineEq().cross(F*cvpt2mat(iter.pos(),1)));
-
-//				cv::circle(canv1, iter.pos(), 3, color, 2);
-//				cv::circle(canv2, p2, 3, color, 2);
-//				showImage("I1", &canv1);
-//				showImage("I2", &canv2);
-//				cv::waitKey(1);
-
-				// ensure sift-descriptor can be computed
-				if (p2.x + patchDiameter/2 > view2.img.cols ||
-					p2.x - patchDiameter/2 < 1 ||
-					p2.y + patchDiameter/2 > view2.img.rows ||
-					p2.y - patchDiameter/2 < 1)
-					continue;
-
-				if (!isPtOnLineSegment(p2, view2.idealLines[j]))
-					continue;
-
-				cv::KeyPoint kp2(p2, patchDiameter, angle_j);
-				kpts1.push_back(kp1);
-				kpts2.push_back(kp2);
-			}
-
-			if (kpts1.size() == 0 )	{
-				scores.at<double>(i,j) = 1e6;
-				continue;
-			}
-
-			featExtractor.compute(gImg1, kpts1, desc1);
-			featExtractor.compute(gImg2, kpts2, desc2);
-			double sum = 0;
-			if (desc1.rows!= desc2.rows)
-				cout<<desc1.rows<<","<<desc2.rows<<endl;
-			for (int k=0; k<kpts1.size(); ++k){
-				sum = sum + cv::norm(desc1.row(k)-desc2.row(k));
-			}
-
-			scores.at<double>(i,j) = sum/kpts1.size();
-
-			if (minScore > scores.at<double>(i,j)) {
-				minScore = scores.at<double>(i,j);
-				minj = j;
-				showImage("I1", &canv1);
-				showImage("I2", &canv2);
-
-//				cout<<"score = "<<scores.at<double>(i,j)<<endl;
-//				cv::waitKey();
-			}
-		}
-
-		if (minScore < 0.5) {
-			cout<<"minScore = "<<minScore<<",msldDif="<<
-				compMsldDiff(view1.idealLines[i],view2.idealLines[minj])<< endl;
-			cv::waitKey();
-		}
-	}
-}
-
-bool isKeyframe (const View& v0, const View& v1, int th_pair, int th_overlap)
-// determine if v1 is a keyframe, given v0 is the last keyframe
-// point matches, overlap
-{
-	int ThreshPtPair = th_pair;
-	vector<vector<cv::Point2d>> ptmatches;
-	vector<vector<int>> pairIdx;
-	pairIdx = matchKeyPoints (v0.featurePoints, v1.featurePoints, ptmatches);
-	cv::Mat F, R, E, t;
-	if (pairIdx.size() > 5) {
-		computeEpipolar (ptmatches, pairIdx, v0.K, F, R, E, t);
-	}
-	int count=0;
-	for(int i=0; i<pairIdx.size(); ++i) { // and is3D
-		if (v0.featurePoints[pairIdx[i][0]].gid >= 0 ) {
-			count++;
-		}
-	}
-
-	cout<<"Keypoint Matches: "<<ptmatches.size()<<"/"<<v1.featurePoints.size()
-           <<"   overlap="<<count<<endl;
-
-	if (ptmatches.size() < min((double)th_pair, v1.featurePoints.size()/50.0) ||
-           count < min((double)th_overlap, ptmatches.size()/3.0))
-		return true;
-	else
-		return false;
-}
 
 bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 // determine if v1 is a keyframe, given v0 is the last keyframe
@@ -254,7 +81,6 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
                  // &&(curr_pts[i].x >0 &&  curr_pts[i].y>0 && curr_pts[i].x<v1.img.cols-1 &&curr_pts[i].y<v1.img.rows-1)
                  // &&(prev_pts[i].x>0 && prev_pts[i].y >0 && prev_pts[i].x<v1.img.cols-1 && prev_pts[i].y<v1.img.rows-1 )
                  ) { // match found
-				// todo: verify by ORB descriptor
 				vector<int> pair(2);
 				pair[0] = i; pair[1] = i;
 				pairIdx.push_back(pair);
@@ -270,7 +96,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 			}
 		}
 	}
-	cout<<ptmatches.size()<<'\t';
+//	cout<<ptmatches.size()<<'\t';
 	// === filter out false matches by F matrix ===
 	if (pairIdx.size() > 7) {
 		int nPts = ptmatches.size();
@@ -284,7 +110,6 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 		vector<uchar> inSetF;
 		cv::Mat F = cv::findFundamentalMat(pts1.t(), pts2.t(), 8, 2, 0.99, inSetF);
 		if(cv::norm(F) < 1e-10) { // F is invalid (zero matrix)
-			cout<<" 0F ";
 		} else {
 			for(int j = inSetF.size()-1; j>=0; --j) {
 				if (inSetF[j] == 0) {
@@ -295,7 +120,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 			}
 		}
 	}
-	cout<<ptmatches.size()<<'\t';
+//	cout<<ptmatches.size()<<'\t';
 	Frame frm; // probably added to track_frms
 	frm.filename = v1.filename;
 	frm.image = v1.grayImg;
@@ -308,7 +133,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 		}
 	}
 
-	// compute current pose, if rotation large, drop key frame
+	//// compute current pose, if rotation large, drop key frame
 	vector<cv::Point3d> X;
 	vector<cv::Point2d> x;
 	for(int i=0; i<pairIdx.size(); ++i) {
@@ -332,8 +157,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 		computePnP(X,x,map.K,Rn,tn); //current pose Rn, tn
 		cv::Mat R = Rn*map.views.back().R.inv();
 		double angle = acos(abs((R.at<double>(0,0) + R.at<double>(1,1) + R.at<double>(2,2) - 1)/2));
-		cout<<angle*180/PI<<'\t';
-      // TODO: needs tr1 namespace???
+//		cout<<angle*180/PI<<'\t';
 		unordered_map<int,int> tracked_lid_id;
       for (int i=0; i<tracked_idx.size();++i) {
          tracked_lid_id[tracked_idx[i]] = i;
@@ -368,7 +192,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 						partpts.push_back(cv::Point2f(j+pt.x,k+pt.y));
 					}
 				}
-				// extract descriptors
+				//// extract descriptors
 				vector<cv::KeyPoint> kpts;
 				for(int j=0; j<partpts.size(); ++j) {
 					kpts.push_back(cv::KeyPoint(partpts[j], 21));// no angle info provided
@@ -463,7 +287,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 		if (angle > 15 * PI/180
               || cv::norm(-Rn.t()*tn + map.views.back().R.t()*map.views.back().t) > 1.2  // large translation
               ) {
-			cout<<" ,rotation angle large, drop keyframe!!!\n";
+//			cout<<" ,rotation angle large, drop keyframe!!!\n";
 			if(map.trackFrms.size()==0) {
 				map.trackFrms.push_back(frm);
 			}
@@ -488,8 +312,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 		}
 	}
 
-	cout<<"Keypoint Matches: "<<ptmatches.size()<<"/"<<v1.featurePoints.size()
-           <<"   overlap="<<count<<endl;
+//	cout<<"Keypoint Matches: "<<ptmatches.size()<<"/"<<v1.featurePoints.size() <<"   overlap="<<count<<endl;
 
 	if (ptmatches.size() < min((double)th_pair, v0.featurePoints.size()/50.0) ||
            count < min((double)th_overlap, ptmatches.size()/3.0)) {
@@ -540,7 +363,6 @@ vector<vector<int>> matchVanishPts_withR(View& view1, View& view2, cv::Mat R, bo
 			score.at<double>(i,j) = vp1.dot(vp2);
 		}
 	}
-	//cout<<score<<endl;
 	vector<vector<int>> pairIdx;
 	for (int i=0; i<score.rows; ++i) {
 		vector<int> onePairIdx;
@@ -555,7 +377,6 @@ vector<vector<int>> matchVanishPts_withR(View& view1, View& view2, cv::Mat R, bo
 				onePairIdx.push_back(i);
 				onePairIdx.push_back(maxPos.x);
 				pairIdx.push_back(onePairIdx);
-				//		cout<<i<<","<<maxPos.x<<"\t"<<acos(maxV)*180/PI<<endl;
 				////// need a better metric to determine if R is good or not.................
 				if( view1.vanishPoints[i].idlnLids.size() > 15 &&
                     view2.vanishPoints[maxPos.x].idlnLids.size() > 15 &&

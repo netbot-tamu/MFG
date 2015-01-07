@@ -22,13 +22,6 @@ cv::Mat vanishpoint_cov_xy2ab(cv::Mat vp, cv::Mat K, cv::Mat cov_xy)
 	}
 	cv::Mat J = (cv::Mat_<double>(2,2)<<j00,j01,j10,j11);
 	cv::Mat cov_ab = J * cov_xy * J.t(); // cov of ab, in radian
-
-/*	cout<<"x="<<x<<endl;
-	cout<<"y="<<y<<endl;
-	cout<<"K="<<K<<endl;
-	cout<<"cov_xy="<<cov_xy<<endl;
-	cout<<"cov_ab="<<cov_ab<<endl;
-*/
 	return cov_ab;
 }
 
@@ -59,11 +52,5 @@ cv::Mat vanishpoint_cov_xyw2ab(cv::Mat vp, cv::Mat K, cv::Mat cov_xyw)
 	cv::Mat J = (cv::Mat_<double>(2,3)<<j00,j01,j02, j10,j11,j12);
 	cv::Mat cov_ab = J * cov_xyw * J.t(); // cov of ab, in radian
 
-/*	cout<<"x="<<x<<endl;
-	cout<<"y="<<y<<endl;
-	cout<<"K="<<K<<endl;
-	cout<<"cov_xy="<<cov_xy<<endl;
-	cout<<"cov_ab="<<cov_ab<<endl;
-*/
 	return cov_ab;
 }

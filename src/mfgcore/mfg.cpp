@@ -37,16 +37,12 @@
 #include "utils.h"
 #include "settings.h"
 
-//#define USE_PT_ONLY_FOR_LBA
-#define PREDICT_POSE_USE_R_AND_T
-//#define PREDICT_POSE_USE_R_NOT_T
 #define THRESH_PARALLAX 7 //(12.0*IDEAL_IMAGE_WIDTH/1000.0)
 #define THRESH_PARALLAX_DEGREE (0.9)
 
 extern double THRESH_POINT_MATCH_RATIO, SIFT_THRESH, SIFT_THRESH_HIGH, SIFT_THRESH_LOW;
 extern int IDEAL_IMAGE_WIDTH;
 extern MfgSettings* mfgSettings;
-extern vector<vector<double>> planeColors;
 struct cvpt2dCompare
 {
    bool operator() (const cv::Point2d& lhs, const cv::Point2d& rhs) const
@@ -77,13 +73,12 @@ void Mfg::initialize()
    cv::Mat F, R, E, t;
 
    pairIdx = matchKeyPoints (view0.featurePoints, view1.featurePoints, featPtMatches);
+   
    allFeatPtMatches = featPtMatches;
    allPairIdx = pairIdx;
-   //	drawFeatPointMatches(view0, view1, featPtMatches);
    computeEpipolar (featPtMatches, pairIdx, K, F, R, E, t, true);
    cout<<"R="<<R<<endl<<"t="<<t<<endl;
    view1.t_loc = t;
-   //	drawFeatPointMatches(view0, view1, featPtMatches);
    bool isRgood = true;
    vpPairIdx = matchVanishPts_withR(view0, view1, R, isRgood);
 
@@ -121,12 +116,12 @@ void Mfg::initialize()
             R, t, K, featPtMatches[i][0],	featPtMatches[i][1]);
       tmpkp.push_back(KeyPoint3d(X.at<double>(0),X.at<double>(1),X.at<double>(2)));
    }
-   //	twoview_ba(K, R, t, tmpkp, featPtMatches);
    cv::Point2d ep1 = mat2cvpt(K*R.t()*t);
    cv::Point2d ep2 = mat2cvpt(K*t);
 
    view0.epipoleA = ep1;
    view1.epipoleB = ep2;
+
 
    // ----- sort point matches by parallax -----
    vector<valIdxPair> prlxVec;
@@ -147,9 +142,10 @@ void Mfg::initialize()
       featPtMatches.push_back(copyFeatPtMatches[prlxVec[i].second]);
    }
 
-
+#ifdef PLOT_MID_RESULTS
    cv::Mat canv1 = view0.img.clone();
    cv::Mat canv2 = view1.img.clone();
+#endif   
    // --- set up 3d key points ---
    int numNew3dPt = 0;
    cv::Mat X(4,1,CV_64F);
@@ -173,10 +169,7 @@ void Mfg::initialize()
          kp.viewId_ptLid.push_back(view_point);
          kp.is3D = false;
          keyPoints.push_back(kp);
-#ifndef HIGH_SPEED_NO_GRAPHICS
-         cv::circle(canv1, featPtMatches[i][0], 2, cv::Scalar(0,0,0,1), 1);
-         cv::putText(canv1, " "+num2str(i), featPtMatches[i][0], 1, 1, cv::Scalar(0,0,0,1));
-#endif
+
       } else {
          if(numNew3dPt > maxNoNew3dPt) continue;
          cv::Mat X = triangulatePoint_nonlin ( cv::Mat::eye(3,3,CV_64F), cv::Mat::zeros(3,1,CV_64F),
@@ -201,10 +194,6 @@ void Mfg::initialize()
          kp.estViewId = 1;
          keyPoints.push_back(kp);
          numNew3dPt++;
-#ifndef HIGH_SPEED_NO_GRAPHICS
-         cv::circle(canv2, featPtMatches[i][1], 2, cv::Scalar(0,0,0,1), 1);
-         cv::putText(canv2, " "+num2str(parallax)+","+num2str(cv::norm(X)), featPtMatches[i][1], 1, 1, cv::Scalar(0,0,0,1));
-#endif
       }
    }
 
@@ -235,9 +224,7 @@ void Mfg::initialize()
    }
 
    matchIdealLines(view0, view1, vpPairIdx, featPtMatches, F, ilinePairIdx, 1);
-   //	drawLineMatches(view0.img,view1.img, view0.idealLines, view1.idealLines, ilinePairIdx);
-   //	detectPlanes_2Views (view0, view1, R, t, vpPairIdx, ilinePairIdx, primaryPlanes);
-
+   
    for(int i=0; i < keyPoints.size(); ++i) {
       if(! keyPoints[i].is3D || keyPoints[i].gid<0) continue;
       FeatPoint2d p0 = view0.featurePoints[keyPoints[i].viewId_ptLid[0][1]];
@@ -254,7 +241,6 @@ void Mfg::initialize()
    }
 
    // ----- set up 3D lines (only coplanar ones) -----
-
    for(int i=0; i < ilinePairIdx.size(); ++i) {
       double prlx = compParallax(view0.idealLines[ilinePairIdx[i][0]],
             view1.idealLines[ilinePairIdx[i][1]], K, view0.R, view1.R);
@@ -305,16 +291,13 @@ void Mfg::initialize()
          line.viewId_lnLid.push_back(pair);
          idealLines.push_back(line);
          cout<<line.gid<<'\t';
+#ifdef PLOT_MID_RESULTS
          cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
          cv::line(canv1, a.extremity1, a.extremity2, color, 2);
          cv::line(canv2, b.extremity1, b.extremity2, color, 2);
+#endif         
       }
    }
-   //	drawLineMatches(view0.img,view1.img, view0.idealLines, view1.idealLines, ilinePairIdx);
-   //	showImage("view0", &canv1);
-   //	showImage("view1", &canv2);
-
-   //cv::waitKey(2000);
 
    Matrix3d Rx;
    Rx << R.at<double>(0,0), R.at<double>(0,1), R.at<double>(0,2),
@@ -329,7 +312,7 @@ void Mfg::initialize()
 
 
    updatePrimPlane();
-   cout<<endl<<"Mfg initialization done <<<<<<<<<<<<<<"<<endl<<endl;
+   cout<<endl<<" >>>>>>>>>> MFG initialized using two views <<<<<<<<<<"<<endl;
 
    return;
 }
@@ -385,7 +368,6 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       }
       if(!found_in_track) {// not found in track, then do opticalflow track
          // wrt last one in track
-         //		cout<<"ops, need to track for selected key frame....\n";
          vector<cv::Point2f> curr_pts;
          vector<uchar> status;
          vector<float> err;
@@ -422,7 +404,6 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
 
       for(int j=0; j < nview.featurePoints.size(); ++j) {
          bool pt_exist = false;
-         // change to flann later
          for(int k=0; k <frm_same_nview.featpts.size(); ++k) {
             float dx = frm_same_nview.featpts[k].x - nview.featurePoints[j].x;
             float dy = frm_same_nview.featpts[k].y - nview.featurePoints[j].y;
@@ -460,21 +441,18 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       }
 
    }
-#ifndef HIGH_SPEED_NO_GRAPHICS
+#ifdef PLOT_MID_RESULTS
    cv::Mat canv1 = prev.img.clone(), canv2=nview.img.clone();
    for(int i=0; i<featPtMatches.size(); ++i) {
       cv::circle(canv1, featPtMatches[i][0], 2, cv::Scalar(100,200,200), 2);
       cv::circle(canv2, featPtMatches[i][1], 2, cv::Scalar(100,200,200), 2);
    }
-   //	showImage("1",&canv1);
-   //	showImage("2",&canv2);
-   //	cv::waitKey();
 #endif
    trackFrms.clear();
 
    //cv::Mat t_prev = prev.t - (prev.R * views[views.size()-3].R.t()) * views[views.size()-3].t;
    cv::Mat t_prev = views[views.size()-2].t_loc;
-   cout<<t_prev<<endl;
+//   cout<<t_prev.t()<<endl;
 
    cv::Mat F, R, E, t; // relative pose between last two views
 
@@ -483,16 +461,14 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
 
    MyTimer timer;	timer.start();
    computePotenEpipolar (featPtMatches,pairIdx,K, Fs, Es, Rs, ts, false, t_prev);
-   timer.end();	cout<<pairIdx.size()<<"\t"<<"computePotenEpipolar time:"<<timer.time_ms<<"ms\n";
+   timer.end(); //	cout<<pairIdx.size()<<"\t"<<"computePotenEpipolar time:"<<timer.time_ms<<"ms\n";
    // ---- find observed 3D points (and plot)  ------
    vector<cv::Point3d> pt3d, pt3d_old;
    vector<cv::Point2d> pt2d, pt2d_old;
-   //	cv::Mat canv1 = prev.img.clone(), canv2 = nview.img.clone();
    for(int i=0; i < featPtMatches.size(); ++i) {
-      int gid = prev.featurePoints[pairIdx[i][0]].gid;
+      int gid = prev.featurePoints[pairIdx[i][0]].gid;      
+#ifdef PLOT_MID_RESULTS
       cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
-#ifndef HIGH_SPEED_NO_GRAPHICS
-
       if (gid >= 0 && keyPoints[gid].is3D) { // observed 3d pts
          cv::circle(canv1, featPtMatches[i][0], 4, color, 2);
          cv::circle(canv2, featPtMatches[i][1], 4, color, 2);
@@ -511,13 +487,26 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       }
    }
 
+   ///// apply pnp //////
+   cv::Mat Rn_pnp, tn_pnp, R_pnp, t_pnp;
+   for(int i=0; i<pt3d.size(); ++i) {
+      if (pt2d[i].x < prev.img.cols/16.0 || pt2d[i].x > prev.img.cols*15/16.0)
+      { // don't use pts on border due to distortion
+         pt3d.erase(pt3d.begin()+i);
+         pt2d.erase(pt2d.begin()+i);
+         i--;
+      }
+   }
+   if (pt3d.size()>3) {
+      computePnP(pt3d, pt2d, K, Rn_pnp, tn_pnp);   
+      R_pnp = Rn_pnp * prev.R.t();
+      t_pnp = tn_pnp - R_pnp * prev.t; // relative t, with scale
+   }
 
-#ifdef PREDICT_POSE_USE_R_AND_T
    vector <int> maxInliers_Rt;
    double bestScale = -100;
    vector<KeyPoint3d> localKeyPts;
    vector<double> sizes;
-   //	cout<<"Observed 3d points: "<<pt3d.size() <<endl;
    for(int trial=0; trial < 20; ++trial) {
       maxInliers_Rt.clear();
       localKeyPts.clear();
@@ -545,10 +534,8 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          vector<KeyPoint3d> tmpkp; // temporary keypoints
          int num_usable_pts = 0;
          for(int i=0; i < featPtMatches.size(); ++i) {
-            double parallax = compParallax (featPtMatches[i][0], featPtMatches[i][1], K, cv::Mat::eye(3,3,CV_64F), Ri);
             double parallaxDeg = compParallaxDeg (featPtMatches[i][0], featPtMatches[i][1], K, cv::Mat::eye(3,3,CV_64F), Ri);
             int iGid = prev.featurePoints[pairIdx[i][0]].gid;
-            //		if ((parallax > parallaxThresh * 0.8) && iGid >= 0 && keyPoints[iGid].is3D) {
             if ((parallaxDeg > parallaxDegThresh * 0.8) && iGid >= 0 && keyPoints[iGid].is3D) {
                cv::Mat X = triangulatePoint_nonlin (cv::Mat::eye(3,3,CV_64F), cv::Mat::zeros(3,1,CV_64F),
                      Ri, ti, K, featPtMatches[i][0],	featPtMatches[i][1]);
@@ -560,7 +547,6 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
                tmpkp.back().is3D = false;
             }
          }
-         cout<<"usable local 3d pts for scale estimate: "<<num_usable_pts<<endl;
          if(num_usable_pts < 1)
             continue; // abandon this pair of Ri ti
 
@@ -570,7 +556,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          vector<int> maxInliers;
          double best_s = -1;
          for (int it = 0; it < maxIter; ++it) {
-            int i = rand()%featPtMatches.size();
+            int i = xrand()%featPtMatches.size();
             int iGid = prev.featurePoints[pairIdx[i][0]].gid;
             if (iGid < 0) {--it; continue;} // not observed before
             if (!keyPoints[iGid].is3D||keyPoints[iGid].gid<0) {--it; continue;}  // not 3D point yet
@@ -596,7 +582,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
                best_s = s;
             }
          }
-         cout<<ti<<" "<<maxInliers.size()<<endl;
+         cout<<ti.t()<<" "<<maxInliers.size()<<endl;
 
          if(cv::norm(t_prev)>0.1 && abs(ti.dot(t_prev)) < cos(50*PI/180.0) ) { // larger than 45 deg
             cout<<"... smooth constraint violated...\n";
@@ -618,7 +604,6 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
                || sizes[sizes.size()-2] >= sizes[sizes.size()-1]-1 )) {
          // ----- use motion smooth constraint ------
          if (1 || sizes[sizes.size()-1] < 5) {
-            cout<<"t_prev = "<< t_prev<<endl;
             // filter out some R and t
             double minVal=1, minIdx=0;
             for(int i = 0; i < Rs.size(); ++i) {
@@ -659,12 +644,11 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
             if(keyPoints[gid].viewId_ptLid[k][0] >= keyPoints[gid].estViewId)
                obsTimesSinceEst ++;
          }
-#ifndef HIGH_SPEED_NO_GRAPHICS
+#ifdef PLOT_MID_RESULTS
          cv::putText(canv2, "  "+num2str(s), featPtMatches[j][1], 1, 1, color);
 #endif
          wsum = wsum + s * pow((double)obsTimesSinceEst+1, 3);
          tw = tw + pow((double)obsTimesSinceEst+1, 3);
-
          scales.push_back(s);
 
          if(keyPoints[gid].viewId_ptLid.size() >= 3 && obsTimesSinceEst >=2 ) { // point observed at 3 times
@@ -674,18 +658,26 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       }
       if (scales.size() > 0) {
          scale = wsum/tw;
-         cout<<nview.frameId-prev.frameId<<" frames, bestScale = " << bestScale
-            <<", w-ave="<< wsum/tw<<", median=" << vecMedian(scales) <<endl;
+   //      cout<<nview.frameId-prev.frameId<<" frames, bestScale = " << bestScale <<", w-ave="<< wsum/tw<<", median=" << vecMedian(scales) <<endl;
          if (scales3.size() >= 15) {
             scale = vecMedian(scales3);
-            cout<<nview.frameId-prev.frameId<<" frames,"<<"ave="<<vecSum(scales3)/scales3.size()
-               <<", median="<<vecMedian(scales3)<< ", ["<< scales3.size()<<"]"<<endl;
+   //         cout<<nview.frameId-prev.frameId<<" frames,"<<"ave="<<vecSum(scales3)/scales3.size() <<", median="<<vecMedian(scales3)<< ", ["<< scales3.size()<<"]"<<endl;
          }
          scale = (scale + bestScale + vecMedian(scales))/3;
-         cout<<nview.id<<": mixed scale = "<<scale<<endl;
+         cout<<"keyframe "<<nview.id<<", "<<nview.frameId-prev.frameId<<" frames: mixed scale = "<<scale<<endl;
       } else {
          scale = bestScale;
       }
+      ///// compare with pnp result /////      
+      if(maxInliers_Rt.size() < 5 
+         && pt3d.size() > 7
+         && (abs(scale - cv::norm(t_pnp)) > 0.7 * scale || abs(scale - cv::norm(t_pnp)) > 0.7 * cv::norm(t_pnp)) 
+        ) {
+         cout<<"Inconsistent pnp and 5-pt: "<< cv::norm(t_pnp) <<", "<<scale<<endl;
+         int tmp;  cin>>tmp;
+         scale = cv::norm(t_pnp);
+      }
+
       nview.t = R*prev.t + t*scale;
       nview.t_loc = t;
    } else { // small movement, use R-PnP
@@ -723,8 +715,8 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
             cv::Mat good_tn;
             double best_s = -1;
             for (int it = 0; it < maxIter; ++it) {
-               int i = rand() % pt3d.size();
-               int j = rand() % pt3d.size();
+               int i = xrand() % pt3d.size();
+               int j = xrand() % pt3d.size();
                if(i==j) {--it; continue;}
                vector<cv::Point3d> samplePt3d;
                samplePt3d.push_back(pt3d[i]);
@@ -750,7 +742,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
                   good_tn = tn;
                }
             }
-            cout<<ti<<",, "<<maxInliers.size()<<endl;
+            cout<<ti.t()<<",, "<<maxInliers.size()<<endl;
             sizes.push_back(maxInliers.size());
             if (maxInliers.size() > maxInliers_R.size()) {
                maxInliers_R = maxInliers;
@@ -767,114 +759,40 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
             break;
       }
       // ------ re-compute scale on largest concensus set --------
+    #ifdef PLOT_MID_RESULTS
       cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
-
-      vector<cv::Point3d> inlierPt3d;
-      vector<cv::Point2d> inlierPt2d;
-      for(int i=0; i < maxInliers_R.size(); ++i) {
-         inlierPt3d.push_back(pt3d[maxInliers_R[i]]);
-         inlierPt2d.push_back(pt2d[maxInliers_R[i]]);
-      }
-      nview.R = R*prev.R;
-      nview.t = pnp_withR (inlierPt3d, inlierPt2d, K, nview.R);
-      nview.t_loc = cv::Mat::zeros(3,1,CV_64F);
-      cout<<nview.frameId-prev.frameId<<" frames,"<<"Scale (2pt_alg)="
-         <<cv::norm(-nview.R.t()*nview.t + prev.R.t()*prev.t)<<", "
-         <<maxInliers_R.size()<<"/"<<pt3d.size()<<endl;
-   }
 #endif
+      if(maxInliers_R.size() >= 5) {
+         vector<cv::Point3d> inlierPt3d;
+         vector<cv::Point2d> inlierPt2d;
+         for(int i=0; i < maxInliers_R.size(); ++i) {
+            inlierPt3d.push_back(pt3d[maxInliers_R[i]]);
+            inlierPt2d.push_back(pt2d[maxInliers_R[i]]);
+         }      
+         nview.R = R*prev.R;
+         nview.t = pnp_withR (inlierPt3d, inlierPt2d, K, nview.R);
+         nview.t_loc = cv::Mat::zeros(3,1,CV_64F);
+         cout<<nview.frameId-prev.frameId<<" frames,"<<"Scale (2pt_alg)="
+            <<cv::norm(-nview.R.t()*nview.t + prev.R.t()*prev.t)<<", "
+            <<maxInliers_R.size()<<"/"<<pt3d.size()<<endl;
+      } else { 
+         cout <<"Insufficient feature info for relative pose estimation...\n";
+         // use pnp or const vel
+         ///// compare with pnp result /////
+         if(pt3d.size() > 7) {
+            cout<<"fallback to pnp : "<< cv::norm(t_pnp) <<endl;     
+            int tmp; cin>>tmp;
+            nview.R = Rn_pnp;
+            nview.t = tn_pnp;  
+            R = R_pnp;
+            t = t_pnp;
+         } else {
+            cout<<"need to use const-vel model ...\n";
 
-#ifdef PREDICT_POSE_USE_R_NOT_T
-   vector <int> maxInliers_R;
-   cv::Mat best_tn;
-   vector<double> sizes;
-   for(int trial=0; trial < 10; ++trial) {
-      maxInliers_R.clear();
-      sizes.clear();
-
-      for(int iter = 0; iter < Rs.size(); ++iter) {
-         cv::Mat Ri = Rs[iter],	ti = ts[iter];
-         bool isRgood = true;
-         vector<vector<int>> vpPairIdx = matchVanishPts_withR(prev, nview, Ri, isRgood);
-         if (!isRgood && featPtMatches.size() < numPtpairLB) {
-            // when point matches are inadequate, E (R,t) are not reliable, even errant
-            // if R is not consistent with VPs, reestimate with VPs)
-            cout<<"R is inconsistent with vanishing point correspondences****"<<endl;
-            vector<vector<cv::Mat>> vppairs;
-            for(int i = 0; i < vpPairIdx.size(); ++i) {
-               vector<cv::Mat> pair;
-               pair.push_back(prev.vanishPoints[vpPairIdx[i][0]].mat());
-               pair.push_back(nview.vanishPoints[vpPairIdx[i][1]].mat());
-               vppairs.push_back(pair);
-            }
-            optimizeRt_withVP (K, vppairs, 1000, featPtMatches,Ri, ti);
-            matchVanishPts_withR(prev, nview, Ri, isRgood);
-            cout<<"rectified:"<<R<<endl<<t<<endl;
-         }
-
-         cv::Mat Rn = Ri *prev.R;
-
-         // ----- find best R and t based on existent 3D points------
-         int maxIter = 100;
-         vector<int> maxInliers;
-         cv::Mat good_tn;
-         double best_s = -1;
-         for (int it = 0; it < maxIter; ++it) {
-            int i = rand() % pt3d.size();
-            int j = rand() % pt3d.size();
-            if(i==j) {--it; continue;}
-            vector<cv::Point3d> samplePt3d;
-            samplePt3d.push_back(pt3d[i]);
-            samplePt3d.push_back(pt3d[j]);
-            vector<cv::Point2d> samplePt2d;
-            samplePt2d.push_back(pt2d[i]);
-            samplePt2d.push_back(pt2d[j]);
-
-            cv::Mat tn = pnp_withR (samplePt3d, samplePt2d, K, Rn);
-
-            vector<int> inliers;
-            for(int j=0; j < pt3d.size(); ++j) {
-               // project 3d to n-th view
-               cv::Mat pt = K*(Rn * cvpt2mat(pt3d[j],0) + tn);
-               if (cv::norm(pt2d[j] - mat2cvpt(pt)) < reprjThresh )
-                  inliers.push_back(j);
-            }
-            if (maxInliers.size() < inliers.size()) {
-               maxInliers = inliers;
-               good_tn = tn;
-            }
-         }
-         cout<<ti<<" "<<maxInliers.size()<<endl;
-         sizes.push_back(maxInliers.size());
-         if (maxInliers.size() > maxInliers_R.size()) {
-            maxInliers_R = maxInliers;
-            best_tn = good_tn;
-            R = Ri;
-            t = ti;
-            F = Fs[iter];
+            exit(0);
          }
       }
-      sort(sizes.begin(), sizes.end());
-      if(sizes.size()>1 && sizes[sizes.size()-2] >= sizes[sizes.size()-1] * 0.95)
-         reprjThresh = reprjThresh * 0.9;
-      else
-         break;
    }
-   // ------ re-compute scale on largest concensus set --------
-   cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
-
-   vector<cv::Point3d> inlierPt3d;
-   vector<cv::Point2d> inlierPt2d;
-   for(int i=0; i < maxInliers_R.size(); ++i) {
-      inlierPt3d.push_back(pt3d[maxInliers_R[i]]);
-      inlierPt2d.push_back(pt2d[maxInliers_R[i]]);
-   }
-   nview.R = R*prev.R;
-   nview.t = pnp_withR (inlierPt3d, inlierPt2d, K, nview.R);
-   cout<<nview.frameId-prev.frameId<<" frames,"<<"Scale (2pt_alg)="
-      <<cv::norm(-nview.R.t()*nview.t + prev.R.t()*prev.t)<<", "
-      <<maxInliers_R.size()<<"/"<<pt3d.size()<<endl;
-#endif
 
    // ---- plot epipoles ----
    cv::Point2d ep1 = mat2cvpt(K*R.t()*t);
@@ -883,7 +801,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
    prev.epipoleA = ep1;
    nview.epipoleB = ep2;
    double epNeibRds = 0.0 * IDEAL_IMAGE_WIDTH/640;
-#ifndef HIGH_SPEED_NO_GRAPHICS
+#ifdef PLOT_MID_RESULTS
    cv::circle(canv1, ep1, epNeibRds, cv::Scalar(0,0,100), 1);
    cv::circle(canv2, ep2, epNeibRds, cv::Scalar(0,0,100), 1);
 #endif
@@ -950,15 +868,14 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       if ( ptGid >= 0 && keyPoints[ptGid].is3D ) { // points represented in 3D form
       } else if (ptGid >= 0 && !keyPoints[ptGid].is3D) {// point exist as 2D track
       } else { // newly found points
-         double parallax = compParallax (featPtMatches[i][0], featPtMatches[i][1], K,cv::Mat::eye(3,3,CV_64F), R);
          double parallaxDeg = compParallaxDeg (featPtMatches[i][0], featPtMatches[i][1], K,cv::Mat::eye(3,3,CV_64F), R);
          cv::Mat Xw =  triangulatePoint_nonlin (prev.R, prev.t, nview.R, nview.t, K,
                featPtMatches[i][0], featPtMatches[i][1]);
          cv::Mat Xc = triangulatePoint (cv::Mat::eye(3,3,CV_64F), cv::Mat::zeros(3,1,CV_64F),
                R, t, K,	featPtMatches[i][0], featPtMatches[i][1]);
 
+#ifdef PLOT_MID_RESULTS
          cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
-#ifndef HIGH_SPEED_NO_GRAPHICS
          if (parallaxDeg > parallaxDegThresh) {
             cv::circle(canv1, featPtMatches[i][0], 2, color, 2);
             cv::circle(canv2, featPtMatches[i][1], 2, color, 2);
@@ -1005,7 +922,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
             view_point.push_back(pairIdx[i][1]);
             kp.viewId_ptLid.push_back(view_point);
             keyPoints.push_back(kp);
-#ifndef HIGH_SPEED_NO_GRAPHICS
+#ifdef PLOT_MID_RESULTS
             cv::circle(canv1, featPtMatches[i][0], 7, color, 1);
             cv::circle(canv2, featPtMatches[i][1], 7, color, 1);
             cv::putText(canv1, " "+num2str(cv::norm(Xw+nview.R.t()*nview.t)), featPtMatches[i][0],
@@ -1026,9 +943,8 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       }
       else if (ptGid >= 0 && !keyPoints[ptGid].is3D) {// point exist as 2D track
          cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
-         double parallax = compParallax (featPtMatches[i][0], featPtMatches[i][1], K, cv::Mat::eye(3,3,CV_64F), R);
          double parallaxDeg = compParallaxDeg(featPtMatches[i][0], featPtMatches[i][1], K, cv::Mat::eye(3,3,CV_64F), R);
-#ifndef HIGH_SPEED_NO_GRAPHICS
+#ifdef PLOT_MID_RESULTS
          if (parallaxDeg > parallaxDegThresh) {
             cv::circle(canv1, featPtMatches[i][0], 2, color, 2);
             cv::circle(canv2, featPtMatches[i][1], 2, color, 2);
@@ -1097,7 +1013,6 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
             pt.push_back(views[vid].featurePoints[lid].cvpt());
          }
          est3dpt (Rs, ts, K, pt, bestKeyPt); // nonlinear estimation
-         //est3dpt_g2o (Rs, ts, K, pt, bestKeyPt); // nonlinear estimation
          if(cv::norm(bestKeyPt+nview.R.t()*nview.t) > mfgSettings->getDepthLimit() ) continue;
 
          // --- 3) establish 3d pt ---
@@ -1106,7 +1021,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          keyPoints[ptGid].x = bestKeyPt.at<double>(0);
          keyPoints[ptGid].y = bestKeyPt.at<double>(1);
          keyPoints[ptGid].z = bestKeyPt.at<double>(2);
-#ifndef HIGH_SPEED_NO_GRAPHICS
+#ifdef PLOT_MID_RESULTS
          cv::circle(canv1, featPtMatches[i][0], 7, color, 2);
          cv::circle(canv2, featPtMatches[i][1], 7, color, 2);
          cv::putText(canv1, " "+num2str(cv::norm(bestKeyPt+nview.R.t()*nview.t)), featPtMatches[i][0],
@@ -1115,9 +1030,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          new2_3dPtNum ++;
       }
    }
-   tm.end(); cout<<"2d->3d: "<<tm.time_ms<<endl;
-   cout<<"2d->3d pt: "<<new2_3dPtNum<<", add new 3d pt:"<<new3dPtNum<<endl;
-#ifdef PREDICT_POSE_USE_R_AND_T
+   tm.end(); //cout<<"2d->3d: "<<tm.time_ms<<endl;
    // remove outliers
    for(int i=0; i < maxInliers_Rt.size(); ++i) {
       int j = maxInliers_Rt[i];
@@ -1137,7 +1050,6 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          keyPoints[gid].viewId_ptLid.clear();
       }
    }
-#endif
 
    // ----- setup/update vanishing points -----
    bool isRgood;
@@ -1195,16 +1107,11 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
    update3dIdealLine(ilinePairIdx, nview);
    updatePrimPlane();
    // ---- write to images for debugging ----
-#ifndef HIGH_SPEED_NO_GRAPHICS
+#ifdef PLOT_MID_RESULTS
    cv::imwrite("./tmpimg/"+num2str(views.back().id)+"_pt1.jpg", canv1);
    cv::imwrite("./tmpimg/"+num2str(views.back().id)+"_pt2.jpg", canv2);
 #endif
    views.back().drawAllLineSegments(true);
-
-   //	showImage("match1", &canv1);
-   //	showImage("match2" ,&canv2);
-
-   //	cv::waitKey();
 }
 
 void Mfg::update3dIdealLine(vector<vector<int>> ilinePairIdx, View& nview)
@@ -1221,7 +1128,7 @@ void Mfg::update3dIdealLine(vector<vector<int>> ilinePairIdx, View& nview)
    if (rotateMode()) {
       parallaxThresh = parallaxThresh * 1.5;
    }
-#ifndef HIGH_SPEED_NO_GRAPHICS
+#ifdef PLOT_MID_RESULTS
    cv::Mat canv1 = prev.img.clone(), canv2 = nview.img.clone();
 #endif
    vector<int> vid_lid;
@@ -1327,18 +1234,16 @@ void Mfg::update3dIdealLine(vector<vector<int>> ilinePairIdx, View& nview)
             linewidth = 2; // 2d to 3d conversion
          }
       }
-#ifndef HIGH_SPEED_NO_GRAPHICS
+#ifdef PLOT_MID_RESULTS
       if(linewidth > 0) {
          cv::line(canv1, prev.idealLines[ilinePairIdx[i][0]].extremity1, prev.idealLines[ilinePairIdx[i][0]].extremity2, color, linewidth);
          cv::line(canv2, nview.idealLines[ilinePairIdx[i][1]].extremity1, nview.idealLines[ilinePairIdx[i][1]].extremity2, color, linewidth);
       }
 #endif
    }
-#ifndef HIGH_SPEED_NO_GRAPHICS
-#ifndef USE_PT_ONLY_FOR_LBA
+#ifdef PLOT_MID_RESULTS
    cv::imwrite("./tmpimg/ln_"+num2str(views.back().id)+"_1.jpg", canv1);
    cv::imwrite("./tmpimg/ln_"+num2str(views.back().id)+"_2.jpg", canv2);
-#endif
 #endif
 }
 
@@ -1474,24 +1379,6 @@ void Mfg::draw3D() const
       glEnd();
    }
 
-   /*	// plot mfg planes
-      glBegin(GL_LINES);
-      glColor3f((rand()%100)/100.0,(rand()%100)/100.0,(rand()%100)/100.0);
-
-      for(int i =0; i<views[0].idealLines.size(); ++i)
-      {
-      if (views[0].idealLines[i].pGid <0) continue;
-      cv::Mat edp1, edp2;
-      projectImgPt2Plane(cvpt2mat(views[0].idealLines[i].extremity1),
-      primaryPlanes[views[0].idealLines[i].pGid], K, edp1);
-      projectImgPt2Plane(cvpt2mat(views[0].idealLines[i].extremity2),
-      primaryPlanes[views[0].idealLines[i].pGid], K, edp2);
-      glVertex3f(edp1.at<double>(0),edp1.at<double>(1),edp1.at<double>(2));
-      glVertex3f(edp2.at<double>(0),edp2.at<double>(1),edp2.at<double>(2));
-      }
-      glEnd();
-      */
-
    glPointSize(3.0);
    glBegin(GL_POINTS);
    for (int i=0; i<keyPoints.size(); ++i){
@@ -1499,40 +1386,27 @@ void Mfg::draw3D() const
       if(keyPoints[i].pGid < 0) // red
          glColor3f(0.6, 0.6, 0.6);
       else { // coplanar green
-         glColor3f(planeColors[keyPoints[i].pGid][0],
-               planeColors[keyPoints[i].pGid][1],planeColors[keyPoints[i].pGid][2]);
+         glColor3f(0.0, 1.0, 0.0);
       }
       glVertex3f(keyPoints[i].x, keyPoints[i].y, keyPoints[i].z);
    }
    glEnd();
 
-#ifndef USE_PT_ONLY_FOR_LBA
    glColor3f(0,1,1);
    glLineWidth(2);
    glBegin(GL_LINES);
    for(int i=0; i<idealLines.size(); ++i) {
       if(!idealLines[i].is3D || idealLines[i].gid<0) continue;
-      /*	if(idealLines[i].vpGid == 0)
-         glColor3f(1,0,0);
-         else if (idealLines[i].vpGid == 1)
-         glColor3f(0,1,0);
-         else if (idealLines[i].vpGid == 2)
-         glColor3f(0,0,1);
-         else
-         glColor3f(0,0,0);
-         */
       if(idealLines[i].pGid < 0) {
          glColor3f(0,0,0);
       } else {
-         glColor3f(planeColors[idealLines[i].pGid][0],
-               planeColors[idealLines[i].pGid][1],planeColors[idealLines[i].pGid][2]);
+         glColor3f(0.0,1.0,0.0);
       }
 
       glVertex3f(idealLines[i].extremity1().x,idealLines[i].extremity1().y,idealLines[i].extremity1().z);
       glVertex3f(idealLines[i].extremity2().x,idealLines[i].extremity2().y,idealLines[i].extremity2().z);
    }
    glEnd();
-#endif
 }
 
 void Mfg::adjustBundle()
@@ -1541,14 +1415,8 @@ void Mfg::adjustBundle()
    if (views.size() <=numFrm ){
       numPos = numFrm;
    }
-#ifdef	USE_PT_ONLY_FOR_LBA
-   //adjustBundle_Pt_Rel(numPos, numFrm);
-   adjustBundle_Pt_G2O(numPos, numFrm);
-#else
-   //adjustBundle_PtLnVp_Rel(numPos, numFrm);
    adjustBundle_G2O(numPos, numFrm);
 
-#endif
    // write to file
    exportCamPose (*this, "camPose.txt");
    exportMfgNode (*this, "mfgNode.txt");
@@ -1688,7 +1556,7 @@ void Mfg::detectPtOutliers(double threshPt2PtDist)
          }
       }
    }
-   cout<<"delete 3d pts : "<<n_del<<endl;
+//   cout<<"delete 3d pts : "<<n_del<<endl;
 }
 
 bool Mfg::rotateMode ()

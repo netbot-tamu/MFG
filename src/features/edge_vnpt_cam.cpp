@@ -70,16 +70,8 @@ namespace g2o {
 		VertexVanishPoint *v_vp = static_cast<VertexVanishPoint*>(_vertices[0]);
 		const VertexCam *cam = static_cast<const VertexCam*>(_vertices[1]);
 
-		// calculate the error: option 1 - image point dists
-/*      const Eigen::Vector3d &vp = v_vp->estimate();
-		Eigen::Vector4d hvp(vp(0),vp(1),vp(2),0);  // homogeneous, last element = 0 for vanishing point
-		Eigen::Vector3d hvp_im = cam->estimate().w2i * hvp;
-		Eigen::Vector2d ihvp_im;
-		ihvp_im = hvp_im.head<2>()/hvp_im(2);
-		_error = ihvp_im - _measurement; // error vector
-*/
 
-		// calculate the error: option 2 - 3D unit vector angles
+		// calculate the error: 3D unit vector angles
 		const Eigen::Vector3d &vp = v_vp->estimate();
 		Eigen::Vector4d hvp(vp(0),vp(1),vp(2),0);  // homogeneous, last element = 0 for vanishing point
 		Eigen::Vector3d ihvp_c = cam->estimate().w2n * hvp; // inhomogenous, in camera coordinates
@@ -90,20 +82,6 @@ namespace g2o {
 		_error(0) = ang;
 		_error(1) = ang;
 
-		// calculate the error: option 3 - <a,b> (angle representation of unit vector)
-/*		const Eigen::Vector3d &vp = v_vp->estimate();
-		Eigen::Vector4d hvp(vp(0),vp(1),vp(2),0);  // homogeneous, last element = 0 for vanishing point
-		Eigen::Vector3d ihvp_c = cam->estimate().w2n * hvp; // inhomogenous, in camera coordinates
-		cv::Mat ihvp_c_mat = (cv::Mat_<double>(3,1)<<ihvp_c(0),ihvp_c(1),ihvp_c(2));
-		ihvp_c_mat = ihvp_c_mat/cv::norm(ihvp_c_mat);
-		double alpha, beta;
-		unitVec2angle(ihvp_c_mat, &alpha, &beta);
-		_error(0) = alpha - _measurement(0);
-		_error(1) = beta - _measurement(1);
-		// try the opposite direction
-		unitVec2angle(-ihvp_c_mat, &alpha, &beta);
-		Eigen::Vector2d ab(alpha, beta);
-*/
 	}
 
 

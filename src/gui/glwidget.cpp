@@ -3,7 +3,6 @@
 #include <QtGui>
 #include <math.h>
 
-#include "twoview.h"
 
 #ifndef GL_MULTISAMPLE
 #define GL_MULTISAMPLE  0x809D
@@ -14,8 +13,7 @@ double scale_const = 2000;
 
 GLWidget::GLWidget(QWidget *parent)
 : QGLWidget(QGLFormat(QGL::SampleBuffers), parent)
-{
-   scene = 0;
+{ 
    xRot = 270*16;
    yRot = 0;
    zRot = 0;
@@ -112,15 +110,9 @@ void GLWidget::paintGL()
    glRotatef(yRot / 16.0, 0.0, 1.0, 0.0);
    glRotatef(zRot / 16.0, 0.0, 0.0, 1.0);
    glScalef(scale/scale_const,scale/scale_const,scale/scale_const);
-#ifndef HIGH_SPEED_NO_GRAPHICS
-   if (scene)
-      scene->draw3D();
    if (map) {
       map->draw3D();
    }
-#endif
-   //     glColorMaterial ( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE );
-   //     glEnable ( GL_COLOR_MATERIAL );
 
 }
 

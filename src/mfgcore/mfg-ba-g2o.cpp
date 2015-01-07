@@ -40,9 +40,7 @@
 #include "edge_point_plane.h"
 #include "edge_line_vp_plane.h"
 #include <fstream>
-//#include "levmar-2.6/lm.h"
 #include "levmar-2.6/levmar.h"
-//#include <Windows.h>
 
 using namespace Eigen;
 extern MfgSettings* mfgSettings;
@@ -50,8 +48,6 @@ extern MfgSettings* mfgSettings;
 void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 // local bundle adjustment: points+vp
 {
-
-	// ----- BA setting -----
 	// Note: numFrm should be larger or equal to numPos+2, to fix scale
 
 	// ----- G2O parameter setting -----
@@ -65,12 +61,8 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 	g2o::SparseOptimizer optimizer;
 	optimizer.setVerbose(false);
 	MyLinearSolver* linearSolver = new MyLinearSolver();
-	MyDenseLinearSolver* linearDenseSolver= new MyDenseLinearSolver();
-
 	MyBlockSolver* solver_ptr = new MyBlockSolver(linearSolver);
-//	MyBlockSolver* solver_ptr = new MyBlockSolver(linearDenseSolver);
 	g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(solver_ptr);
-//	g2o::OptimizationAlgorithmGaussNewton* solver = new g2o::OptimizationAlgorithmGaussNewton(solver_ptr);
 	optimizer.setAlgorithm(solver);
 
 	// -- add the parameter representing the sensor offset  !!!!
@@ -99,7 +91,7 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 		v_cam->setId(vertex_id);
 		g2o::SBACam sc(q.inverse(), pose.inverse().translation());
 	//	((g2o::SBACam*)v_cam)->setKcam(K.at<double>(0,0),K.at<double>(1,1),K.at<double>(0,2),K.at<double>(1,2),0);//???
-		sc.setKcam(K.at<double>(0,0),K.at<double>(1,1),K.at<double>(0,2),K.at<double>(1,2),0); ///??????
+		sc.setKcam(K.at<double>(0,0),K.at<double>(1,1),K.at<double>(0,2),K.at<double>(1,2),0); ///
 		v_cam->setEstimate(sc);
 
 		if (i<1 || i<frontPosIdx) {
@@ -175,9 +167,7 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 	vector<g2o::VertexSBAPointXYZ*> lnvertVec;
 	for(int i=0; i < idealLines.size(); ++i) {
 		if(!idealLines[i].is3D || idealLines[i].gid<0) continue;
-#ifdef USE_VERT_LINE_ONLY
-		if(idealLines[i].vpGid != 0) continue;
-#endif
+
 		for(int j=0; j < idealLines[i].viewId_lnLid.size(); ++j) {
 			if(idealLines[i].viewId_lnLid[j][0] >= frontPosIdx) {
 				g2o::VertexSBAPointXYZ* v_lnpt = new g2o::VertexSBAPointXYZ();
@@ -519,7 +509,7 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 	optimizer.computeActiveErrors(); double baerr=optimizer.activeRobustChi2();
 	optimizer.setVerbose(0);
 	optimizer.optimize(maxIters);
-	timer.end(); cout<<"BA time:"<<timer.time_ms<<"ms,";
+	timer.end(); cout<<"LBA time:"<<timer.time_ms<<" ms,";
 
 	// ----- update camera and structure parameters -----
 	double scale = 1;
@@ -601,7 +591,7 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 			Vector3d rho;
 			vecEdgeKpt[i]->robustKernel()->robustify(vecEdgeKpt[i]->chi2(),rho);
 			errKpt += rho[0];
-#ifndef HIGH_SPEED_NO_GRAPHICS
+#ifdef PLOT_MID_RESULTS
 			if(vecEdgeKpt[i]->chi2()>100) {
 				int camid = camvid2fid[vecEdgeKpt[i]->vertices()[1]->id()];
 				int ptgid = ptvid2gid[vecEdgeKpt[i]->vertices()[0]->id()];
@@ -632,7 +622,7 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 			Vector3d rho;
 			vecEdgeVnpt[i]->robustKernel()->robustify(vecEdgeVnpt[i]->chi2(),rho);
 			errVnpt += rho[0];
-#ifndef HIGH_SPEED_NO_GRAPHICS
+#ifdef PLOT_MID_RESULTS
 			if( rho[0] >1000) {
 				int vpgid = vpvid2gid[vecEdgeVnpt[i]->vertices()[0]->id()];
 				int camid = camvid2fid[vecEdgeVnpt[i]->vertices()[1]->id()];
@@ -665,7 +655,7 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 			Vector3d rho;
 			vecEdgeLine[i]->robustKernel()->robustify(vecEdgeLine[i]->chi2(), rho);
 			errLine += rho[0];
-#ifndef HIGH_SPEED_NO_GRAPHICS
+#ifdef PLOT_MID_RESULTS
 			if(vecEdgeLine[i]->chi2()>100) {
 				cout<<vecEdgeLine[i]->chi2()<<endl;
 				int lngid = lnvid2gid[vecEdgeLine[i]->vertices()[0]->id()];
@@ -681,9 +671,7 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 						for(int k=0; k < views[fid].idealLines[lid].lsEndpoints.size(); k=k+2) {
 							cv::line(canv, views[fid].idealLines[lid].lsEndpoints[k], views[fid].idealLines[lid].lsEndpoints[k+1],
 								cv::Scalar(200,100, 1, 0), 3);
-						}
-					//	showImage("repj",&canv);
-					//	cv::waitKey();
+						}					
 					}
 				}
 

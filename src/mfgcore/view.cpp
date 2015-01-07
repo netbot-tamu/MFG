@@ -89,36 +89,20 @@ View::View (string imgName, cv::Mat _K, cv::Mat dc, int _id, MfgSettings* _setti
       grayImg = img;
    lsLenThresh = img.cols/100.0;   // for raw line segments
 
-   MyTimer timer;
-   timer.start();
    detectFeatPoints ();
-   timer.end();
-   cout<<"Keypoint detection time:" << timer.time_ms << " ms"<<endl;
+
    cv::Mat pImg = img.clone();
-   timer.start();
+
    detectLineSegments(pImg);
-   timer.end();
-   //	cout<<"Line segment detection time:" << timer.time_ms << " ms"<<endl;
-   //	drawAllLineSegments();
+
    compMsld4AllSegments (grayImg);
 
-   timer.start();
    detectVanishPoints();
-#ifndef HIGH_SPEED_NO_GRAPHICS
 
-#endif
+#ifdef PLOT_MID_RESULTS
    drawAllLineSegments(true);
-   timer.end();
-   //	cout<<"Vanishing point detection time:" << timer.time_ms << " ms"<<endl;
-
-
-   timer.start();
+#endif
    extractIdealLines();
-   timer.end();
-   //	cout<<"Ideal line extraction time:" << timer.time_ms << " ms"<<endl;
-   //	drawPointandLine();
-
-   //	drawIdealLines();
 
    errPt=0; errLn=0; errAll=0;
    errPtMean=0; errLnMean=0;
@@ -219,7 +203,7 @@ void View::detectFeatPoints()
 void View::detectLineSegments(cv::Mat pImg)
 {
    ntuple_list  lsdOut;
-   lsdOut = callLsd(&pImg, false);// use LSD method
+   lsdOut = callLsd(&pImg);// use LSD method
    int dim = lsdOut->dim;
    double a,b,c,d;
    for(int i=0; i<lsdOut->size; i++) {// store LSD output to lineSegments
@@ -334,8 +318,8 @@ void View::detectVanishPoints ()
       vector<int>	inlierIdx;
       int	maxIterNo	= 500;   // initial max RANSAC iteration number
       for (int i=0; i < maxIterNo; ++i) {
-         int j = rand() % ls.size();
-         int k = rand() % ls.size();
+         int j = xrand() % ls.size();
+         int k = xrand() % ls.size();
          if (j==k || ls[j].vpLid!=-1 || ls[k].vpLid!=-1) { //redo it
             --i;
             continue;
@@ -417,7 +401,6 @@ void View::detectVanishPoints ()
          if (maxInlierIdx.size() < 5) break;
       }
 
-      //	drawLineSegmentGroup(maxInlierIdx);
       if (maxInlierIdx.size() < 15) continue; // inliers too few
 
       bool overlap = false;
@@ -443,14 +426,7 @@ void View::detectVanishPoints ()
    vpGrpIdLnIdx.resize(vanishPoints.size());
 
    for (int i=0; i<vanishPoints.size(); ++i) {
-      //		cout<<vanishPoints[i].x<<","<<vanishPoints[i].y<<","<<vanishPoints[i].w<<endl;
-      //		cout<<vanishPoints[i].cov<<endl;
-      //		cout<<vanishPoints[i].cov_homo<<endl;
-
-      //		vanishPoints[i].cov_ab = vanishpoint_cov_xy2ab(vanishPoints[i].mat(0),K,vanishPoints[i].cov);
-      //		cout<<"cov_ab="<<vanishPoints[i].cov_ab<<endl;
       vanishPoints[i].cov_ab = vanishpoint_cov_xyw2ab(vanishPoints[i].mat(),K,vanishPoints[i].cov_homo);
-      //		cout<<"cov_ab="<<vanishPoints[i].cov_ab<<endl;
    }
 
 }
@@ -642,7 +618,7 @@ void View::drawAllLineSegments(bool write2file)
       colors.push_back(cv::Scalar(rand()%255,rand()%255,rand()%255,0));
    }
 
-#ifndef HIGH_SPEED_NO_GRAPHICS
+#ifdef PLOT_MID_RESULTS
    cv::Mat canvas = img.clone();
    for (int i=0; i<lineSegments.size(); ++i) {
       if(lineSegments[i].vpLid==-1)
@@ -667,10 +643,6 @@ void View::drawIdealLineGroup(vector<IdealLine2d> ilines)
    cv::Mat canvas = img.clone();
    cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
    for (int i=0; i<ilines.size(); ++i) {
-      //		for (int j=0; j<ilines[i].lsLids.size(); ++j)
-      //			cv::line(canvas, lineSegments[ilines[i].lsLids[j]].endpt1,
-      //			lineSegments[ilines[i].lsLids[j]].endpt2,
-      //			cv::Scalar(255,255,255,0)-color, 2);
       cv::line(canvas,ilines[i].extremity1,ilines[i].extremity2, color,1);
       cv::circle(canvas,ilines[i].extremity1,1,color,1);
       cv::circle(canvas,ilines[i].extremity2,1,color,1);
@@ -683,8 +655,6 @@ void View::drawIdealLines()
 {
    cv::Mat canvas = img.clone();
    vector<cv::Scalar> colors;
-
-   //	colors.push_back(cv::Scalar(rand()%255,rand()%255,rand()%255,0));
    colors.push_back(cv::Scalar(0,255,255,0));
    colors.push_back(cv::Scalar(0,0,255,0));
    colors.push_back(cv::Scalar(0,255,0,0));
@@ -713,11 +683,9 @@ void View::drawPointandLine()
    vector<cv::Scalar> colors;
 
    colors.push_back(cv::Scalar(rand()%255,rand()%255,rand()%255,0));
-   //colors.push_back(cv::Scalar(0,0,255,0));
    colors.push_back(cv::Scalar(0,255,0,0));
    colors.push_back(cv::Scalar(0,255,0,0));
    colors.push_back(cv::Scalar(0,255,0,0));
-   //colors.push_back(cv::Scalar(255,0,0,0));
    for (int i=0; i < vanishPoints.size()+1; ++i)	{
       colors.push_back(cv::Scalar(rand()%255,rand()%255,rand()%255,0));
    }

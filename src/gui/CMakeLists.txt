@@ -2,7 +2,7 @@
 project(mfg-gui)
 
 # TODO: make this an optional flag
-set(CMAKE_BUILD_TYPE debug)
+set(CMAKE_BUILD_TYPE release)
 
 set(SOURCES
    glwidget.cpp

@@ -56,7 +56,7 @@ Mat* grayImage(Mat* src)
 // use LSD to extract line segments from an image
 // input : an image color/grayscale
 // output: a list of line segments - endpoint x-y coords + ...
-ntuple_list callLsd (Mat* src, bool bShow)
+ntuple_list callLsd (Mat* src)
 {
 	Mat* src_gray = grayImage(src);
 	image_double image; //image_double is a struct defined in 'lsd.h'
@@ -67,28 +67,11 @@ ntuple_list callLsd (Mat* src, bool bShow)
 	unsigned char s = 0;//to get image values
    for (int x = 0; x < w; ++x) {
 		for(int y = 0; y < h; ++y) {
-			s=src_gray->at<uchar>(y, x);//cvGet2D(src_gray,y,x);
-			image->data[x + y*image->xsize] = s;//.val[0];
+			s=src_gray->at<uchar>(y, x);
+			image->data[x + y*image->xsize] = s;
 		}
 	}
-	lsd_out = lsd(image);
-
-	if(bShow){ 		// print output and plot in image
-		Mat *canvas = new Mat(w, h, CV_8UC3);
-		printf("%u Line segments found by LSD.\n",lsd_out->size);
-		int dim = lsd_out->dim;
-		for(int i=0;i<lsd_out->size;i++){
-			cvLine(src,
-                 cvPoint(lsd_out->values[i*dim],    lsd_out->values[i*dim+1]),
-                 cvPoint(lsd_out->values[i*dim+2],  lsd_out->values[i*dim+3]),
-                 cvScalar(255, 255, 255, 0),
-                 1.5, 8, 0);
-		}
-		cvNamedWindow("LSD Result",1);
-		cvShowImage("LSD Result",src);
-		//cvWaitKey();
-		//cvDestroyWindow("LSD Result");
-	}
+	lsd_out = lsd(image);	
 	free_image_double(image);
 	return lsd_out;
 }
@@ -625,7 +608,7 @@ void drawLineMatches(cv::Mat im1,cv::Mat im2, vector<IdealLine2d>lines1,
 	cv::Mat canv2 = im2.clone();
 	for (int i=0; i < pairs.size(); ++i)
 	{
-		cv::Scalar color(xrand()/200+55,xrand()/200+55,xrand()/200+55,0);
+		cv::Scalar color(rand()/200+55,rand()/200+55,rand()/200+55,0);
 		cv::line(canv1, lines1[pairs[i][0]].extremity1,
               lines1[pairs[i][0]].extremity2,color,2);
 
@@ -655,16 +638,14 @@ vector<vector<int>>matchKeyPoints (const vector<FeatPoint2d>& kps1,
 		kps2[i].siftDesc.copyTo(sift2.col(i));
 
 	vector<vector<cv::DMatch>> knnMatches;
-	if (1 && kps1.size() * kps2.size() > 3e1) {
+	if (kps1.size() * kps2.size() > 1e8) {
 		cv::FlannBasedMatcher matcher;	// this gives fast inconsistent output
 		matcher.knnMatch(sift1.t(), sift2.t(), knnMatches,2);
-		//		cout<<"flann match"<<endl;
 	}
-	else { // BF is slow but result is consistent
+	else { // BF is slower but result is consistent
 		//cv::BruteForceMatcher<cv::L2<float>> matcher; // for opencv2.3.0
       cv::BFMatcher matcher( cv::NORM_L2, false ); // for opencv2.4.2
 		matcher.knnMatch(sift1.t(), sift2.t(),	knnMatches,2);
-		//		cout<<"bf match"<<endl;
 	}
 	pointMatches.clear();
 	vector<vector<int>> pairIdx;

@@ -7,11 +7,9 @@ set(CMAKE_BUILD_TYPE debug)
 set(SOURCES
    est3dpt.cpp
    estfundm.cpp
-   estfundm_g2o.cpp
    estfundm_helper.cpp
    export.cpp
    mfg-ba-g2o.cpp
-   mfg-ba-pt-g2o.cpp
    mfg.cpp
    mfgthread.cpp
    mfgutils.cpp

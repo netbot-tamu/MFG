@@ -14,15 +14,6 @@
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 #include <Eigen/Geometry>
-
-#include "lsd/lsd.h"
-#include "levmar-2.6/levmar.h"
-// Eigen includes replace above with linux variant
-// TODO: make this windows-compatible
-//#include "C:\Study\Research\Toolbox\C_C++\Eigen311\Eigen\Dense"
-//#include "C:\Study\Research\Toolbox\C_C++\Eigen311\Eigen\Eigenvalues"
-//#include "C:\Study\Research\Toolbox\C_C++\Eigen311\Eigen\Geometry"
-
 #include <QThread>
 
 #include "view.h"
@@ -32,8 +23,7 @@
 
 using namespace Eigen;
 using namespace std;
-//#define HIGH_SPEED_NO_GRAPHICS
-//#define DEBUG
+//#define PLOT_MID_RESULTS
 
 class MfgSettings;
 
@@ -89,13 +79,14 @@ public:
    void detectLnOutliers(double threshPt2LnDist);
    void detectPtOutliers(double threshPt2PtDist);
    void adjustBundle ();
-   void adjustBundle_Pt_G2O(int numPos, int numFrm);
    void adjustBundle_G2O(int numPos, int numFrm);
    void est3dIdealLine(int lnGid);
    void update3dIdealLine(vector< vector<int> > ilinePairIdx, View& nview);
    void updatePrimPlane();
    void draw3D() const;
    bool rotateMode ();
+
+   void exportAll (string root_dir);
 };
 
 
