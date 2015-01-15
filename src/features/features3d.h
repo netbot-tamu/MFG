@@ -101,6 +101,7 @@ public:
    std::vector< std::vector<int> > viewId_vpLid;
    int						estViewId;
 
+   VanishPnt3d() {}	
    VanishPnt3d(double x_, double y_, double z_) 
    {
       double len = sqrt(x_*x_+y_*y_+z_*z_);

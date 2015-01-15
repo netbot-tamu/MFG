@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
    mfgSettings = new MfgSettings();
 
 
-   seed_xrand(1); // TODO: use mfgSettings->getPRNGSeed()	
+   seed_xrand(mfgSettings->getPRNGSeed());  	
    srand(time(NULL));
 
    string imgName;			// first image name

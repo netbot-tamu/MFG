@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
    mfgSettings = new MfgSettings();
 
    
-   seed_xrand(1); // TODO: use mfgSettings->getPRNGSeed()
+   seed_xrand(mfgSettings->getPRNGSeed());
    //srand(1);
    string imgName;			// first image name
    cv::Mat K, distCoeffs;	// distortion coeff: k1, k2, p1, p2
