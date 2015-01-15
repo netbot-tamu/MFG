@@ -97,7 +97,7 @@ void Mfg::exportAll (string root_dir)
     if (!keyPoints[i].is3D || keyPoints[i].gid < 0) continue; // only output 3d pt
     ++kpNum;
   }
-  feat3d_ofs << "3D_point_number: "<<kpNum<<'\n';
+  feat3d_ofs << "3D_point_number: "<<kpNum<<'\t'<<keyPoints.size()<<'\n';
   feat3d_ofs <<"#format: global_id\tx\ty\tz\tplane_id\test_view_id\tviewId_ptLid_number\tviewId_ptLid_pairs\n";
   for (int i = 0; i < keyPoints.size(); ++i) {
     if (!keyPoints[i].is3D || keyPoints[i].gid < 0) continue; // only output 3d pt
@@ -116,7 +116,7 @@ void Mfg::exportAll (string root_dir)
     if (!idealLines[i].is3D || idealLines[i].gid < 0) continue; // only output 3d pt
     ++ilNum;
   }
-  feat3d_ofs <<"3D_line_number: "<< ilNum <<"\n";
+  feat3d_ofs <<"3D_line_number: "<< ilNum<<'\t'<<idealLines.size() <<'\n';
   feat3d_ofs <<"#format: global_id\tx1\ty1\tz1\tx2\ty2\tz2\tplane_id\tvp_id\test_view_id\tviewId_lnLid_number\tviewId_lnLid_pairs\n";
   for (int i = 0; i < idealLines.size(); ++i) {
     if (!idealLines[i].is3D || idealLines[i].gid < 0) continue; // only output 3d pt
@@ -131,7 +131,7 @@ void Mfg::exportAll (string root_dir)
   }
 
   // === vanishing points ===
-  feat3d_ofs <<"3D_vanishing_point_number: "<< vanishingPoints.size() <<"\n";
+  feat3d_ofs <<"3D_vanishing_point_number: "<< vanishingPoints.size() <<'\n';
   feat3d_ofs <<"#format: global_id\tx\ty\tz\tw\test_view_id\tviewId_vpLid_number\tviewId_vpLid_pairs\n";
   for (int i = 0; i < vanishingPoints.size(); ++i) {
     feat3d_ofs << vanishingPoints[i].gid <<'\t' 
@@ -145,7 +145,7 @@ void Mfg::exportAll (string root_dir)
   }
 
   // === planes ===
-  feat3d_ofs<<"3D_plane_number: "<<primaryPlanes.size()<<"\n";
+  feat3d_ofs<<"3D_plane_number: "<<primaryPlanes.size()<<'\n';
   feat3d_ofs<<"#format:global_id\tnormal_vec_3d\tdepth\test_view_id\trecent_view_id\tchild_kpt_number\tchild_kpt_gids\tchild_line_number\tchild_line_gids\n";
   for(int i=0; i<primaryPlanes.size();++i) {
     feat3d_ofs<<primaryPlanes[i].gid<<'\t'

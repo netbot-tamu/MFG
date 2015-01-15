@@ -14,13 +14,6 @@
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 #include <Eigen/Geometry>
-
-#include "lsd/lsd.h"
-#include "levmar-2.6/levmar.h"
-// Eigen includes replace above with linux variant
-// TODO: make this windows-compatible
-// include eigen headers
-
 #include <QThread>
 
 #include "view.h"
