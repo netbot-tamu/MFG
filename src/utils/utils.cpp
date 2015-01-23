@@ -267,6 +267,7 @@ cv::Point2d mat2cvpt (cv::Mat m)
 	}
 
    std::cerr<<"input matrix dimmension wrong!";
+   return cv::Point2d();
 }
 
 cv::Point3d mat2cvpt3d (cv::Mat m)
@@ -279,6 +280,7 @@ cv::Point3d mat2cvpt3d (cv::Mat m)
    } else {
 		std::cerr<<"input matrix dimmension wrong!";
    }
+   return cv::Point3d();
 }
 
 cv::Mat cvpt2mat(cv::Point2d p, bool homo)
