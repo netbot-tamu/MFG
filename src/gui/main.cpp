@@ -23,6 +23,7 @@
 #include "view.h"
 #include "window.h"
 #include "mfg.h"
+#include "mfgthread.h"
 #include "utils.h"
 #include "random.h"
 //#include "mfgutils.h"
@@ -51,7 +52,7 @@ int main(int argc, char *argv[])
    //MfgSettings mfgSettings; // TODO: arg-parse a cameraID (optional arg)
    mfgSettings = new MfgSettings();
 
-   
+
    seed_xrand(1); // TODO: use mfgSettings->getPRNGSeed()
    //srand(1);
    string imgName;			// first image name
@@ -65,8 +66,8 @@ int main(int argc, char *argv[])
    imgName     = mfgSettings->getInitialImage().toStdString();
    K           = cv::Mat(mfgSettings->getIntrinsics()); // TODO: remove conversion
    distCoeffs  = cv::Mat(mfgSettings->getDistCoeffs()); // TODO: remove conversion
-   std::cout << "K =\n" << K << std::endl;
-   std::cout << "distCoeffs =\n" << distCoeffs << std::endl;
+//   std::cout << "K =\n" << K << std::endl;
+//   std::cout << "distCoeffs =\n" << distCoeffs << std::endl;
    std::cout << "getImageWidth() = " << mfgSettings->getImageWidth() << std::endl;
 
    // *** END UPDATING ***
