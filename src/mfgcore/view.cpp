@@ -53,7 +53,11 @@ View::View (string imgName, cv::Mat _K, cv::Mat dc, MfgSettings* _settings)
    else
       grayImg = img;
 
-   detectFeatPoints ();
+   if (mfgSettings->getKeypointAlgorithm() < 3) //sift/surf
+      detectFeatPoints ();
+
+   matchable = true;
+
 }
 
 View::View (string imgName, cv::Mat _K, cv::Mat dc, int _id, MfgSettings* _settings)
@@ -88,7 +92,7 @@ View::View (string imgName, cv::Mat _K, cv::Mat dc, int _id, MfgSettings* _setti
    else
       grayImg = img;
    lsLenThresh = img.cols/100.0;   // for raw line segments
-
+//   lsLenThresh = 1000;
    detectFeatPoints ();
 
    cv::Mat pImg = img.clone();
@@ -106,6 +110,8 @@ View::View (string imgName, cv::Mat _K, cv::Mat dc, int _id, MfgSettings* _setti
 
    errPt=0; errLn=0; errAll=0;
    errPtMean=0; errLnMean=0;
+
+   matchable = true;
 }
 
 cv::Point2d LineSegmt2d::getGradient(cv::Mat* xGradient, cv::Mat* yGradient)
@@ -162,6 +168,7 @@ void View::detectFeatPoints()
                  if (id==-2) break; // don't detect features when tracking between key frames
                  detect_featpoints_buckets(grayImg, // the image
                        3,
+                       10,
                        ptpos,   // the output detected features
                        mfgSettings->getGfttMaxPoints(),  // the maximum number of features
                        mfgSettings->getGfttQualityLevel(),     // quality level
@@ -225,6 +232,7 @@ void View::compMsld4AllSegments (cv::Mat grayImg) {
    int ddepth = CV_64F;
    cv::Sobel(grayImg, xGradImg, ddepth, 1, 0, 5); // Gradient X
    cv::Sobel(grayImg, yGradImg, ddepth, 0, 1, 5); // Gradient Y
+   #pragma omp parallel for
    for (int i=0; i<lineSegments.size(); ++i)  {
       computeMSLD(lineSegments[i], &xGradImg, &yGradImg);
    }
@@ -262,19 +270,25 @@ void View::detectVanishPoints ()
    cv::Mat cov, covhomo;
    while (vertGroupIdx.size()<sz) {
       sz = vertGroupIdx.size();
+      if(sz<3) 
+         break;
       refineVanishPt (lineSegments, vertGroupIdx, vp, cov, covhomo);
    }
-   //	drawLineSegmentGroup(vertGroupIdx);
-   vanishPoints.push_back(
-         VanishPnt2d(vp.at<double>(0),vp.at<double>(1),vp.at<double>(2),0, -1));
-   vanishPoints.back().cov = cov.clone();
-   vanishPoints.back().cov_homo = covhomo.clone();
-   for (int i=0; i<vertGroupIdx.size(); ++i) // assign vp lid to line segments
-      lineSegments[vertGroupIdx[i]].vpLid = 0;
+   cv::Mat v0;
+   if(vertGroupIdx.size()>=3) { 
+      vanishPoints.push_back(VanishPnt2d(vp.at<double>(0),vp.at<double>(1),vp.at<double>(2),0, -1));
+      vanishPoints.back().cov = cov.clone();
+      vanishPoints.back().cov_homo = covhomo.clone();
+      v0 = K.inv()*(cv::Mat_<double>(3,1)<<vanishPoints[0].x,
+            vanishPoints[0].y, vanishPoints[0].w);
+      for (int i=0; i<vertGroupIdx.size(); ++i) // assign vp lid to line segments
+         lineSegments[vertGroupIdx[i]].vpLid = 0;
+   } else {
+      cout<<"no vertical VP found ...\n";
+      v0 = (cv::Mat_<double>(3,1)<<0, 1, 0);      
+   }
 
-
-   cv::Mat v0 = K.inv()*(cv::Mat_<double>(3,1)<<vanishPoints[0].x,
-         vanishPoints[0].y, vanishPoints[0].w);
+    
    // ==== 2.  horizontal VPs search =====
    int	maxHvpNo  = 2;	// number of horizontal VPs
    int minLsNoTh = 30; // minimum number of supporting ls for a hrz vp
@@ -318,6 +332,7 @@ void View::detectVanishPoints ()
       vector<int>	inlierIdx;
       int	maxIterNo	= 500;   // initial max RANSAC iteration number
       for (int i=0; i < maxIterNo; ++i) {
+         if( ls.size() < 2 ) break; 
          int j = xrand() % ls.size();
          int k = xrand() % ls.size();
          if (j==k || ls[j].vpLid!=-1 || ls[k].vpLid!=-1) { //redo it

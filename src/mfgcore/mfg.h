@@ -42,7 +42,7 @@ class Mfg
 {
 public:
    vector <View>				views;
-   vector <KeyPoint3d>			keyPoints;
+   vector <KeyPoint3d>		keyPoints;
    vector <IdealLine3d>		idealLines;
    vector <PrimPlane3d>		primaryPlanes;
    vector <VanishPnt3d>		vanishingPoints;
@@ -54,11 +54,18 @@ public:
    double linVel; // linear velocity
    double fps;
 
+   bool need_scale_to_real;
+   vector<int>  scale_since;
+   vector<double> scale_vals;
+   double camera_height;
+   vector<vector<double> > camdist_constraints; // cam1_id, cam2_id, dist, confidence
+
    //== for pt traking use ==
    vector<Frame> trackFrms;
    double angleSinceLastKfrm;
 
    Mfg(){}
+   Mfg(View v0, int ini_incrt, cv::Mat dc);
    Mfg(View v0, View v1) {
       views.push_back(v0);
       views.push_back(v1);
@@ -87,6 +94,11 @@ public:
    bool rotateMode ();
 
    void exportAll (string root_dir);
+
+   void scaleLocalMap(int from_view_id, int to_view_id, double, bool);
+   void cleanup(int n_keep);
+   void bundle_adjust_between(int from_view, int to_view, int);
+
 };
 
 
@@ -111,6 +123,5 @@ public:
 private:
    MfgSettings* mfgSettings;
 };
-
 
 #endif //MFG_HEADER

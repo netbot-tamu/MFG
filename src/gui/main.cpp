@@ -80,10 +80,14 @@ int main(int argc, char *argv[])
    qDebug() << "View initialized";
    view0.frameId = atoi (imgName.substr(imgName.size()-imIdLen-4, imIdLen).c_str());
    imgName = nextImgName(imgName, imIdLen, ini_incrt);
-   View view1(imgName, K, distCoeffs, 1, mfgSettings);
-   view1.frameId = atoi (imgName.substr(imgName.size()-imIdLen-4, imIdLen).c_str());
+   //   View view1(imgName, K, distCoeffs, 1, mfgSettings);
+//   view1.frameId = atoi (imgName.substr(imgName.size()-imIdLen-4, imIdLen).c_str());
 
-   Mfg map(view0, view1, 30);
+//   Mfg map(view0, view1, 10);
+
+   Mfg map(view0, ini_incrt, distCoeffs);
+   map.fps = 10;
+
 
    mfgSettings->setKeypointAlgorithm(KPT_GFTT); // use gftt tracking
 

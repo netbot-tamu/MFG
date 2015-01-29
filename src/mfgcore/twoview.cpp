@@ -37,6 +37,7 @@ void  matchIdealLines(View& view1, View& view2, vector<vector<int>> vpPairIdx,
 	vector<vector<cv::Point2d>> featPtMatches, cv::Mat F, vector<vector<int>>& ilinePairIdx,
 	bool usePtMatch)
 {
+
 	//== gather lines into groups by vp ==
 	vector<vector<IdealLine2d>> grpLines1(view1.vpGrpIdLnIdx.size()),
 		grpLines2(view2.vpGrpIdLnIdx.size());
@@ -73,7 +74,7 @@ void  matchIdealLines(View& view1, View& view2, vector<vector<int>> vpPairIdx,
 			}
 		}
 		t.end();
-//		cout<<"point-based = "<<t.time_ms<<"\t";
+	//	cout<<"point-based = "<<t.time_ms<<"\t";
 	}
 
 	// assign gid of matched lines

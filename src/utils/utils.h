@@ -18,7 +18,7 @@
 #include "features3d.h"
 
 #include "random.h"
-
+using namespace std;
 
 cv::Mat* grayImage(cv::Mat*); // output GRAY scale images
 
@@ -122,6 +122,8 @@ void computeEpipolar (std::vector< std::vector<cv::Point2d> >& pointMatches, cv:
 						cv::Mat& F, cv::Mat& R,cv::Mat& E,cv::Mat& t);
 void computeEpipolar (std::vector< std::vector<cv::Point2d> >& pointMatches,
 	std::vector< std::vector<int> >& pairIdx, cv::Mat K, cv::Mat& F, cv::Mat& R,cv::Mat& E,cv::Mat& t, bool useMultiE = false);
+void computeEpipolar (vector<vector<cv::Point2d>>& pointMatches, vector<vector<int>>& pairIdx,
+        cv::Mat K,	vector<cv::Mat>& Fs, vector<cv::Mat>& Es, vector<cv::Mat>& Rs, vector<cv::Mat>& ts) ;
 
 void computePotenEpipolar (std::vector< std::vector<cv::Point2d> >& pointMatches, std::vector< std::vector<int> >& pairIdx,
  	cv::Mat K, std::vector<cv::Mat>& Fs, std::vector<cv::Mat>& Es, std::vector<cv::Mat>& Rs, std::vector<cv::Mat>& ts,
@@ -246,6 +248,8 @@ cv::Mat vanishpoint_cov_xyw2ab(cv::Mat vp, cv::Mat K, cv::Mat cov_xyw);
 
 void detect_featpoints_buckets (cv::Mat grayImg, int n, std::vector<cv::Point2f>& pts,
 	int maxNumPts = 1000, double qualityLevel = 0.01, double minDistance = 5);
+void detect_featpoints_buckets (cv::Mat grayImg, int m, int n, std::vector<cv::Point2f>& pts,
+	int maxNumPts = 1000, double qualityLevel = 0.01, double minDistance = 5);
 
 int computePnP_ransac (std::vector<cv::Point3d> X, std::vector<cv::Point2d> x, cv::Mat K,
 			cv::Mat& R, cv::Mat& t, int maxIter = 50);
@@ -254,5 +258,10 @@ double rotateAngleDeg(cv::Mat R) ;
 double rotateAngle(cv::Mat R) ;
 
 bool fund_ransac (cv::Mat pts1, cv::Mat pts2, cv::Mat F, std::vector<uchar>& mask, double distThresh, double confidence);
+
+vector<int> findGroundPlaneFromPoints (const vector<cv::Point3f>& pts, cv::Point3f& norm_vec, double& depth);
+
+bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R, const cv::Mat& t, const cv::Mat& K,
+						int& n_pts, double& depth, cv::Point3f& normal, double& quality, cv::Mat&, double);
 
 #endif

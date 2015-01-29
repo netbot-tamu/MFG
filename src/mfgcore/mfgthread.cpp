@@ -27,29 +27,42 @@
 #include "settings.h"
 #include <opencv2/nonfree/nonfree.hpp> // For opencv2.4+,
 
-#define DETECT_BLUR
+#define FIX_INCREMENT
+//#define DETECT_BLUR
 void MfgThread::run()
 {
 	pMap->adjustBundle();
 	int trialNo = 3;
-	int threshPtPairNum = 50;
-	int thresh3dPtNum = 7;
+#ifdef FIX_INCREMENT
+		trialNo = 3;
+#endif		
+	int threshPtPairNum = 200;
+	int thresh3dPtNum = 30;
 	double interval_ratio = 1;
 
 	MyTimer timer;
 	timer.start();
-	for(int i=0; true; ++i) {
+	bool finished = false;
+	for(int i=0; !finished; ++i) {
 		if(pMap->rotateMode()||pMap->angleSinceLastKfrm > 10*PI/180) {
 			increment = max(1, mfgSettings->getFrameStep()/2);
-			interval_ratio = 0.5;
+			interval_ratio = 0.1;
 		} else {
 			increment = mfgSettings->getFrameStep();
-			interval_ratio = 1;
+			interval_ratio = 0.55;
 		}
-//		cout<<"<"<<i<<"> ";
+	
 		bool toExpand = false;
 		imgName = nextImgName(imgName, imIdLen, increment);
-		if (!isFileExist(imgName)) break;
+			
+		if (!isFileExist(imgName)) {
+			do {			
+				imgName = prevImgName(imgName, imIdLen, 1);
+				cout<<imgName<<endl;
+			} while(!isFileExist(imgName));
+			toExpand = true;
+			finished = true;
+		}
 		View v(imgName, K, distCoeffs, mfgSettings);
 		int fid = atoi (imgName.substr(imgName.size()-imIdLen-4, imIdLen).c_str());
 
@@ -57,7 +70,8 @@ void MfgThread::run()
 
 		// --- determine keyframe or not ---
 		if(fid-pMap->views.back().frameId >  // interval limit
-			(pMap->views[1].frameId-pMap->views[0].frameId)*interval_ratio) {
+			(pMap->views[1].frameId-pMap->views[0].frameId)*interval_ratio
+		   && fid-pMap->views.back().frameId >1) {
 				toExpand = true;
 				imgName = prevImgName(imgName, imIdLen, increment);
 		} else if (isKeyframe(*pMap, v, threshPtPairNum, thresh3dPtNum)) { // previous frame is selected
@@ -88,7 +102,7 @@ void MfgThread::run()
 				}
 				toExpand = true;
 			}
-		} else
+		} else if(!toExpand)
 			continue;
 
 		if(toExpand) { // to avoid Motion blurred image, search around
@@ -120,7 +134,9 @@ void MfgThread::run()
 #endif
 			int fid = atoi (imgName.substr(imgName.size()-imIdLen-4, imIdLen).c_str());
 			cout<<"\nframe:"<<fid<<endl;
-         View imgView(imgName,K,distCoeffs,-1, mfgSettings);
+			MyTimer tm; tm.start();
+         	View imgView(imgName,K,distCoeffs,-1, mfgSettings);
+        // 	tm.end(); cout<<"view setup time "<<tm.time_ms<<" ms"<<endl;
 			pMap->expand(imgView,fid);
 		}
 	}

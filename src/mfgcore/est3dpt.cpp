@@ -84,12 +84,8 @@ void costFun_EST3D2(double *p, double *error, int numPara, int numMeas, void *ad
 		error[i*2] = (xh/zh) - dp->pt[i].x;
 		error[i*2+1] = (yh/zh) - dp->pt[i].y;
 
-		cost = cost + error[i*2]*error[i*2] + error[i*2+1]*error[i*2+1];
-		if( abs(pi.x - xh/zh) > 1e-12 || abs(pi.y - yh/zh) > 1e-12) {
-//			cout<<std::setprecision(12)<<pi.x<<","<<xh/zh<<"\t"<<pi.y<<","<<yh/zh<<endl;
-		}
+//		cost = cost + error[i*2]*error[i*2] + error[i*2+1]*error[i*2+1];
 
-//		cout<<pi.x - xh/zh<<"\t"<<pi.y -yh/zh <<endl;
 	}
 	
 }

@@ -24,6 +24,7 @@ int essn_ransac (cv::Mat* pts1, cv::Mat* pts2, cv::Mat* E, cv::Mat K,
 {
 	cv::Mat bestMss1, bestMss2;
 	int maxIterNum = 500, N = pts1->cols;
+	int maxIterNum0 = maxIterNum;
 	double confidence = 0.995;
 	double threshDist = 1;// (0.5*imsize/640.0);		//  in image units 0.64
 	int iter = 0;
@@ -63,8 +64,11 @@ int essn_ransac (cv::Mat* pts1, cv::Mat* pts2, cv::Mat* E, cv::Mat K,
 			}
 		}
 		//re-compute maximum iteration number:maxIterNum
-//		maxIterNum = abs(log(1-confidence)
-//			/log(1-pow(double(maxInlierSet.size())/N,5.0)));
+		if(maxInlierSet.size()>0) {
+			maxIterNum = min(maxIterNum0,
+				(int)abs(log(1-confidence)/log(1-pow(double(maxInlierSet.size())/N,5.0))));
+		}
+
 	}
 	if (maxInlierSet.size() < mss1.cols) {
 		cout<<"essn_ransac: Largest concensus set is too small for minimal estimation."
@@ -93,6 +97,7 @@ int essn_ransac (cv::Mat* pts1, cv::Mat* pts2, cv::Mat* E, cv::Mat K,
 			if (dist < threshDist)
 				curInlierSet.push_back(i);
 		}
+		
 		if(curInlierSet.size() > maxInlierSet.size())  {
 			maxInlierSet = curInlierSet;
 			bestE = tmpE;
@@ -124,6 +129,7 @@ void essn_ransac (cv::Mat* pts1, cv::Mat* pts2, vector<cv::Mat>& bestEs, cv::Mat
 	// output:
 
 {
+	MyTimer tm; tm.start();
 	bestEs.clear();
 	inlierMasks.clear();
 	int maxSize;
@@ -282,15 +288,15 @@ void essn_ransac (cv::Mat* pts1, cv::Mat* pts2, vector<cv::Mat>& bestEs, cv::Mat
 			trialNum = 2;
 		//	cout<<rotateAngleDeg(Ra)<<'\t'<<rotateAngleDeg(Rb)<<endl;
 		}
-}
+	}
 
-		for(int i=0; i<bestEs.size(); ++i) {
+	for(int i=0; i<bestEs.size(); ++i) {
 		cv::Mat Ra, Rb, t;
 		decEssential (&bestEs[i], &Ra, &Rb, &t);
 		cout<<t.t();
 		cout<<numInlier_E[i]<<", res="<<resds[i]<<endl;
 		}
-	}
+}
 
 
 bool isEssnMatSimilar(cv::Mat E1, cv::Mat E2)

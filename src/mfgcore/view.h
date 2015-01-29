@@ -32,7 +32,7 @@ public:
    std::vector< std::vector<int> >	vpGrpIdLnIdx;
    cv::Point2d					epipoleA, epipoleB; // A is with respect to next frame
    double						angVel; // angular velocity, in degree
-
+   bool                    matchable;
 
    // ******
    cv::Mat						img, grayImg; // resized image

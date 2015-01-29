@@ -351,6 +351,9 @@ vector<cv::Point2d> sampleFromLine (IdealLine2d l, double stepSize)
 vector<vector<int>> F_guidedLinematch (cv::Mat F, vector<IdealLine2d> lines1,
 					vector<IdealLine2d> lines2, cv::Mat img1, cv::Mat img2)
 {
+	if(F.empty()) {
+		return vector<vector <int> >();
+	}
 	double patchDiameter = 20; // point area diameter for featextractor
 	cv::SurfDescriptorExtractor featExtractor;
 	int	sampleNum = 10; // smaple points per line

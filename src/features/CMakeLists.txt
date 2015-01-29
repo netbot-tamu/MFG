@@ -9,6 +9,7 @@ set(SOURCES
    edge_line_vp_plane.cpp
    edge_point_plane.cpp
    edge_vnpt_cam.cpp
+   edge_cam_cam_dist.cpp
    epnp.cpp
    epnp_interface.cpp
    linematch.cpp
@@ -24,6 +25,7 @@ set(HEADERS
    edge_line_vp_plane.h
    edge_point_plane.h
    edge_vnpt_cam.h
+   edge_cam_cam_dist.h
    epnp.h
    features2d.h
    features3d.h

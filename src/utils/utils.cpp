@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "settings.h"
 #include "random.h"
+#include "omp.h"
 
 #include <math.h>
 #include <iostream>
@@ -16,6 +17,7 @@
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/video/tracking.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
+#include <opencv2/nonfree/features2d.hpp>
 
 extern "C"
 {
@@ -518,6 +520,16 @@ void computeEpipolar (vector<vector<cv::Point2d>>& pointMatches, vector<vector<i
 	//	cout<<posTrans<<":"<<negTrans<<endl;
 	F = K.t().inv()*E*K.inv();
 }
+
+void computeEpipolar (vector<vector<cv::Point2d>>& pointMatches, vector<vector<int>>& pairIdx,
+        cv::Mat K,	vector<cv::Mat>& Fs, vector<cv::Mat>& Es, vector<cv::Mat>& Rs, vector<cv::Mat>& ts) 
+{
+	Fs.resize(1); Es.resize(1); Rs.resize(1); ts.resize(1);
+	computeEpipolar (pointMatches, pairIdx, K, Fs[0], Rs[0], Es[0], ts[0], false);
+
+}
+
+
 
 void computePotenEpipolar (vector<vector<cv::Point2d>>& pointMatches, vector<vector<int>>& pairIdx,
         cv::Mat K, vector<cv::Mat>& Fs, vector<cv::Mat>& Es, vector<cv::Mat>& Rs, vector<cv::Mat>& ts
@@ -1039,6 +1051,57 @@ void find3dPlanes_pts (vector<KeyPoint3d> pts, vector<vector<int>>& groups,
 	}
 }
 
+vector<int> findGroundPlaneFromPoints (const vector<cv::Point3f>& pts, cv::Point3f& norm_vec, double& depth, double real_scale)
+{
+	int maxIterNo = 500;
+	int minSolSetSize = 3;
+	double pt2planeDistThresh = 0.075;
+	if(real_scale > 1) {
+		pt2planeDistThresh = 0.075/real_scale;
+	}
+	
+	// ---- ransac ----
+	vector<int> indexes(pts.size());
+	for (int i=0; i<indexes.size(); ++i) indexes[i]=i;
+	vector<int> maxInlierSet;
+	for(int iter=0; iter<maxIterNo;iter++) {
+		vector<int> inlierSet;
+		random_unique(indexes.begin(), indexes.end(),minSolSetSize);// shuffle
+    	cv::Point3f n = (pts[indexes[0]]-pts[indexes[1]]).cross(pts[indexes[0]]-pts[indexes[2]]);
+    	if(abs(n.y)/cv::norm(n) < cos(10*PI/180)) // ensure plane normal
+    		continue;
+		double d = -n.dot(pts[indexes[0]]); // plane=[n' d];
+
+		for(int i=0; i<pts.size(); ++i) {
+			double dist = abs(n.dot(pts[i])+d)/cv::norm(n);
+			if (dist < pt2planeDistThresh) {
+				inlierSet.push_back(i);
+			}
+		}
+		if(inlierSet.size()>maxInlierSet.size()) {
+			maxInlierSet = inlierSet;
+			norm_vec = n;
+			depth = d;
+		}
+		maxIterNo = abs(log(1-0.99)/log(1-pow(double(maxInlierSet.size())/pts.size(),3.0)));
+	}
+
+	if(maxInlierSet.size()>3) {
+		cv::Mat cpPts(4,maxInlierSet.size(),CV_64FC1);
+		for(int i=0; i < maxInlierSet.size(); ++i) {
+			cvpt2mat(pts[maxInlierSet[i]]).clone().copyTo(cpPts.col(i));
+		}
+		cv::SVD svd(cpPts.t());
+		cv::Mat pleq = svd.vt.row(svd.vt.rows-1);
+		cv::Point3d n_svd(pleq.at<double>(0),pleq.at<double>(1),pleq.at<double>(2));
+		double d_svd = pleq.at<double>(3);
+//    cout<<"plane-svd: "<<n_svd*(1/cv::norm(n_svd))<<d_svd/cv::norm(n_svd)<<endl;
+		norm_vec = n_svd*(1/cv::norm(n_svd));
+		depth = d_svd/cv::norm(n_svd);
+	}
+	return maxInlierSet;
+}
+
 void find3dPlanes_pts_lns_VPs (vector<KeyPoint3d> pts, vector<IdealLine3d> lns, vector<VanishPnt3d> vps,
         vector<vector<int>>& planePtIdx, vector<vector<int>>& planeLnIdx,
         vector<cv::Mat>& planeVecs)
@@ -1184,6 +1247,42 @@ void detect_featpoints_buckets (cv::Mat grayImg, int n, vector<cv::Point2f>& pts
 	cv::cornerSubPix(grayImg, pts, cv::Size(10,10), cv::Size(-1,-1),termcrit);
 }
 
+void detect_featpoints_buckets (cv::Mat grayImg, int m, int n, vector<cv::Point2f>& pts, int maxNumPts,
+        double qualityLevel, double minDistance)
+{// devide image into nxn regions(buckets)
+	pts.clear();
+	pts.reserve(maxNumPts);
+	int w = grayImg.cols, h = grayImg.rows;
+	vector<vector<cv::Point2f> > vec_part_pts(n*m);
+	
+	#pragma omp parallel for num_threads(4)
+	for (int i=0; i<n; ++i) {
+		for(int j=0; j<m; ++j) {
+	   cv::Mat mask = cv::Mat::zeros(grayImg.size(), CV_8UC1);
+         cv::Mat roi = cv::Mat(mask, cv::Rect(i*w/n,j*h/m,w/n,h/m));
+         roi = 1;
+         vector<cv::Point2f> partpts;
+         cv::goodFeaturesToTrack(grayImg, // the image
+                 partpts,   // the output detected features
+                 maxNumPts/m/n,  // the maximum number of features
+                 qualityLevel,     // quality level
+                 minDistance,     // min distance between two features
+                 mask,
+                 3,
+                 false
+         );      
+    //     pts.insert(pts.end(), partpts.begin(), partpts.end());
+         vec_part_pts[i*m+j] = partpts;
+		}		
+	}
+	
+	for(int i=0; i<vec_part_pts.size();++i) {
+		pts.insert(pts.end(), vec_part_pts[i].begin(), vec_part_pts[i].end());
+	}
+	cv::TermCriteria termcrit(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS,20,0.03);
+	cv::cornerSubPix(grayImg, pts, cv::Size(10,10), cv::Size(-1,-1),termcrit);
+}
+
 
 double rotateAngle(cv::Mat R) // return radian
 {
@@ -1194,4 +1293,206 @@ double rotateAngleDeg(cv::Mat R) // return degree
 {
 	return acos(abs((R.at<double>(0,0) + R.at<double>(1,1) + R.at<double>(2,2) - 1)/2))
            * 180/PI;
+}
+
+bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R, const cv::Mat& t, const cv::Mat& K,
+						int& n_pts, double& depth, cv::Point3f& normal, double& quality, cv::Mat& roi, double real_baseline)
+//// assume camera optical axis is approximately parallel to ground plane 
+// small baseline???? check parallax
+{
+   MyTimer tm; tm.start();
+
+   quality = 0;
+   cv::Mat maskA = cv::Mat::zeros(im1.size(), CV_8UC1);
+   
+   vector<cv::Point> vertsA;
+   vertsA.push_back(cv::Point(500,190));
+   vertsA.push_back(cv::Point(650,190)); //740
+   vertsA.push_back(cv::Point(830,im1.rows-20));
+   vertsA.push_back(cv::Point(410,im1.rows-20));
+   fillConvexPoly(maskA, &vertsA[0], vertsA.size(), 1, 8, 0);  
+   cv::Mat roiA = cv::Mat(maskA, cv::Rect(vertsA[0].x, vertsA[0].y, vertsA[1].x-vertsA[0].x, im1.rows-1-vertsA[0].y));
+   
+   cv::Mat mask = maskA;
+   //cv::Mat 
+   roi = cv::Mat::zeros(im1.size(),im1.type()); 
+   im1.copyTo(roi, mask);  
+   
+
+   vector<cv::Point2f> featptsA, featpts1;
+
+   int r_bucket = 4, c_bucket = 7;
+   int rows_roi = vertsA[2].y-vertsA[1].y, cols_roi = vertsA[2].x-vertsA[3].x;
+   int n_gftt = 500;
+   for(int i=0; i<r_bucket; ++i) {
+   	for(int j=0; j<c_bucket; ++j) {
+   		cv::Mat mask_bucket = cv::Mat::zeros(im1.size(), CV_8UC1);
+   		cv::Mat roi_bucket = cv::Mat(mask_bucket, cv::Rect(vertsA[3].x+cols_roi/c_bucket*j, vertsA[0].y+rows_roi/r_bucket*i, cols_roi/c_bucket, rows_roi/r_bucket));
+   		roi_bucket = 1;   		
+   		cv::Mat mask_comb = mask.mul(mask_bucket);
+   		cv::goodFeaturesToTrack(im1, // the image
+                           featptsA,   // the output detected features
+                           n_gftt/r_bucket/c_bucket,  // the maximum number of features
+                           0.01,     // quality level
+                           5,     // min distance between two features
+                           mask_comb,
+                           3,
+                           false
+                           );
+   		featpts1.insert(featpts1.end(), featptsA.begin(), featptsA.end());
+   	}
+   }
+
+   vector<uchar> status;
+   vector<float> err;
+   vector<cv::Point2f> featpts2;
+   cv::calcOpticalFlowPyrLK(im1, 
+                            im2, // 2 consecutive images
+                            featpts1, // input point positions in first im
+                            featpts2, // output point positions in the 2nd
+               status,    // tracking success
+               err,      // tracking error
+               cv::Size(mfgSettings->getOflkWindowSize(),mfgSettings->getOflkWindowSize()),
+               3,
+               cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 30, 0.01),
+               0,
+               mfgSettings->getOflkMinEigenval()  // minEignVal threshold for the 2x2 spatial motion matrix, to eleminate bad points
+               );
+   vector<cv::Point2f> matches1, matches2;
+   for(int i=0; i<status.size();++i) {
+      if(status[i]) {
+         cv::circle(roi, featpts1[i], 1, cv::Scalar(0,200,0),1);
+         matches1.push_back(featpts1[i]);
+         matches2.push_back(featpts2[i]);
+      }
+   }
+   
+   if (matches1.size()<20) {
+   	return false;
+   }
+   	
+	if(matches1.size() < 300) {   	
+   	///////// find sift matches /////////
+    vector<cv::KeyPoint>				poses1, poses2;
+   	cv::Mat 							descs1, descs2;
+	cv::FeatureDetector * pfeatDetector = new cv::SIFT(0,3,0.01,10);    
+    cv::DescriptorExtractor * pfeatExtractor = new cv::SIFT();
+    pfeatDetector->detect(im1, poses1, mask);
+    pfeatExtractor->compute(im1, poses1, descs1);
+    pfeatDetector->detect(im2, poses2, mask);
+    pfeatExtractor->compute(im2, poses2, descs2);
+    vector<vector<cv::DMatch>> knnMatches;
+	if (poses1.size() * poses2.size() > 1e8) {
+		cv::FlannBasedMatcher matcher;	// this gives fast inconsistent output
+		matcher.knnMatch(descs1, descs2, knnMatches,2);
+	}
+	else { // BF is slower but result is consistent
+      cv::BFMatcher matcher( cv::NORM_L2, false ); // for opencv2.4.2
+		matcher.knnMatch(descs1, descs2, knnMatches,2);
+	}
+	vector<cv::Point2f> siftmatch1, siftmatch2;
+	for (int i=0; i<knnMatches.size(); ++i) {
+		double ratio = knnMatches[i][0].distance/knnMatches[i][1].distance;
+		if ( ratio < THRESH_POINT_MATCH_RATIO) 		{
+			siftmatch1.push_back(poses1[knnMatches[i][0].queryIdx].pt);
+			siftmatch2.push_back(poses2[knnMatches[i][0].trainIdx].pt);
+		}
+	}
+//	cout<<"find sift matches "<<siftmatch1.size()<<endl;
+	for(int i=0; i<siftmatch1.size(); ++i) {
+		cv::circle(roi, siftmatch1[i], 4, cv::Scalar(0,200,0), 1);
+	}
+	matches1.insert(matches1.end(),siftmatch1.begin(),siftmatch1.end());
+	matches2.insert(matches2.end(),siftmatch2.begin(),siftmatch2.end());
+	}
+   cv::Mat inliers;
+//   findHomography(matches1, matches2, CV_RANSAC, 3, inliers);
+   findFundamentalMat(matches1, matches2, FM_RANSAC, 3, 0.99, inliers);
+
+   double depth_limit = 15;  
+   vector<cv::Point3f> pts3;
+   vector<int> idx_m1_3d;
+   cv::Mat eye = cv::Mat::eye(3,3,CV_32FC1), zro = cv::Mat::zeros(3,1,CV_32FC1);
+   for(int i=0; i<inliers.rows; ++i) {
+      if(inliers.at<uchar>(i)) {
+//		 double prlx_deg = compParallaxDeg (matches1[i], matches2[i], K, cv::Mat::eye(3,3,CV_64FC1), R);
+         cv::Mat pt = triangulatePoint (eye, zro, R, t, K, matches1[i], matches2[i]);
+         if(cv::norm(pt) < depth_limit) {
+            pts3.push_back(cv::Point3f(pt.at<double>(0),pt.at<double>(1),pt.at<double>(2)));       
+            idx_m1_3d.push_back(i);     
+         } 
+      }
+   }
+//   cout<<featpts1.size()<<"\t"<<matches1.size()<<"\t"<<cv::norm(inliers)*cv::norm(inliers)<<"\t"<<pts3.size()<<endl;
+   if(pts3.size()<10) {
+   	return false;
+   }
+
+   cv::Point3f n;
+   double d;
+   vector<int> gp_idx = findGroundPlaneFromPoints (pts3, n, d, real_baseline);
+
+   	if(gp_idx.size()>40 && abs(n.y)>0.99) {
+  ////// evaluate results //////
+   		cv::Point2f tl(vertsA[0].x/2+vertsA[3].x/2, vertsA[0].y),
+   					tr(vertsA[1].x/2+vertsA[2].x/2, vertsA[0].y);
+   		int n_rows = 8, n_cols = 15;
+   		cv::Mat accum = cv::Mat::zeros(n_rows,n_cols, CV_32FC1);
+   		float grid_width = (tr.x - tl.x)/n_cols, 
+   		  	grid_height = (vertsA[2].y - vertsA[0].y)/n_rows;
+   		int n_ptsin_grids = 0;
+      	for(int i=0;i<gp_idx.size(); ++i) {
+         	cv::circle(roi, matches1[idx_m1_3d[gp_idx[i]]], 2, cv::Scalar(0,200,0),2);
+         	 int c = (int)((matches1[idx_m1_3d[gp_idx[i]]].x - tl.x)/grid_width);
+         	 int r = (int)((matches1[idx_m1_3d[gp_idx[i]]].y - tl.y)/grid_height);
+         	 if(c>=0 && c<n_cols && r>=0 && r<n_rows) {
+         	 	accum.at<float>(r,c) += 1; 
+         	 	n_ptsin_grids++;
+         	 }
+      	}
+      	float n_low = (float)n_ptsin_grids/(n_rows*n_cols)/3;
+      	float n_valid_grid = 0; // number of grids having gp points
+      	for(int i=0; i<accum.rows;++i) {
+      		for(int j=0;j<accum.cols;++j) {
+      			if(accum.at<float>(i,j)>n_low) {
+      				if(j>=2 && j<=n_cols-3 && i>=1)
+						n_valid_grid = n_valid_grid + 1.5;
+					else
+						n_valid_grid = n_valid_grid + 1;
+      			}
+      		}
+      	}
+      	quality = n_valid_grid/(n_cols*n_rows-15);
+      	cv::putText(roi, "Ground point number "+num2str(n_ptsin_grids), cv::Point2f(10,50), FONT_HERSHEY_PLAIN, 3, cv::Scalar(200,0,0));
+      	cv::putText(roi, "n_low = "+num2str(n_low), cv::Point2f(10,100), FONT_HERSHEY_PLAIN, 3, cv::Scalar(200,0,0));
+      	cv::putText(roi, "n_valid_grid = "+num2str(n_valid_grid) +"   " + num2str(quality), cv::Point2f(10,150), FONT_HERSHEY_PLAIN, 3, cv::Scalar(200,0,0));
+
+      	for(int i=0; i<=n_rows; ++i) {
+      		cv::line(roi, cv::Point2f(tl.x,tl.y+grid_height*i), 
+      					cv::Point2f(tl.x+grid_width*n_cols,tl.y+grid_height*i),
+      					cv::Scalar(0,200,0));
+      	}
+      	for(int i=0; i<=n_cols; ++i) {
+      		cv::line(roi, cv::Point2f(tl.x+grid_width*i, tl.y), 
+      					cv::Point2f(tl.x+grid_width*i, tl.y+grid_height*n_rows),
+      					cv::Scalar(0,200,0));
+      	}
+    //  	cout<<accum<<endl;
+
+      depth = d/cv::norm(n);
+      normal = n*(1/cv::norm(n));
+      n_pts = gp_idx.size();
+  
+  	  tm.end(); cout<<"GP detect time "<<tm.time_ms<<" ms\n";
+      showImage("roi", &roi);
+      if (quality > 0.4) {      
+      
+      	return true;
+      }
+      else 
+      	return false;
+  }
+
+ 	return false;  
+
 }
