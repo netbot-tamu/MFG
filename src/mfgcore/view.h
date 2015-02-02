@@ -28,6 +28,7 @@ public:
    cv::Mat						R;	// rotation matrix w.r.t. {W}
    cv::Mat						t;	// translation std::vector in {W}
    cv::Mat						t_loc;// local relative translation with previous view
+   cv::Mat                 R_loc;
    std::vector< std::vector<int> >	vpGrpIdLnIdx;
    cv::Point2d					epipoleA, epipoleB; // A is with respect to next frame
    double						angVel; // angular velocity, in degree

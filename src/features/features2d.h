@@ -16,7 +16,7 @@ public:
    int			lid;	// local id in view
    int			gid;    // global id = the corresponding 3d keypoint's gid
 
-   FeatPoint2d() {}	
+   FeatPoint2d() {lid = -1; gid = -1;}	
    FeatPoint2d(double x_, double y_) {x = x_; y = y_; lid = -1; gid = -1;}
    FeatPoint2d(double x_, double y_, int _lid) {x = x_; y = y_; lid = -1; lid = _lid; gid = -1;}
    FeatPoint2d(double x_, double y_, cv::Mat des) 

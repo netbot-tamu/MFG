@@ -18,7 +18,7 @@ public:
    bool					is3D;
    int						estViewId;
 
-   KeyPoint3d() {is3D = false;  pGid = -1;}
+   KeyPoint3d() {is3D = false; gid = -1; pGid = -1;}
    KeyPoint3d(double x_, double y_, double z_) 
    {
       x = x_; y = y_; z = z_;
