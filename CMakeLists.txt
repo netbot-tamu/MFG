@@ -9,7 +9,9 @@ LIST(APPEND CMAKE_MODULE_PATH ${mfg_SOURCE_DIR}/cmake_modules)
 
 # for CMake 3.0 and above, this will suppress warnings about old policies
 # TODO: need to wrap this in a version check
+IF(POLICY CMP0043)
 CMAKE_POLICY(SET CMP0043 OLD)
+ENDIF(POLICY CMP0043)
 
 
 ################################################################################
