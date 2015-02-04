@@ -83,7 +83,7 @@ int computeMSLD (LineSegmt2d& l, cv::Mat* xGradient, cv::Mat* yGradient)
 	cv::Mat MS(72, 1, CV_64F);
 	if (GDM.size() ==0 ) {
 		for (int i=0; i<MS.rows; ++i)
-			MS.at<double>(i,0) = xrand(); // if not computable, assign random num
+			MS.at<double>(i,0) = rand(); // if not computable, assign random num
 		l.msldDesc = MS;
 		return 0;
 	}

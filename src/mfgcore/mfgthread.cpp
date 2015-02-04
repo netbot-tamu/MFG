@@ -57,10 +57,10 @@ void MfgThread::run()
 			
 		if (!isFileExist(imgName)) {
 			do {			
-				imgName = prevImgName(imgName, imIdLen, 1);
-				cout<<imgName<<endl;
+				imgName = prevImgName(imgName, imIdLen, 1);				
 			} while(!isFileExist(imgName));
-			toExpand = true;
+			if(imgName != pMap->views.back().filename)
+				toExpand = true;
 			finished = true;
 		}
 		View v(imgName, K, distCoeffs, mfgSettings);
@@ -71,10 +71,11 @@ void MfgThread::run()
 		// --- determine keyframe or not ---
 		if(fid-pMap->views.back().frameId >  // interval limit
 			(pMap->views[1].frameId-pMap->views[0].frameId)*interval_ratio
-		   && fid-pMap->views.back().frameId >1) {
+		   && fid-pMap->views.back().frameId >1
+		   && !finished) {
 				toExpand = true;
 				imgName = prevImgName(imgName, imIdLen, increment);
-		} else if (isKeyframe(*pMap, v, threshPtPairNum, thresh3dPtNum)) { // previous frame is selected
+		} else if (isKeyframe(*pMap, v, threshPtPairNum, thresh3dPtNum) && !finished) { // previous frame is selected
 			string selName;
 			bool found = false; // found a view with more overlap
 			string oldName = imgName;
@@ -102,7 +103,7 @@ void MfgThread::run()
 				}
 				toExpand = true;
 			}
-		} else if(!toExpand)
+		} else if(!toExpand && !finished)
 			continue;
 
 		if(toExpand) { // to avoid Motion blurred image, search around
@@ -143,7 +144,7 @@ void MfgThread::run()
 	timer.end();
 	cout<<"total time = "<<timer.time_s<<"s"<<endl;
 	exportCamPose (*pMap, "camPose.txt") ;
-	pMap->exportAll("MFG");
+//	pMap->exportAll("MFG");
 }
 
 

@@ -546,9 +546,7 @@ void Mfg::bundle_adjust_between(int view_from, int view_to, int cam_from)
 		}
 	}
 
-	
-	
-cout<<"LBA fixed points number "<<kptIdx2Rpj_notOpt.size()<<", non-fixed "<<kptIdx2Opt.size()<<endl;
+
 	// ====== start g2o ======
 	MyTimer timer;
 	timer.start();
@@ -1272,9 +1270,7 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 		}
 	}
 
-	
-	
-cout<<"LBA fixed points number "<<kptIdx2Rpj_notOpt.size()<<", non-fixed "<<kptIdx2Opt.size()<<endl;
+
 	// ====== start g2o ======
 	MyTimer timer;
 	timer.start();

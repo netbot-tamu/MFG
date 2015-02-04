@@ -53,7 +53,9 @@ int main(int argc, char *argv[])
 
    
    seed_xrand(mfgSettings->getPRNGSeed());
-   //srand(1);
+   srand(1);
+   cv::theRNG().state = 1;
+
    string imgName;			// first image name
    cv::Mat K, distCoeffs;	// distortion coeff: k1, k2, p1, p2
    int imIdLen = 5;			// n is the image number length,

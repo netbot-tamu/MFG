@@ -51,7 +51,7 @@ public:
    vector <IdealLine3d>		lineTrack;
 
    double angVel; // angle velocity deg/sec
-   double linVel; // linear velocity
+   double linVel; // linear velocity m/s
    double fps;
 
    bool need_scale_to_real;

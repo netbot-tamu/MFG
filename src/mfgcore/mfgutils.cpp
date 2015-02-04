@@ -157,8 +157,8 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 		computePnP(X,x,map.K,Rn,tn); //current pose Rn, tn
 		cv::Mat R = Rn*map.views.back().R.inv();
 		double angle = acos(abs((R.at<double>(0,0) + R.at<double>(1,1) + R.at<double>(2,2) - 1)/2));
-//		cout<<angle*180/PI<<'\t';
-		unordered_map<int,int> tracked_lid_id;
+
+		std::map<int,int> tracked_lid_id;
       for (int i=0; i<tracked_idx.size();++i) {
          tracked_lid_id[tracked_idx[i]] = i;
       }

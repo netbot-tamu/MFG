@@ -10,7 +10,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
 
-//#include "mfg.h"
+#include "mfg.h"
 #include "settings.h"
 #include "utils.h"
 //#include "lsd/lsd.h"
@@ -91,8 +91,8 @@ View::View (string imgName, cv::Mat _K, cv::Mat dc, int _id, MfgSettings* _setti
       cv::cvtColor(img, grayImg, CV_RGB2GRAY);
    else
       grayImg = img;
-   lsLenThresh = img.cols/100.0;   // for raw line segments
-//   lsLenThresh = 1000;
+   lsLenThresh = img.cols/50.0;   // for raw line segments
+
    detectFeatPoints ();
 
    cv::Mat pImg = img.clone();
@@ -248,9 +248,9 @@ void View::detectVanishPoints ()
    vector<LineSegmt2d>&ls = lineSegments;
 
    double orthThresh =			sin(3*PI/180);  // threshold for VP orthogonality
-   double vp2LineDistThresh =	tan(1.5*PI/180);  // normalized dist
-   double line2VpDistThresh =	1;    // mledist threshold
-
+   double vp2LineDistThresh =	tan(1*PI/180);  // normalized dist
+   
+   int num_ls_vp_thres = 100;
    vector<int> oriIdx;  // original index of ls
    for (int i=0; i<ls.size(); ++i) oriIdx.push_back(i);
 
@@ -275,7 +275,7 @@ void View::detectVanishPoints ()
       refineVanishPt (lineSegments, vertGroupIdx, vp, cov, covhomo);
    }
    cv::Mat v0;
-   if(vertGroupIdx.size()>=3) { 
+   if(vertGroupIdx.size()>= 30) { 
       vanishPoints.push_back(VanishPnt2d(vp.at<double>(0),vp.at<double>(1),vp.at<double>(2),0, -1));
       vanishPoints.back().cov = cov.clone();
       vanishPoints.back().cov_homo = covhomo.clone();
@@ -284,7 +284,6 @@ void View::detectVanishPoints ()
       for (int i=0; i<vertGroupIdx.size(); ++i) // assign vp lid to line segments
          lineSegments[vertGroupIdx[i]].vpLid = 0;
    } else {
-      cout<<"no vertical VP found ...\n";
       v0 = (cv::Mat_<double>(3,1)<<0, 1, 0);      
    }
 
@@ -325,16 +324,17 @@ void View::detectVanishPoints ()
 
    double vpAngleLB =	80;  //degree
    double confidence = 0.99;  // for recomputing maxIterNo.
-
+   
    for (int vpNo = 1; vpNo < maxHvpNo+1; ++vpNo) {
       int	inlierNoThresh	= ls.size()/maxHvpNo;
       vector<int> maxInlierIdx;
-      vector<int>	inlierIdx;
+      vector<int>	inlierIdx; 
       int	maxIterNo	= 500;   // initial max RANSAC iteration number
       for (int i=0; i < maxIterNo; ++i) {
          if( ls.size() < 2 ) break; 
          int j = xrand() % ls.size();
          int k = xrand() % ls.size();
+   //      cout<<j<<"\t"<<k<<"\t"<<ls.size()<<endl;
          if (j==k || ls[j].vpLid!=-1 || ls[k].vpLid!=-1) { //redo it
             --i;
             continue;
@@ -429,19 +429,23 @@ void View::detectVanishPoints ()
          continue;
       }
 
+      if(maxInlierIdx.size() < num_ls_vp_thres)
+         continue;
+
       int vplid = vanishPoints.size();
       for (int i=0; i<maxInlierIdx.size(); ++i)
          ls[maxInlierIdx[i]].vpLid = vplid;
       vanishPoints.push_back(VanishPnt2d(vp.at<double>(0), vp.at<double>(1),vp.at<double>(2), vplid , -1));
       vanishPoints.back().cov = hvpCov.clone();
       vanishPoints.back().cov_homo = hvpCovHomo.clone();
-
+   
    }
+  
 #endif
    vpGrpIdLnIdx.resize(vanishPoints.size());
 
    for (int i=0; i<vanishPoints.size(); ++i) {
-      vanishPoints[i].cov_ab = vanishpoint_cov_xyw2ab(vanishPoints[i].mat(),K,vanishPoints[i].cov_homo);
+      vanishPoints[i].cov_ab = vanishpoint_cov_xyw2ab(vanishPoints[i].mat(),K,vanishPoints[i].cov_homo);      
    }
 
 }
@@ -624,6 +628,7 @@ void View::drawLineSegmentGroup(vector<int> idx) // draw grouped line segments
 
 void View::drawAllLineSegments(bool write2file)
 {
+   
    vector<cv::Scalar> colors;
    colors.push_back(cv::Scalar(rand()%255,rand()%255,rand()%255,0));
    colors.push_back(cv::Scalar(0,0,255,0));

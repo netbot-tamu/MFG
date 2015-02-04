@@ -13,6 +13,7 @@
  */
 
 #include "random.h"
+ #include <iostream>
 
 /* XOR Shift 64-bit */
 

@@ -1300,13 +1300,12 @@ bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R
 //// assume camera optical axis is approximately parallel to ground plane 
 // small baseline???? check parallax
 {
-   MyTimer tm; tm.start();
-
+   
    quality = 0;
    cv::Mat maskA = cv::Mat::zeros(im1.size(), CV_8UC1);
    
    vector<cv::Point> vertsA;
-   vertsA.push_back(cv::Point(500,190));
+   vertsA.push_back(cv::Point(580,190));//500
    vertsA.push_back(cv::Point(650,190)); //740
    vertsA.push_back(cv::Point(830,im1.rows-20));
    vertsA.push_back(cv::Point(410,im1.rows-20));
@@ -1434,8 +1433,8 @@ bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R
 
    	if(gp_idx.size()>40 && abs(n.y)>0.99) {
   ////// evaluate results //////
-   		cv::Point2f tl(vertsA[0].x/2+vertsA[3].x/2, vertsA[0].y),
-   					tr(vertsA[1].x/2+vertsA[2].x/2, vertsA[0].y);
+   		cv::Point2f tl(vertsA[3].x, vertsA[0].y),
+   					tr(vertsA[2].x, vertsA[0].y);
    		int n_rows = 8, n_cols = 15;
    		cv::Mat accum = cv::Mat::zeros(n_rows,n_cols, CV_32FC1);
    		float grid_width = (tr.x - tl.x)/n_cols, 
@@ -1462,7 +1461,8 @@ bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R
       			}
       		}
       	}
-      	quality = n_valid_grid/(n_cols*n_rows-15);
+    //  	cout<<"invalid grids "<<(vertsA[3].y-vertsA[0].y)*(vertsA[0].x-tl.x)/grid_width/grid_height <<endl;
+      	quality = n_valid_grid/(n_cols*n_rows-((vertsA[3].y-vertsA[0].y)*(vertsA[0].x-tl.x)/grid_width/grid_height/2));
       	cv::putText(roi, "Ground point number "+num2str(n_ptsin_grids), cv::Point2f(10,50), FONT_HERSHEY_PLAIN, 3, cv::Scalar(200,0,0));
       	cv::putText(roi, "n_low = "+num2str(n_low), cv::Point2f(10,100), FONT_HERSHEY_PLAIN, 3, cv::Scalar(200,0,0));
       	cv::putText(roi, "n_valid_grid = "+num2str(n_valid_grid) +"   " + num2str(quality), cv::Point2f(10,150), FONT_HERSHEY_PLAIN, 3, cv::Scalar(200,0,0));
@@ -1483,7 +1483,6 @@ bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R
       normal = n*(1/cv::norm(n));
       n_pts = gp_idx.size();
   
-  	  tm.end(); cout<<"GP detect time "<<tm.time_ms<<" ms\n";
       showImage("roi", &roi);
       if (quality > 0.4) {      
       

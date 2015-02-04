@@ -68,7 +68,6 @@ Mfg::Mfg(View v0, int ini_incrt, cv::Mat dc)
       v0_idx.push_back(v0.featurePoints[i].lid);
    }
    cv::Mat prev_img = v0.grayImg;
-
    string imgName = v0.filename;
    for(int idx = 0; idx < ini_incrt; ++idx) {
       imgName = nextImgName(imgName, 5, 1);
@@ -114,7 +113,7 @@ Mfg::Mfg(View v0, int ini_incrt, cv::Mat dc)
       prev_pts = tracked_pts;
       v0_idx = tracked_idx;
       prev_img = grayImg.clone();
-      
+     
    } 
 
    vector<vector<cv::Point2d>> featPtMatches;
@@ -645,6 +644,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
    bool   sortbyPrlx = false;
    double parallaxThresh = THRESH_PARALLAX;
    double parallaxDegThresh = THRESH_PARALLAX_DEGREE;
+   double accel_max = 10; // m/s/s
 
    vector<vector<cv::Point2d>> featPtMatches;
    vector<vector<int>> pairIdx;
@@ -751,7 +751,6 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
 
    cv::Mat F, R, E, t; // relative pose between last two views
    vector<cv::Mat> Fs, Es, Rs, ts;
-   
 //   computePotenEpipolar (featPtMatches,pairIdx,K, Fs, Es, Rs, ts, false, t_prev);
    computeEpipolar(featPtMatches,pairIdx,K, Fs, Es, Rs, ts);
 //   tm.end(); cout<<"computePotenEpipolar time "<<tm.time_ms<<" ms.\n";
@@ -786,7 +785,17 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
    cv::Mat Rn_pnp, tn_pnp, R_pnp, t_pnp;
    if (pt3d.size()>3) {
   //    computePnP(pt3d, pt2d, K, Rn_pnp, tn_pnp);  
-      computePnP_ransac (pt3d, pt2d, K, Rn_pnp, tn_pnp, 100);
+  //    computePnP_ransac (pt3d, pt2d, K, Rn_pnp, tn_pnp, 100);
+      vector<cv::Point3f> pt3f;
+      vector<cv::Point2f> pt2f;
+      for(int i=0; i<pt3d.size(); ++i) {
+         pt3f.push_back(cv::Point3f(pt3d[i].x, pt3d[i].y, pt3d[i].z));
+         pt2f.push_back(cv::Point2f(pt2d[i].x, pt2d[i].y));
+      }
+      cv::Mat rvec;
+      solvePnPRansac(pt3f, pt2f, K, cv::Mat(), rvec, tn_pnp, false, 100, 8.0, 200);
+      cv::Rodrigues(rvec, Rn_pnp);
+
       R_pnp = Rn_pnp * prev.R.t();
       t_pnp = tn_pnp - R_pnp * prev.t; // relative t, with scale
 
@@ -828,10 +837,10 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
 
          cv::Mat Rn = Ri *prev.R;
          // ----- find best R and t based on existent 3D points------
-         int maxIter = 100;
+         int maxIter = 100, maxmaxIter = 1000;
          vector<int> maxInliers;
          double best_s = -1;
-         for (int it = 0; it < maxIter; ++it) {
+         for (int it = 0, itt = 0; it < maxIter && itt < maxmaxIter; ++it, ++itt) {
             int i = xrand()%featPtMatches.size();
             int iGid = prev.featurePoints[pairIdx[i][0]].gid;
             if (iGid < 0) {--it; continue;} // not observed before
@@ -934,10 +943,8 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       }
       if (scales.size() > 0) {
          scale = wsum/tw;
-   //      cout<<nview.frameId-prev.frameId<<" frames, bestScale = " << bestScale <<", w-ave="<< wsum/tw<<", median=" << vecMedian(scales) <<endl;
          if (scales3.size() >= 15) {
             scale = vecMedian(scales3);
-   //         cout<<nview.frameId-prev.frameId<<" frames,"<<"ave="<<vecSum(scales3)/scales3.size() <<", median="<<vecMedian(scales3)<< ", ["<< scales3.size()<<"]"<<endl;
          }
          scale = (scale + bestScale + vecMedian(scales))/3;
          cout<<"keyframe "<<nview.id<<", "<<nview.frameId-prev.frameId<<" frames: mixed scale = "<<scale;
@@ -948,21 +955,65 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       if(pt3d.size()>3) {
          cout<<", "<<cv::norm(t_pnp)<<"("<<pt3d.size()<<")\n";
       } 
-
-      if(maxInliers_Rt.size() < 5 
-         && pt3d.size() > 7
+      double dt = (nview.frameId - prev.frameId)/fps;
+      if(prev.speed > 0 && !need_scale_to_real) {         
+         double a0 = abs((scale/dt - prev.speed)/dt); 
+         if(a0 < accel_max) {
+            nview.t = R*prev.t + t*scale;
+            nview.R_loc = R;
+            nview.t_loc = t;
+         } else 
+            use_const_vel_model = true;
+         /// compare with pnp
+         if(pt3d.size() > 10
+            && (abs(scale - cv::norm(t_pnp)) > 0.7 * scale || abs(scale - cv::norm(t_pnp)) > 0.7 * cv::norm(t_pnp))) {
+            cout<<"Inconsistent pnp and 5-pt: "<< cv::norm(t_pnp) <<", "<<scale<<endl;
+            double a1 = abs((cv::norm(t_pnp)/dt - prev.speed)/dt);            
+            if(a0 >= accel_max && a1 >= accel_max){
+               use_const_vel_model = true; // neither usable
+            } else if(a1 < a0) { // choose small acc
+               cout<<"checking accelaraion "<<a0<< " > " <<a1<<", use pnp instead"<<endl;
+               nview.R = Rn_pnp;
+               nview.t = tn_pnp;  
+               R = R_pnp;
+               t = t_pnp/cv::norm(t_pnp);
+               nview.R_loc = R;
+               nview.t_loc = t;
+               use_const_vel_model = false;
+               
+            }
+         }
+      } else {
+/*      if(maxInliers_Rt.size() < 5 
+         && pt3d.size() > 30
          && (abs(scale - cv::norm(t_pnp)) > 0.7 * scale || abs(scale - cv::norm(t_pnp)) > 0.7 * cv::norm(t_pnp)) 
         ) {
          cout<<"Inconsistent pnp and 5-pt: "<< cv::norm(t_pnp) <<", "<<scale<<endl;
          cout<<"use pnp scale instead\n";
          scale = cv::norm(t_pnp);
       }
-
-      nview.t = R*prev.t + t*scale;
-      nview.R_loc = R;
-      nview.t_loc = t;
+*/          
+         nview.t = R*prev.t + t*scale;
+         nview.R_loc = R;
+         nview.t_loc = t;
+         if(pt3d.size() > 10
+            && (abs(scale - cv::norm(t_pnp)) > 0.7 * scale || abs(scale - cv::norm(t_pnp)) > 0.7 * cv::norm(t_pnp))) {
+            cout<<"Inconsistent pnp and 5-pt: "<< cv::norm(t_pnp) <<", "<<scale<<endl;
+           if(abs(cv::norm(t_pnp)/dt - prev.speed) < abs(scale/dt - prev.speed) && prev.speed > 0) { // choose small acc
+               cout<<"checking accelaraion, use pnp instead"<<endl;
+               nview.R = Rn_pnp;
+               nview.t = tn_pnp;  
+               R = R_pnp;
+               t = t_pnp/cv::norm(t_pnp);
+               nview.R_loc = R;
+               nview.t_loc = t;
+               use_const_vel_model = false;
+               
+            }
+         }
+      }
    } else { // small movement, use R-PnP
-   /*   vector <int> maxInliers_R;
+      vector <int> maxInliers_R;
       cv::Mat best_tn;
       vector<double> sizes;
       for(int trial=0; trial < 10; ++trial) {
@@ -975,12 +1026,12 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
             cv::Mat Rn = Ri *prev.R;
 
             // ----- find best R and t based on existent 3D points------
-            int maxIter = 100;
+            int maxIter = 100, maxmaxIter = 1000;
             vector<int> maxInliers;
             cv::Mat good_tn;
             double best_s = -1;
-            for (int it = 0; it < maxIter; ++it) {
-               if(pt3d.size()==0) break;
+            for (int it = 0, itt = 0; it < maxIter && itt < maxmaxIter; ++it, ++itt) {
+               if(pt3d.size()<2) break;
                int i = xrand() % pt3d.size();
                int j = xrand() % pt3d.size();
                if(i==j) {--it; continue;}
@@ -1035,17 +1086,66 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
             inlierPt3d.push_back(pt3d[maxInliers_R[i]]);
             inlierPt2d.push_back(pt2d[maxInliers_R[i]]);
          }      
-         nview.R = R*prev.R;
-         nview.t = pnp_withR (inlierPt3d, inlierPt2d, K, nview.R);
-         nview.R_loc = R;
-         nview.t_loc = cv::Mat::zeros(3,1,CV_64F);
+         cv::Mat nvR = R*prev.R;
+         cv::Mat nvt = pnp_withR (inlierPt3d, inlierPt2d, K, nvR);
+
          cout<<nview.frameId-prev.frameId<<" frames,"<<"Scale (2pt_alg)="
-            <<cv::norm(-nview.R.t()*nview.t + prev.R.t()*prev.t)<<", "
+            <<cv::norm(-nvR.t()*nvt + prev.R.t()*prev.t)<<", "
             <<maxInliers_R.size()<<"/"<<pt3d.size()<<endl;
-      } else { 
-      */   cout <<"Insufficient feature info for relative pose estimation...\n";
-         // use pnp or const vel
-         ///// compare with pnp result /////
+         double base = cv::norm(nvR.t()*nvt - prev.R.t()*prev.t); 
+         double dt = (nview.frameId - prev.frameId)/fps;
+         if(prev.speed > 0 && !need_scale_to_real) { // able to compute accel
+            double a0 = abs((base/dt - prev.speed)/dt);
+            if (a0 < accel_max) { // accel not out of bound
+               nview.R = nvR.clone();
+               nview.t = nvt.clone();
+               nview.R_loc = R.clone();
+               nview.t_loc = nvt - R * prev.t; // relative t, with scale;
+               nview.t_loc = nview.t_loc/cv::norm(nview.t_loc);
+            } else 
+               use_const_vel_model = true;
+            if(pt3d.size() > 10 // compare with pnp
+               && (abs(base - cv::norm(t_pnp)) > 0.7 * base || abs(base - cv::norm(t_pnp)) > 0.7 * cv::norm(t_pnp))) {
+               cout<<"Inconsistent pnp and 2-pt: "<< cv::norm(t_pnp) <<", "<<base<<endl;
+               double a1 = abs((cv::norm(t_pnp)/dt - prev.speed)/dt);            
+               if(a0 >= accel_max && a1 >= accel_max){
+                  use_const_vel_model = true; // neither usable
+               } else if(a1 < a0) { // choose small acc
+                  cout<<"checking accelaraion "<<a0<< " > " <<a1<<", use pnp instead"<<endl;
+                  nview.R = Rn_pnp;
+                  nview.t = tn_pnp;  
+                  R = R_pnp;
+                  t = t_pnp/cv::norm(t_pnp);
+                  nview.R_loc = R;
+                  nview.t_loc = t;
+                  use_const_vel_model = false;
+                 
+               }
+            }
+         } else { /// 
+            nview.R = nvR.clone();
+            nview.t = nvt.clone();
+            nview.R_loc = R.clone();
+            nview.t_loc = nvt - R * prev.t; // relative t, with scale;
+            nview.t_loc = nview.t_loc/cv::norm(nview.t_loc);
+            //// compare with pnp
+            if(pt3d.size() > 10 // compare with pnp
+               && (abs(base - cv::norm(t_pnp)) > 0.7 * base || abs(base - cv::norm(t_pnp)) > 0.7 * cv::norm(t_pnp))) {
+               cout<<"Inconsistent pnp and 2-pt: "<< cv::norm(t_pnp) <<", "<<base<<endl;            
+               if(abs(cv::norm(t_pnp)/dt - prev.speed) < abs(base/dt - prev.speed) && prev.speed > 0) { // choose small acc
+                  cout<<"checking accelaraion, use pnp instead"<<endl;
+                  nview.R = Rn_pnp;
+                  nview.t = tn_pnp;  
+                  R = R_pnp;
+                  t = t_pnp/cv::norm(t_pnp);
+                  nview.R_loc = R;
+                  nview.t_loc = t;
+                  
+               }
+            }
+         }
+      } else {       
+      // use pnp or const vel
          if(pt3d.size() > 7) {
             cout<<"fallback to pnp : "<< cv::norm(t_pnp) <<endl;            
             nview.R = Rn_pnp;
@@ -1054,14 +1154,14 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
             t = t_pnp/cv::norm(t_pnp);
             nview.R_loc = R;
             nview.t_loc = t;
-         } else {
-            cout<<"fallback to const-vel model ...press 1 to continue\n";
-            int tmp; cin>>tmp;            
+         } else {       
             use_const_vel_model = true;                           
          }
-   //   }
+      }
    }
-
+   if(use_const_vel_model) {
+         cout<<"fallback to const-vel model ...press 1 to continue\n";    
+   }
 
 #ifdef USE_GROUND_PLANE
    int n_gp_pts;
@@ -1070,12 +1170,16 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
    double gp_quality;
    double scale_to_real = -1;
    cv::Mat gp_roi;
-   double gp_qual_thres = 0.53;
+   double gp_qual_thres = 0.55;
    double baseline = -1;
    if(!need_scale_to_real && !use_const_vel_model) { 
       baseline = cv::norm(nview.t - R*prev.t);
    }
-   if(detectGroundPlane(prev.grayImg, nview.grayImg,R,t,K, n_gp_pts, gp_depth, gp_norm_vec, gp_quality, gp_roi, baseline)) {
+   bool gp_detect_valid = false;
+   
+      gp_detect_valid = detectGroundPlane(prev.grayImg, nview.grayImg,R,t,K, n_gp_pts, gp_depth, gp_norm_vec, gp_quality, gp_roi, baseline);
+   
+   if( gp_detect_valid && gp_quality >= gp_qual_thres-0.02) {
       if(!use_const_vel_model) // translation scale obtained from epipolor or pnp
       {
          scale_to_real = camera_height/abs((cv::norm(nview.t - R*prev.t) * gp_depth));
@@ -1086,7 +1190,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
                if(scale_vals.size()==0) {
                   scale_vals.push_back(scale_to_real);
                }
-               cout<<"Scale local map by "<< vecSum(scale_vals)/scale_vals.size()<<endl; //int tmp; cin>>tmp; 
+               cout<<"Scale local map by "<< vecSum(scale_vals)/scale_vals.size()<<endl; 
                vector<double> scale_constraint(4);
                scale_constraint[0] = prev.id; scale_constraint[1] = nview.id; 
                scale_constraint[2] = cv::norm(nview.t - R*prev.t) * vecSum(scale_vals)/scale_vals.size();
@@ -1108,13 +1212,13 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
                 (abs(scale_since.back()-nview.id)>20 && abs(est_ch - camera_height) > 0.1 && 
                   abs(est_ch - camera_height) < 0.3 && gp_quality > gp_qual_thres-0.02)
                ) { // inconsistence
-                  cout<<"Scale inconsistence, do scaling "<<scale_to_real<<" from "<<scale_since.back()<<endl; //int tmp; cin>>tmp;
+                  cout<<"Scale inconsistence, do scaling "<<scale_to_real<<" from "<<scale_since.back()<<endl; 
                if(nview.id - scale_since.back() == 1 && scale_since.size()>2)
                   scaleLocalMap(scale_since[scale_since.size()-2], nview.id, scale_to_real, false);
                if(nview.id - scale_since.back() > 1 && nview.frameId - views[scale_since.back()].frameId < 100)   
                   scaleLocalMap(scale_since.back(), nview.id, scale_to_real, false); 
-               else if (nview.frameId - views[scale_since.back()].frameId > 60) 
-                  scaleLocalMap(max(0, nview.id-20), nview.id, scale_to_real, false);
+               else if (nview.frameId - views[scale_since.back()].frameId > 100) 
+                  scaleLocalMap(max(0, nview.id-50), nview.id, scale_to_real, false);
 
                vector<double> scale_constraint(4);
                scale_constraint[0] = prev.id; scale_constraint[1] = nview.id; 
@@ -1150,7 +1254,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
             nview.R_loc = R;            
             nview.t_loc = t;
             use_const_vel_model = false;     // avoid using const-vel via gp info 
-            cout<<"t-scale unavailable ... GP recovers real scale by scaling "<<scale_to_real<<endl; //int tmp; cin>>tmp;
+            cout<<"t-scale unavailable ... GP recovers real scale by scaling "<<scale_to_real<<endl; 
          }  
       }
    } else {//no ground plane detected 
@@ -1164,7 +1268,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          nview.R_loc = R;            
          nview.t_loc = t;
          use_const_vel_model = false;
-         cout<<"started a new local system since view "<<nview.id<<endl; //int tmp; cin>>tmp;
+         cout<<"started a new local system since view "<<nview.id<<endl; 
       }
    }
 #endif
@@ -1195,7 +1299,11 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       }
       if(R.cols==3) { // R computed
          nview.R = R * prev.R;
-         nview.t = R*prev.t + cv::norm(t_const)*t;      
+         if(t_const.dot(t)>0) 
+            nview.t = R*prev.t + cv::norm(t_const)*t;
+         else 
+            nview.t = R*prev.t - cv::norm(t_const)*t;
+               
       } else {
          nview.R = R_const * prev.R;
          nview.t = R_const*prev.t + t_const;
@@ -1227,10 +1335,27 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       R.at<double>(1,0), R.at<double>(1,1), R.at<double>(1,2),
       R.at<double>(2,0), R.at<double>(2,1), R.at<double>(2,2);
    Quaterniond q(Rx);
-   angVel = 2*acos(q.w()) * 180/PI / ((nview.frameId - prev.frameId)/fps);
+   double delta_t = (nview.frameId - prev.frameId)/fps;
+   angVel = 2*acos(q.w()) * 180/PI / delta_t;
 //   cout<<"angVel="<<angVel<<" deg/sec\n";
    nview.angVel = angVel;
 
+   nview.speed = -1;
+   nview.accel = -1;
+   if (!need_scale_to_real)  {
+      nview.speed = cv::norm(nview.R.t() * nview.t - prev.R.t() * prev.t)/delta_t;
+   //   cout<<"speed "<<nview.speed<<" m/s, ";
+      if(prev.id>0) {// update previous speed (after potential scaling)
+         int ppid = prev.id - 1;
+         prev.speed = cv::norm(prev.R.t()*prev.t - views[ppid].R.t()*views[ppid].t)/
+                        (prev.frameId - views[ppid].frameId)*fps;   
+      }
+      if(prev.speed > 0.1) {
+         nview.accel = abs(nview.speed - prev.speed)/delta_t;
+   //      cout<<"accel "<<nview.accel<<" m/s2"<<endl;
+         
+      }
+   }
    // ----- sort point matches by parallax -----
    if(sortbyPrlx) {
       vector<valIdxPair> prlxVec;
@@ -1440,7 +1565,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          new2_3dPtNum ++;
       }
    }
-   cout<<"new 3d pts "<<new3dPtNum<<"\t"<<new2_3dPtNum<<endl;
+//   cout<<"new 3d pts "<<new3dPtNum<<"\t"<<new2_3dPtNum<<endl;
    // remove outliers
    if(!use_const_vel_model) {
       for(int i=0; i < maxInliers_Rt.size(); ++i) {
@@ -1836,7 +1961,7 @@ void Mfg::draw3D() const
 
 void Mfg::adjustBundle()
 {
-   int numPos = 10, numFrm = 15;
+   int numPos = 8, numFrm = 10;
    if (views.size() <=numFrm ){
       numPos = numFrm;
    }
