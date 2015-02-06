@@ -106,6 +106,8 @@ class MfgThread : public QThread
 {
    Q_OBJECT
 
+signals:
+     void closeAll();
 protected:
    void run();
 

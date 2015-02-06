@@ -1318,13 +1318,16 @@ bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R
    im1.copyTo(roi, mask);  
    
 
-   vector<cv::Point2f> featptsA, featpts1;
-
+   vector<cv::Point2f> featpts1;
+   MyTimer tm; tm.start();
    int r_bucket = 4, c_bucket = 7;
    int rows_roi = vertsA[2].y-vertsA[1].y, cols_roi = vertsA[2].x-vertsA[3].x;
    int n_gftt = 500;
+   vector<vector<cv::Point2f> > vvpt(r_bucket*c_bucket);
+   #pragma omp parallel for
    for(int i=0; i<r_bucket; ++i) {
    	for(int j=0; j<c_bucket; ++j) {
+   		vector<cv::Point2f> featptsA;
    		cv::Mat mask_bucket = cv::Mat::zeros(im1.size(), CV_8UC1);
    		cv::Mat roi_bucket = cv::Mat(mask_bucket, cv::Rect(vertsA[3].x+cols_roi/c_bucket*j, vertsA[0].y+rows_roi/r_bucket*i, cols_roi/c_bucket, rows_roi/r_bucket));
    		roi_bucket = 1;   		
@@ -1338,10 +1341,14 @@ bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R
                            3,
                            false
                            );
-   		featpts1.insert(featpts1.end(), featptsA.begin(), featptsA.end());
+   	//	featpts1.insert(featpts1.end(), featptsA.begin(), featptsA.end());
+   		vvpt[i*c_bucket+j] = featptsA;
    	}
    }
+   for(int i=0; i<vvpt.size();++i) 
+   		featpts1.insert(featpts1.end(), vvpt[i].begin(), vvpt[i].end());
 
+//   tm.end(); cout<<"detect gftt "<<tm.time_ms<<endl;
    vector<uchar> status;
    vector<float> err;
    vector<cv::Point2f> featpts2;
@@ -1365,23 +1372,34 @@ bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R
          matches2.push_back(featpts2[i]);
       }
    }
-   
    if (matches1.size()<20) {
    	return false;
    }
    	
+   
 	if(matches1.size() < 300) {   	
    	///////// find sift matches /////////
     vector<cv::KeyPoint>				poses1, poses2;
    	cv::Mat 							descs1, descs2;
 	cv::FeatureDetector * pfeatDetector = new cv::SIFT(0,3,0.01,10);    
     cv::DescriptorExtractor * pfeatExtractor = new cv::SIFT();
-    pfeatDetector->detect(im1, poses1, mask);
-    pfeatExtractor->compute(im1, poses1, descs1);
-    pfeatDetector->detect(im2, poses2, mask);
-    pfeatExtractor->compute(im2, poses2, descs2);
+//    cv::FeatureDetector * pfeatDetector = new cv::SURF();    
+//    cv::DescriptorExtractor * pfeatExtractor = new cv::SURF();
+   
+   	#pragma omp parallel sections 
+   	{
+    	{
+    		pfeatDetector->detect(im1, poses1, mask); // 170ms
+    		pfeatExtractor->compute(im1, poses1, descs1);  // 90ms
+    	}
+    	#pragma omp section
+    	{
+    		pfeatDetector->detect(im2, poses2, mask); 
+    		pfeatExtractor->compute(im2, poses2, descs2);
+    	}
+	}
     vector<vector<cv::DMatch>> knnMatches;
-	if (poses1.size() * poses2.size() > 1e8) {
+	if (poses1.size() * poses2.size() > 1e1) {
 		cv::FlannBasedMatcher matcher;	// this gives fast inconsistent output
 		matcher.knnMatch(descs1, descs2, knnMatches,2);
 	}
@@ -1397,17 +1415,17 @@ bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R
 			siftmatch2.push_back(poses2[knnMatches[i][0].trainIdx].pt);
 		}
 	}
-//	cout<<"find sift matches "<<siftmatch1.size()<<endl;
+
 	for(int i=0; i<siftmatch1.size(); ++i) {
 		cv::circle(roi, siftmatch1[i], 4, cv::Scalar(0,200,0), 1);
 	}
 	matches1.insert(matches1.end(),siftmatch1.begin(),siftmatch1.end());
 	matches2.insert(matches2.end(),siftmatch2.begin(),siftmatch2.end());
 	}
-   cv::Mat inliers;
-//   findHomography(matches1, matches2, CV_RANSAC, 3, inliers);
-   findFundamentalMat(matches1, matches2, FM_RANSAC, 3, 0.99, inliers);
+//	tm.end(); cout<<"sif match "<<tm.time_ms<<endl;
 
+   cv::Mat inliers;
+   findFundamentalMat(matches1, matches2, FM_RANSAC, 3, 0.99, inliers);
    double depth_limit = 15;  
    vector<cv::Point3f> pts3;
    vector<int> idx_m1_3d;
@@ -1430,7 +1448,6 @@ bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R
    cv::Point3f n;
    double d;
    vector<int> gp_idx = findGroundPlaneFromPoints (pts3, n, d, real_baseline);
-
    	if(gp_idx.size()>40 && abs(n.y)>0.99) {
   ////// evaluate results //////
    		cv::Point2f tl(vertsA[3].x, vertsA[0].y),
@@ -1476,13 +1493,12 @@ bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R
       		cv::line(roi, cv::Point2f(tl.x+grid_width*i, tl.y), 
       					cv::Point2f(tl.x+grid_width*i, tl.y+grid_height*n_rows),
       					cv::Scalar(0,200,0));
-      	}
-    //  	cout<<accum<<endl;
+      	}    
 
       depth = d/cv::norm(n);
       normal = n*(1/cv::norm(n));
       n_pts = gp_idx.size();
-  
+  		
       showImage("roi", &roi);
       if (quality > 0.4) {      
       

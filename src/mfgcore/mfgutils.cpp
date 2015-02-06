@@ -287,7 +287,6 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 		if (angle > 15 * PI/180
     //          || cv::norm(-Rn.t()*tn + map.views.back().R.t()*map.views.back().t) > 1.2  // large translation
               ) {
-			cout<<" ,rotation angle large, drop keyframe!!!\n";
 			if(map.trackFrms.size()==0) {
 				map.trackFrms.push_back(frm);
 			}

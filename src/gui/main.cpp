@@ -114,6 +114,9 @@ int main(int argc, char *argv[])
    else
       win.showMaximized();
    // */
+
+   QObject::connect(&mthread,SIGNAL(closeAll()),&app,SLOT(quit()));
+
    return app.exec();
 
 }

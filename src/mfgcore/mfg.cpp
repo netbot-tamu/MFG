@@ -632,7 +632,7 @@ void Mfg::expand(View& nview, int fid)
 
 void Mfg::expand_keyPoints (View& prev, View& nview)
 {
-      MyTimer tm; 
+      MyTimer tm, tm2; tm2.start(); 
    // ----- parameter setting -----
    double numPtpairLB = 30; // lower bound of pair number to trust epi than vp
    double reprjThresh = 5 * IDEAL_IMAGE_WIDTH/640.0; // projected point distance threshold
@@ -648,7 +648,6 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
 
    vector<vector<cv::Point2d>> featPtMatches;
    vector<vector<int>> pairIdx;
-
    if(mfgSettings->getKeypointAlgorithm() <3) // sift surf
       pairIdx = matchKeyPoints (prev.featurePoints, nview.featurePoints, featPtMatches);
    else {
@@ -691,6 +690,9 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
             }
          }
       }
+
+
+
       // === build a map ===
       std::map<cv::Point2d, int, cvpt2dCompare> pt_idx;
       vector<cv::KeyPoint> kpts;
@@ -719,15 +721,21 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       surfext.compute(nview.grayImg, kpts, descs); // note that some ktps can be removed
       nview.featurePoints.clear();
       nview.featurePoints.reserve(kpts.size());
+      
+      std::map<int,int> idx_pair_exist; // avoid one-to-many matches
+
       for(int i = 0; i < kpts.size(); ++i) {
          int lid = nview.featurePoints.size();
          nview.featurePoints.push_back(FeatPoint2d(kpts[i].pt.x, kpts[i].pt.y, descs.row(i).t(), lid,-1));
          if( pt_idx.find(kpts[i].pt) != pt_idx.end()) // matched with last keyframe
          {
+            if(idx_pair_exist.find(pt_idx[kpts[i].pt])!=idx_pair_exist.end())
+               continue;
             vector<int> pair(2);
             vector<cv::Point2d> match(2);
             pair[0] = pt_idx[kpts[i].pt];
             pair[1] = lid;
+            idx_pair_exist[pair[0]] = pair[1];
             match[0] = prev.featurePoints[pair[0]].cvpt();
             match[1] = kpts[i].pt;
             pairIdx.push_back(pair);
@@ -736,6 +744,8 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       }
 
    }
+
+
 #ifdef PLOT_MID_RESULTS
    cv::Mat canv1 = prev.img.clone(), canv2=nview.img.clone();
    for(int i=0; i<featPtMatches.size(); ++i) {
@@ -747,14 +757,14 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
 
    //cv::Mat t_prev = prev.t - (prev.R * views[views.size()-3].R.t()) * views[views.size()-3].t;
    cv::Mat t_prev = views[views.size()-2].t_loc;
-//   cout<<t_prev.t()<<endl;
 
    cv::Mat F, R, E, t; // relative pose between last two views
    vector<cv::Mat> Fs, Es, Rs, ts;
+
 //   computePotenEpipolar (featPtMatches,pairIdx,K, Fs, Es, Rs, ts, false, t_prev);
    computeEpipolar(featPtMatches,pairIdx,K, Fs, Es, Rs, ts);
-//   tm.end(); cout<<"computePotenEpipolar time "<<tm.time_ms<<" ms.\n";
    R = Rs[0]; t = ts[0];
+
    // ---- find observed 3D points (and plot)  ------
    vector<cv::Point3d> pt3d, pt3d_old;
    vector<cv::Point2d> pt2d, pt2d_old;
@@ -1176,9 +1186,9 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       baseline = cv::norm(nview.t - R*prev.t);
    }
    bool gp_detect_valid = false;
-   
-      gp_detect_valid = detectGroundPlane(prev.grayImg, nview.grayImg,R,t,K, n_gp_pts, gp_depth, gp_norm_vec, gp_quality, gp_roi, baseline);
-   
+
+   gp_detect_valid = detectGroundPlane(prev.grayImg, nview.grayImg,R,t,K, n_gp_pts, gp_depth, gp_norm_vec, gp_quality, gp_roi, baseline);
+
    if( gp_detect_valid && gp_quality >= gp_qual_thres-0.02) {
       if(!use_const_vel_model) // translation scale obtained from epipolor or pnp
       {
@@ -1396,7 +1406,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       int ptGid = prev.featurePoints[pairIdx[i][0]].gid;
       nview.featurePoints[pairIdx[i][1]].gid = ptGid;
       if ( ptGid >= 0 && keyPoints[ptGid].is3D ) { // points represented in 3D form
-      } else if (ptGid >= 0 && !keyPoints[ptGid].is3D) {// point exist as 2D track
+      } else if (ptGid >= 0 && !keyPoints[ptGid].is3D && keyPoints[ptGid].gid>=0) {// point exist as 2D track
       } else { // newly found points
          double parallaxDeg = compParallaxDeg (featPtMatches[i][0], featPtMatches[i][1], K,cv::Mat::eye(3,3,CV_64F), R);
          cv::Mat Xw =  triangulatePoint_nonlin (prev.R, prev.t, nview.R, nview.t, K,
@@ -1463,8 +1473,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          }
       }
    }
-   
-   
+
    #pragma omp parallel for
    for (int i=0; i < featPtMatches.size(); ++i) {
       vector<int> view_point;
@@ -1472,8 +1481,8 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       nview.featurePoints[pairIdx[i][1]].gid = ptGid;
       if ( ptGid >= 0 && keyPoints[ptGid].is3D ) { // points represented in 3D form
       }
-      else if (ptGid >= 0 && !keyPoints[ptGid].is3D) {// point exist as 2D track
-         cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
+      else if (ptGid >= 0 && !keyPoints[ptGid].is3D && keyPoints[ptGid].gid >=0) {// point exist as 2D track
+         cv::Scalar color(rand()%255,rand()%255,rand()%255,0); // caution:not thread-safe
          double parallaxDeg = compParallaxDeg(featPtMatches[i][0], featPtMatches[i][1], K, cv::Mat::eye(3,3,CV_64F), R);
 #ifdef PLOT_MID_RESULTS
          if (parallaxDeg > parallaxDegThresh) {
@@ -1486,7 +1495,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          view_point.push_back(pairIdx[i][1]);
          keyPoints[ptGid].viewId_ptLid.push_back(view_point);
 
-         if(new2_3dPtNum >= maxNumNew2d_3dPt) continue;  //
+    //     if(new2_3dPtNum >= maxNumNew2d_3dPt) continue;  //not thread safe
          
 
          // --- 2) check if a 2d track is ready to establish 3d pt ---
@@ -1643,9 +1652,10 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       F = K.t().inv() * R * vec2SkewMat(t) * K.inv();
    }
    vector<vector<int>>			ilinePairIdx;
+   
    matchIdealLines(prev, nview, vpPairIdx, featPtMatches, F, ilinePairIdx, 1);
    update3dIdealLine(ilinePairIdx, nview);
-
+   
 #ifdef USE_GROUND_PLANE
    if(!need_scale_to_real)
 #endif      
@@ -1656,6 +1666,8 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
    cv::imwrite("./tmpimg/"+num2str(views.back().id)+"_pt2.jpg", canv2);
    views.back().drawAllLineSegments(true);
 #endif
+
+   tm2.end(); cout<<"expand_keyPoints time "<<tm2.time_ms<<" ms"<<endl;
 }
 
 void Mfg::update3dIdealLine(vector<vector<int>> ilinePairIdx, View& nview)

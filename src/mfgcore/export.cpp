@@ -4,6 +4,7 @@
 #include <QDir>
 void exportCamPose(Mfg& m, string fname) {
    ofstream file(fname);
+   file.precision(18);
    // ----- camera poses -----
    for (int i = 0; i < m.views.size(); ++i) {
       file << m.views[i].id << '\t' << m.views[i].frameId << '\t'
@@ -27,7 +28,7 @@ void exportCamPose(Mfg& m, string fname) {
               << m.views[i].errLnMean << '\n';
    }  
    file.close();
-
+/*
    string fname2 = "kitti.txt"; 
    ofstream file2(fname2);
    for (int i = 0; i < m.views.size(); ++i) {
@@ -46,7 +47,7 @@ void exportCamPose(Mfg& m, string fname) {
            <<pos.at<double>(2)<<'\n';
    }
    file2.close();
-
+*/
 }
 
 void exportMfgNode(Mfg& m, string fname)

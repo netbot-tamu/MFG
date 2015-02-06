@@ -145,6 +145,7 @@ void MfgThread::run()
 	cout<<"total time = "<<timer.time_s<<"s"<<endl;
 	exportCamPose (*pMap, "camPose.txt") ;
 //	pMap->exportAll("MFG");
+	emit closeAll();
 }
 
 

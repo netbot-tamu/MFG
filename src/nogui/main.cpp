@@ -93,6 +93,8 @@ int main(int argc, char *argv[])
    mthread.distCoeffs = distCoeffs;
 
    mthread.start();
+
+   QObject::connect(&mthread,SIGNAL(closeAll()),&app,SLOT(quit()));
    return app.exec();
 
 }
