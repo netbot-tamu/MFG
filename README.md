@@ -1,6 +1,6 @@
-mfg
+MFG
 ===
-Multi-Layer Feature Graph Implementation
+####An Implementation of a Multi-Layer Feature Graph
 
 
 Dependencies

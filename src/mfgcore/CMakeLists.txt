@@ -39,7 +39,6 @@ add_library(${PROJECT_NAME} STATIC
 # Link the ${PROJECT_NAME} to all dependencies
 target_link_libraries(${PROJECT_NAME}
    # The following are NOT needed on OS X, but ARE needed on Linux Mint/Ubuntu
-   ${OPENGL_LIBRARIES}
    ${G2O_CORE_LIBRARY}
    ${G2O_STUFF_LIBRARY}
    ${G2O_TYPES_SLAM3D}

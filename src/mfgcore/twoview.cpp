@@ -2,18 +2,6 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 
-// replaced with:
-#ifdef __APPLE__
-#include <GLUT/glut.h>
-#include <OpenGL/gl.h>
-#elif __linux__
-#include <GL/glut.h>
-#include <GL/gl.h>
-#else
-#include <gl/glut.h>
-#include <gl/gl.h>
-#endif
-
 #include <math.h>
 #include <fstream>
 
