@@ -44,7 +44,6 @@ int main(int argc, char *argv[])
    //MfgSettings mfgSettings; // TODO: arg-parse a cameraID (optional arg)
    mfgSettings = new MfgSettings();
 
-
    seed_xrand(mfgSettings->getPRNGSeed());  	
 
    string imgName;			// first image name

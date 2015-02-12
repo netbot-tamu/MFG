@@ -109,7 +109,9 @@ FIND_PACKAGE(OpenCV REQUIRED)
 # The OpenGL package uses GLU, which on OS X does not work properly.
 # But, since we specified GLUT as a dependency (freeglut3, specifically), there
 # should be no problems.
-#FIND_PACKAGE(OpenGL REQUIRED)
+IF(UNIX)
+   FIND_PACKAGE(OpenGL REQUIRED)
+ENDIF(UNIX)
 FIND_PACKAGE(GLUT REQUIRED)
 FIND_PACKAGE(Eigen3 REQUIRED)
 FIND_PACKAGE(CSparse REQUIRED)
