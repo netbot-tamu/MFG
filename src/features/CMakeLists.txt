@@ -43,6 +43,7 @@ add_library(${PROJECT_NAME} STATIC
 )
 
 target_link_libraries(${PROJECT_NAME}
+   ${OPENGL_LIBRARIES}
    utils
 )
 

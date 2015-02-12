@@ -89,28 +89,4 @@ public:
    void exportAll (string root_dir);
 };
 
-
-class MfgThread : public QThread
-{
-   Q_OBJECT
-
-protected:
-   void run();
-
-public:
-   Mfg* pMap;
-   string imgName;			// first image name
-   cv::Mat K, distCoeffs;	// distortion coeff: k1, k2, p1, p2
-   int imIdLen;			// n is the image number length,
-   int ini_incrt;
-   int increment;
-   int totalImg;
-
-   MfgThread(MfgSettings* _settings) : mfgSettings(_settings) {}
-
-private:
-   MfgSettings* mfgSettings;
-};
-
-
 #endif //MFG_HEADER

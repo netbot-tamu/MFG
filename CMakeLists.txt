@@ -7,6 +7,11 @@ PROJECT(mfg)
 # look for SuiteSparse, QGLViewer, and Eigen3.
 LIST(APPEND CMAKE_MODULE_PATH ${mfg_SOURCE_DIR}/cmake_modules)
 
+# for CMake 3.0 and above, this will suppress warnings about old policies
+IF(POLICY CMP0043)
+CMAKE_POLICY(SET CMP0043 OLD)
+ENDIF(POLICY CMP0043)
+
 
 ################################################################################
 # Set the version of the kernel project
@@ -101,7 +106,12 @@ ENDIF()
 FIND_PACKAGE(Qt5Core REQUIRED)
 FIND_PACKAGE(Qt5OpenGL REQUIRED)
 FIND_PACKAGE(OpenCV REQUIRED)
-FIND_PACKAGE(OpenGL REQUIRED)
+# The OpenGL package uses GLU, which on OS X does not work properly.
+# But, since we specified GLUT as a dependency (freeglut3, specifically), there
+# should be no problems.
+IF(UNIX)
+   FIND_PACKAGE(OpenGL REQUIRED)
+ENDIF(UNIX)
 FIND_PACKAGE(GLUT REQUIRED)
 FIND_PACKAGE(Eigen3 REQUIRED)
 FIND_PACKAGE(CSparse REQUIRED)
