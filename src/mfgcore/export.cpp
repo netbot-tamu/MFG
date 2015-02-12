@@ -2,6 +2,8 @@
 #include "export.h"
 #include <fstream>
 #include <QDir>
+#include <QString>
+
 void exportCamPose(Mfg& m, string fname) {
    ofstream file(fname);
    // ----- camera poses -----
@@ -75,16 +77,16 @@ void exportMfgNode(Mfg& m, string fname)
    file.close();
 }
 
-void Mfg::exportAll (string root_dir)
+void Mfg::exportAll (QString root_dir)
 {
-  QString qroot_dir = QString::fromStdString(root_dir);
+  //QString qroot_dir = QString::fromStdString(root_dir);
   //======== 0. make/check directory ========
-  if(!QDir(qroot_dir).exists()) {
-    QDir().mkdir(qroot_dir);
+  if(!QDir(root_dir).exists()) {
+    QDir().mkdir(root_dir);
   } 
   //======== 1. export 3D features ========
-  string feat3d_fname = root_dir + "/features3d.txt";
-  ofstream feat3d_ofs(feat3d_fname.c_str());
+  QString feat3d_fname = root_dir + "/features3d.txt";
+  ofstream feat3d_ofs(feat3d_fname.toLocal8Bit().data());//c_str());
 
   feat3d_ofs<<"keyframe_number: "<<views.size()<<'\n';
   feat3d_ofs<<"intrinsic_camera_param: "<<K.at<double>(0,0)<<'\t'<<K.at<double>(0,1)<<'\t'<<K.at<double>(0,2)<<'\t'
@@ -159,16 +161,18 @@ void Mfg::exportAll (string root_dir)
   }
 
   //======== 2. export views =========
-  string views_dir = root_dir + "/views";
-  QString qviews_dir = QString::fromStdString(views_dir);
-  if(QDir(qviews_dir).exists()) {
-    QDir(qviews_dir).removeRecursively();
+  //QString views_dir = root_dir + "/views";
+  QString views_dir = root_dir + "/views";
+  if(QDir(views_dir).exists()) {
+    QDir(views_dir).removeRecursively();
   }
-  QDir().mkdir(qviews_dir);
+  QDir().mkdir(views_dir);
 
   for(int i=0; i<views.size(); ++i) {    
-    string view_fname = views_dir + "/view_" + num2str(i) + ".txt";
-    ofstream view_ofs(view_fname.c_str());
+    //string view_fname = views_dir + "/view_" + num2str(i) + ".txt";
+    QString view_fname = views_dir + QString("/views_%1.txt").arg(i, 3, 10, QChar('0'));
+    //ofstream view_ofs(view_fname.c_str());
+    ofstream view_ofs(view_fname.toLocal8Bit().data());
     view_ofs<<"keyframe_id:\t"<<views[i].id<<'\n';
     view_ofs<<"rawframe_id:\t"<<views[i].frameId<<'\n';
     view_ofs<<"image_path:\t"<<views[i].filename<<'\n';

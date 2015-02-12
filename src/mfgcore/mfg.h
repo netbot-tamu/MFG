@@ -15,6 +15,7 @@
 #include <Eigen/Eigenvalues>
 #include <Eigen/Geometry>
 #include <QThread>
+#include <QString>
 
 #include "view.h"
 #include "features2d.h"
@@ -86,7 +87,7 @@ public:
    void draw3D() const;
    bool rotateMode ();
 
-   void exportAll (string root_dir);
+   void exportAll (QString root_dir);
 };
 
 #endif //MFG_HEADER
