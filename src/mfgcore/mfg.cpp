@@ -1472,8 +1472,9 @@ void Mfg::adjustBundle()
    adjustBundle_G2O(numPos, numFrm);
 
    // write to file
-   exportCamPose (*this, "camPose.txt");
-   exportMfgNode (*this, "mfgNode.txt");
+   QString exportDir = mfgSettings->getOutputDir();
+   exportCamPose (*this, exportDir + "/camPose.txt");
+   exportMfgNode (*this, exportDir + "/mfgNode.txt");
 }
 
 

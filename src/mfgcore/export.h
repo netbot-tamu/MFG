@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   export.h
  * Author: madtreat
  *
@@ -8,10 +8,11 @@
 #ifndef EXPORT_H
 #define EXPORT_H
 
+#include <QString>
 #include "mfg.h"
 
-void exportCamPose(Mfg& m, std::string fname);
-void exportMfgNode(Mfg& m, std::string fname);
+void exportCamPose(Mfg& m, QString fname);
+void exportMfgNode(Mfg& m, QString fname);
 
 #endif /* EXPORT_H */
 

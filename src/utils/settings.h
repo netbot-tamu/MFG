@@ -20,12 +20,6 @@ typedef cv::Mat_<double> CoeffMatrix;
 class MfgSettings : QObject {
    Q_OBJECT
 public:
-   //---------------------------------------------------------------------------
-   // TODO: move this out of here
-   //---------------------------------------------------------------------------
-   //double   angle_thresh_vp2d3d; // degree, match local 2d vp to existing 3d vp
-
-
    MfgSettings(QString _cameraID="", QObject* _parent=0);
    ~MfgSettings();
 
@@ -36,6 +30,7 @@ public:
    // Access functions
    //---------------------------------------------------------------------------
    // General settings
+   QString getOutputDir() const {return outputDir;}
    int   getImageWidth() const {return imageWidth;}
 
    QString getCameraID() const {return cameraID;}
@@ -85,11 +80,18 @@ public:
 
 private:
    //---------------------------------------------------------------------------
-   // General settings
+   // Private settings
    //---------------------------------------------------------------------------
+   QString     mfgRootDir;    // path to mfg root directory
+   QString     userHomeDir;   // path to user home directory, with no trailing /
    QString     configDir;     // path to config directory
    QString     settingsFile;  // path to settings file
    QSettings*  mfgSettings;   // settings object
+
+   //---------------------------------------------------------------------------
+   // General settings
+   //---------------------------------------------------------------------------
+   QString     outputDir;     // path to output/export directory
 
    // Camera settings
    QString           cameraID;
@@ -165,6 +167,7 @@ private:
    // Private functions
    //---------------------------------------------------------------------------
    void loadSettings();
+   void loadInitialImage();
    void loadSIFTSettings();
    void loadSURFSettings();
    void loadGFTTSettings();

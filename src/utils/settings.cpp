@@ -5,20 +5,22 @@
 #include <QFile>
 #include <QDebug>
 
-// TODO: make these settings better
 MfgSettings::MfgSettings(QString _cameraID, QObject* parent)
 : QObject(parent),
 cameraID(_cameraID)
 {
-   // The application should be located in [mfg location]/bin/
-   QString mfgDirStr = QCoreApplication::applicationDirPath();//.left(0);
+   userHomeDir = QDir::home().absolutePath();
+
+   // The application should be located in [mfg root]/bin/ ...
+   QString mfgDirStr = QCoreApplication::applicationDirPath();
    QDir mfgDir(mfgDirStr);
-   // ...so move the path up to the root [mfg location]
+   // ...so move the path up to the root [mfg root]
    mfgDir.cdUp();
-   configDir = mfgDir.absolutePath();
+   mfgRootDir = mfgDir.absolutePath();
 
    // ...and enter the config directory for the settings
-   settingsFile = configDir + "/config/mfgSettings.ini";
+   configDir = mfgRootDir + "/config";
+   settingsFile = configDir + "/mfgSettings.ini";
    if (!QFile::exists(settingsFile))
    {
       qWarning() << "Warning: File" << settingsFile << "does not exist, exiting";
@@ -40,6 +42,7 @@ MfgSettings::~MfgSettings()
 void MfgSettings::printAllSettings() const
 {
    qDebug() << "--- General Settings ---";
+   qDebug() << "Output Directory             :" << outputDir;
    qDebug() << "Image Path                   :" << initialImage;
    qDebug() << "Feature Detection Algorithm  :" << featureAlg;
    qDebug() << "PRNG Seed                    :" << prngSeed;
@@ -112,12 +115,29 @@ void MfgSettings::loadSettings()
    LOAD_INT(prngSeed, "prng_seed");
    qDebug() << "PRNG Seed:" << prngSeed;
 
-   // If no camera ID was specified, use the default ID in the settings
+   // If no camera ID was specified via the command line, use the default ID
+   // in the settings
    if (cameraID == "")
    {
-      LOAD_STR(cameraID, "camera")
+      LOAD_STR(cameraID, "camera");
    }
    qDebug() << "Using camera settings:" << cameraID;
+
+   // Load the output directory
+   LOAD_STR(outputDir, "output_dir");
+   if (outputDir == "")
+   {
+      outputDir = mfgRootDir + "/output";
+   }
+   // Create the output directory (and all parents, if necessary) if it
+   // does not already exist
+   qDebug() << "Output directory:" << outputDir;
+   QDir outDir(outputDir);
+   if (!outDir.exists(outputDir))
+   {
+      qDebug() << "   ...does not exist, creating it now.";
+      outDir.mkpath(outputDir);
+   }
 
    // Load the keypoint detection settings
    mfgSettings->beginGroup("features");
@@ -146,10 +166,10 @@ void MfgSettings::loadSettings()
 
    // Read the settings for this cameraID
    mfgSettings->beginGroup(cameraID);
-   LOAD_DOUBLE(imageWidth, "width")
-   LOAD_STR(initialImage, "image")
-   //*
-   qDebug() << "Image path:" << initialImage
+   loadInitialImage();
+
+   /*
+   qDebug() //<< "Image path:" << initialImage
             << mfgSettings->childKeys()
             << mfgSettings->childGroups()
             << mfgSettings->contains("image")
@@ -157,20 +177,50 @@ void MfgSettings::loadSettings()
             << mfgSettings->contains("intrinsics");
    // */
 
-   // if the initial image starts with a slash or windows drive, assume it
-   // is an absolute path, otherwise assume it is relative, from the user's
-   // home directory
-   if (!initialImage.startsWith("/"))
-   {
-      initialImage = QDir::home().absolutePath() + "/" + initialImage;
-   }
-   qDebug() << "Image path:" << initialImage;
-
    loadIntrinsicsSettings();
    loadDistCoeffSettings();
 
    mfgSettings->endGroup(); // end [cameraID]
 }
+
+void MfgSettings::loadInitialImage()
+{
+   LOAD_DOUBLE(imageWidth, "width");
+
+   QString imagePath;
+   LOAD_STR(imagePath, "image");
+
+   // If the image is not found, exit
+   if (imagePath == "")
+   {
+      qDebug() << "\nERROR: Image path cannot be blank. Exiting";
+      exit(1);
+   }
+
+   // If the image ends in '\r' (Windows line endings sometimes cause this),
+   // remove it, as it will be an invalid filename.
+   if (imagePath.endsWith('\r'))
+      imagePath.remove('\r');//initialImage.size()-1);
+
+   // if the initial image starts with a slash or windows drive, assume it
+   // is an absolute path, otherwise assume it is relative, from the user's
+   // home directory
+   if (!imagePath.startsWith("/"))
+   {
+      imagePath = userHomeDir + "/" + imagePath;
+   }
+   initialImage = imagePath;
+
+   // If the image is not found, exit
+   if (!QFile::exists(initialImage))
+   {
+      qDebug() << "\nERROR: Image does not exist. Exiting";
+      exit(1);
+   }
+
+   qDebug() << "Image path:" << initialImage;
+}
+
 
 void MfgSettings::loadSIFTSettings()
 {

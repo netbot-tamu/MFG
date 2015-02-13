@@ -60,6 +60,7 @@ cmake_install.cmake
 camPose.txt
 debug.txt
 mfgNode.txt
+output/
 
 # OS generated files #
 ######################
