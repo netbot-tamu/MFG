@@ -1,8 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11)
 PROJECT(mfg)
 
-#SET(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 # Set search directory for looking for our custom CMake scripts to
 # look for SuiteSparse, QGLViewer, and Eigen3.
 LIST(APPEND CMAKE_MODULE_PATH ${mfg_SOURCE_DIR}/cmake_modules)
@@ -17,7 +15,7 @@ ENDIF(POLICY CMP0043)
 # Set the version of the kernel project
 ################################################################################
 set(mfg_MAJOR_VERSION 0)
-set(mfg_MINOR_VERSION 1)
+set(mfg_MINOR_VERSION 4)
 set(mfg_PATCH_VERSION 0)
 set(mfg_VERSION ${mfg_MAJOR_VERSION}.${mfg_MINOR_VERSION}.${mfg_PATCH_VERSION})
 
@@ -106,14 +104,17 @@ ENDIF()
 FIND_PACKAGE(Qt5Core REQUIRED)
 FIND_PACKAGE(Qt5OpenGL REQUIRED)
 FIND_PACKAGE(OpenCV REQUIRED)
+
 # The OpenGL package uses GLU, which on OS X does not work properly.
-# But, since we specified GLUT as a dependency (freeglut3, specifically), there
-# should be no problems.
+# But GLUT is the dependency for all platforms, and OpenGL is only helpful for
+# some Linux distros, and introduces graphical artifacts on OS X, thus the 
+# following switch.
 IF(UNIX AND NOT APPLE)
    FIND_PACKAGE(OpenGL REQUIRED)
    MESSAGE(STATUS "This is Unix, including OpenGL libraries")
 ENDIF(UNIX AND NOT APPLE)
 FIND_PACKAGE(GLUT REQUIRED)
+
 FIND_PACKAGE(Eigen3 REQUIRED)
 FIND_PACKAGE(CSparse REQUIRED)
 FIND_PACKAGE(G2O REQUIRED)
@@ -146,8 +147,6 @@ INCLUDE_DIRECTORIES(
 )
 
 
-#message(STATUS "csparse_include_dir = ${CSPARSE_INCLUDE_DIR}")
-#message(STATUS "qt_include_dir***** = ${Qt5OpenGL_INCLUDE_DIR}")
 message(STATUS "Searching for Dependencies...")
 message(STATUS "-- Qt5              = ${Qt5OpenGL_LIBRARIES}")
 message(STATUS "-- OpenGL           = ${OPENGL_LIBRARIES}")
