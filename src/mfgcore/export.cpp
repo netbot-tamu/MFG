@@ -79,14 +79,13 @@ void exportMfgNode(Mfg& m, string fname)
 
 void Mfg::exportAll (QString root_dir)
 {
-  //QString qroot_dir = QString::fromStdString(root_dir);
   //======== 0. make/check directory ========
   if(!QDir(root_dir).exists()) {
     QDir().mkdir(root_dir);
   } 
   //======== 1. export 3D features ========
   QString feat3d_fname = root_dir + "/features3d.txt";
-  ofstream feat3d_ofs(feat3d_fname.toLocal8Bit().data());//c_str());
+  ofstream feat3d_ofs(feat3d_fname.toLocal8Bit().data());
 
   feat3d_ofs<<"keyframe_number: "<<views.size()<<'\n';
   feat3d_ofs<<"intrinsic_camera_param: "<<K.at<double>(0,0)<<'\t'<<K.at<double>(0,1)<<'\t'<<K.at<double>(0,2)<<'\t'
@@ -161,7 +160,6 @@ void Mfg::exportAll (QString root_dir)
   }
 
   //======== 2. export views =========
-  //QString views_dir = root_dir + "/views";
   QString views_dir = root_dir + "/views";
   if(QDir(views_dir).exists()) {
     QDir(views_dir).removeRecursively();
@@ -169,9 +167,7 @@ void Mfg::exportAll (QString root_dir)
   QDir().mkdir(views_dir);
 
   for(int i=0; i<views.size(); ++i) {    
-    //string view_fname = views_dir + "/view_" + num2str(i) + ".txt";
     QString view_fname = views_dir + QString("/views_%1.txt").arg(i, 3, 10, QChar('0'));
-    //ofstream view_ofs(view_fname.c_str());
     ofstream view_ofs(view_fname.toLocal8Bit().data());
     view_ofs<<"keyframe_id:\t"<<views[i].id<<'\n';
     view_ofs<<"rawframe_id:\t"<<views[i].frameId<<'\n';

@@ -6,7 +6,6 @@
 #define MFG_HEADER
 
 #include <iostream>
-#include <fstream>
 #include <opencv/cv.h>
 #include <opencv/cxcore.h>
 #include <opencv/highgui.h>

@@ -2,7 +2,6 @@
 #include "mfgthread.h"
 
 #include <math.h>
-#include <fstream>
 
 #include "mfg.h"
 #include "mfgutils.h"

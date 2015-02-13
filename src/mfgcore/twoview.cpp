@@ -3,7 +3,6 @@
 #include <opencv2/calib3d/calib3d.hpp>
 
 #include <math.h>
-#include <fstream>
 
 #include "utils.h"
 #include "consts.h"

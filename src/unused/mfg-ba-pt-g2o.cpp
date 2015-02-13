@@ -32,11 +32,7 @@
 #endif
 
 #include "g2o/types/sba/sbacam.h"
-//#include "edge_se3_lineendpts.h"
-#include <fstream>
-//#include "levmar-2.6\lm.h"
 #include "levmar-2.6/levmar.h"
-//#include <Windows.h>
 
 using namespace Eigen;
 extern MfgSettings* mfgSettings;

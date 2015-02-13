@@ -71,7 +71,7 @@ ntuple_list callLsd (Mat* src)
 			image->data[x + y*image->xsize] = s;
 		}
 	}
-	lsd_out = lsd(image);	
+	lsd_out = lsd(image);
 	free_image_double(image);
 	return lsd_out;
 }
@@ -714,6 +714,7 @@ double compParallax (IdealLine2d l1, IdealLine2d l2, cv::Mat K, cv::Mat R1, cv::
 	return aveLine2LineDist(l1in2, l2) * cos; // suppress by cos(a)
 }
 
+// TODO: remove this function
 bool isFileExist(std::string imgName)
 {
 	ifstream file(imgName);

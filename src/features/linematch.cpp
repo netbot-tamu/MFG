@@ -102,11 +102,11 @@ int computeMSLD (LineSegmt2d& l, cv::Mat* xGradient, cv::Mat* yGradient)
 		MS.at<double>(i,0)		= mean;
 		MS.at<double>(i+36, 0)	= std;
 	}
-	// normalize mean and std vector, respcectively	
+	// normalize mean and std vector, respectively
 	MS.rowRange(0,36) = MS.rowRange(0,36) / cv::norm(MS.rowRange(0,36));
 	MS.rowRange(36,72) = MS.rowRange(36,72) / cv::norm(MS.rowRange(36,72));
 
-	
+
 	for (int i=0; i < MS.rows; ++i) {
 		if (MS.at<double>(i,0) > 0.4)
 			MS.at<double>(i,0) = 0.4;
@@ -115,7 +115,9 @@ int computeMSLD (LineSegmt2d& l, cv::Mat* xGradient, cv::Mat* yGradient)
 	l.msldDesc.create(72, 1, CV_64F);
 	l.msldDesc = MS;
 if(MS.at<double>(0)!=MS.at<double>(0))
-	{	int tmp; cin>>tmp;
+	{
+//   std::cout << "enter 1 to continue...";
+//   int tmp; cin>>tmp;
 	}
 	return 1;
 }

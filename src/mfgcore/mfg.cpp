@@ -22,7 +22,6 @@
 #endif
 
 #include <math.h>
-#include <fstream>
 #ifdef _MSC_VER
 #include <unordered_map>
 #else
@@ -73,7 +72,7 @@ void Mfg::initialize()
    cv::Mat F, R, E, t;
 
    pairIdx = matchKeyPoints (view0.featurePoints, view1.featurePoints, featPtMatches);
-   
+
    allFeatPtMatches = featPtMatches;
    allPairIdx = pairIdx;
    computeEpipolar (featPtMatches, pairIdx, K, F, R, E, t, true);
@@ -145,7 +144,7 @@ void Mfg::initialize()
 #ifdef PLOT_MID_RESULTS
    cv::Mat canv1 = view0.img.clone();
    cv::Mat canv2 = view1.img.clone();
-#endif   
+#endif
    // --- set up 3d key points ---
    int numNew3dPt = 0;
    cv::Mat X(4,1,CV_64F);
@@ -224,7 +223,7 @@ void Mfg::initialize()
    }
 
    matchIdealLines(view0, view1, vpPairIdx, featPtMatches, F, ilinePairIdx, 1);
-   
+
    for(int i=0; i < keyPoints.size(); ++i) {
       if(! keyPoints[i].is3D || keyPoints[i].gid<0) continue;
       FeatPoint2d p0 = view0.featurePoints[keyPoints[i].viewId_ptLid[0][1]];
@@ -295,7 +294,7 @@ void Mfg::initialize()
          cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
          cv::line(canv1, a.extremity1, a.extremity2, color, 2);
          cv::line(canv2, b.extremity1, b.extremity2, color, 2);
-#endif         
+#endif
       }
    }
 
@@ -457,12 +456,12 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
    cv::Mat F, R, E, t; // relative pose between last two views
    vector<cv::Mat> Fs, Es, Rs, ts;
    computePotenEpipolar (featPtMatches,pairIdx,K, Fs, Es, Rs, ts, false, t_prev);
-   
+
    // ---- find observed 3D points (and plot)  ------
    vector<cv::Point3d> pt3d, pt3d_old;
    vector<cv::Point2d> pt2d, pt2d_old;
    for(int i=0; i < featPtMatches.size(); ++i) {
-      int gid = prev.featurePoints[pairIdx[i][0]].gid;      
+      int gid = prev.featurePoints[pairIdx[i][0]].gid;
 #ifdef PLOT_MID_RESULTS
       cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
       if (gid >= 0 && keyPoints[gid].is3D) { // observed 3d pts
@@ -494,12 +493,12 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       }
    }
    if (pt3d.size()>3) {
-      computePnP(pt3d, pt2d, K, Rn_pnp, tn_pnp);   
+      computePnP(pt3d, pt2d, K, Rn_pnp, tn_pnp);
       R_pnp = Rn_pnp * prev.R.t();
       t_pnp = tn_pnp - R_pnp * prev.t; // relative t, with scale
    }
 
-   
+
    bool use_const_vel_model = false; // when no enought features or no good estimation
    vector <int> maxInliers_Rt;
    double bestScale = -100;
@@ -665,14 +664,14 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       } else {
          scale = bestScale;
       }
-      ///// compare with pnp result /////   
+      ///// compare with pnp result /////
       if(pt3d.size()>3) {
          cout<<", "<<cv::norm(t_pnp)<<"("<<pt3d.size()<<")\n";
-      } else 
+      } else
          cout<<endl;
-      if(maxInliers_Rt.size() < 5 
+      if(maxInliers_Rt.size() < 5
          && pt3d.size() > 7
-         && (abs(scale - cv::norm(t_pnp)) > 0.7 * scale || abs(scale - cv::norm(t_pnp)) > 0.7 * cv::norm(t_pnp)) 
+         && (abs(scale - cv::norm(t_pnp)) > 0.7 * scale || abs(scale - cv::norm(t_pnp)) > 0.7 * cv::norm(t_pnp))
         ) {
          cout<<"Inconsistent pnp and 5-pt: "<< cv::norm(t_pnp) <<", "<<scale<<endl;
          cout<<"use pnp scale instead\n";
@@ -770,7 +769,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          for(int i=0; i < maxInliers_R.size(); ++i) {
             inlierPt3d.push_back(pt3d[maxInliers_R[i]]);
             inlierPt2d.push_back(pt2d[maxInliers_R[i]]);
-         }      
+         }
          nview.R = R*prev.R;
          nview.t = pnp_withR (inlierPt3d, inlierPt2d, K, nview.R);
          nview.R_loc = R;
@@ -778,22 +777,22 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          cout<<nview.frameId-prev.frameId<<" frames,"<<"Scale (2pt_alg)="
             <<cv::norm(-nview.R.t()*nview.t + prev.R.t()*prev.t)<<", "
             <<maxInliers_R.size()<<"/"<<pt3d.size()<<endl;
-      } else { 
+      } else {
          cout <<"Insufficient feature info for relative pose estimation...\n";
          // use pnp or const vel
          ///// compare with pnp result /////
          if(pt3d.size() > 7) {
-            cout<<"fallback to pnp : "<< cv::norm(t_pnp) <<endl;            
+            cout<<"fallback to pnp : "<< cv::norm(t_pnp) <<endl;
             nview.R = Rn_pnp;
-            nview.t = tn_pnp;  
+            nview.t = tn_pnp;
             R = R_pnp;
             t = t_pnp/cv::norm(t_pnp);
             nview.R_loc = R;
             nview.t_loc = t;
          } else {
             cout<<"fallback to const-vel model ...press 1 to continue\n";
-            int tmp; cin>>tmp;            
-            use_const_vel_model = true;                           
+            int tmp; cin>>tmp;
+            use_const_vel_model = true;
          }
       }
    }
@@ -802,13 +801,13 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
    if (!use_const_vel_model) {
       double speed_prev = cv::norm(prev.R.t()*prev.t - views[prev.id-1].R.t()*views[prev.id-1].t)
                          /(prev.frameId - views[(prev.id - 1)].frameId);
-      double speed_curt = cv::norm(prev.R.t()*prev.t - nview.R.t()*nview.t)/(nview.frameId-prev.frameId);   
+      double speed_curt = cv::norm(prev.R.t()*prev.t - nview.R.t()*nview.t)/(nview.frameId-prev.frameId);
       if(abs(speed_curt-speed_prev) > speed_prev * 0.2
          && maxInliers_Rt.size()< 10
          && rotateMode()) {
          cout<<"big speed change, press 1 to continue\n";
          int tmp; cin>>tmp;
-         use_const_vel_model = true;    
+         use_const_vel_model = true;
       }
    }
    ////// use const-vel to predict R t ///////
@@ -836,12 +835,12 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       }
       if(R.cols==3) { // R computed
          nview.R = R * prev.R;
-         nview.t = R*prev.t + cv::norm(t_const)*t;      
+         nview.t = R*prev.t + cv::norm(t_const)*t;
       } else {
          nview.R = R_const * prev.R;
          nview.t = R_const*prev.t + t_const;
          R = R_const;
-         t = t_const/cv::norm(t_const);               
+         t = t_const/cv::norm(t_const);
       }
       nview.R_loc = R_const;
       nview.t_loc = cv::Mat::zeros(3,1,CV_64F);
@@ -988,7 +987,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          }
       }
    }
-   
+
 
    for (int i=0; i < featPtMatches.size(); ++i) {
       view_point.clear();
