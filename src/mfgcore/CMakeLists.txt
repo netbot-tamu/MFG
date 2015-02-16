@@ -1,9 +1,6 @@
 # project is defined in the parent CMakeLists
 project(mfgcore)
 
-# TODO: make this an optional flag
-set(CMAKE_BUILD_TYPE debug)
-
 set(SOURCES
    est3dpt.cpp
    estfundm.cpp

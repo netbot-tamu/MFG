@@ -1,9 +1,6 @@
 # project is defined in the parent CMakeLists
 project(mfg-gui)
 
-# TODO: make this an optional flag
-set(CMAKE_BUILD_TYPE release)
-
 set(SOURCES
    glwidget.cpp
    window.cpp

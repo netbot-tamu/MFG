@@ -1,9 +1,6 @@
 # project is defined in the parent CMakeLists
 project(utils)
 
-# TODO: make this an optional flag
-set(CMAKE_BUILD_TYPE debug)
-
 set(SOURCES
    random.cpp
    utils.cpp

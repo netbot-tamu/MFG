@@ -1,10 +1,6 @@
 # project is defined in the parent CMakeLists
 project(mfg-nogui)
 
-# TODO: make this an optional flag
-set(CMAKE_BUILD_TYPE release)
-
-
 add_executable(${PROJECT_NAME}
    main.cpp
    ${SOURCES}

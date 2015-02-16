@@ -99,6 +99,24 @@ ENDIF()
 
 
 ################################################################################
+# Add a couple custom targets to quickly make a debug or release version
+################################################################################
+SET(CMAKE_BUILD_TYPE Debug)
+
+ADD_CUSTOM_TARGET(debug
+  COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
+  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
+  COMMENT "Switch CMAKE_BUILD_TYPE to Debug"
+)
+
+ADD_CUSTOM_TARGET(release
+  COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release ${CMAKE_SOURCE_DIR}
+  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
+  COMMENT "Switch CMAKE_BUILD_TYPE to Release"
+)
+
+
+################################################################################
 # Project Dependencies:
 ################################################################################
 FIND_PACKAGE(Qt5Core REQUIRED)
@@ -147,6 +165,9 @@ INCLUDE_DIRECTORIES(
 )
 
 
+################################################################################
+# Print out dependencies so we can confirm they were found
+################################################################################
 message(STATUS "Searching for Dependencies...")
 message(STATUS "-- Qt5              = ${Qt5OpenGL_LIBRARIES}")
 message(STATUS "-- OpenGL           = ${OPENGL_LIBRARIES}")

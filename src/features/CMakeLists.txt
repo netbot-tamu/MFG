@@ -1,9 +1,6 @@
 # project is defined in the parent CMakeLists
 project(features)
 
-# TODO: make this an optional flag
-set(CMAKE_BUILD_TYPE debug)
-
 set(SOURCES
    edge_line_vp_cam.cpp
    edge_line_vp_plane.cpp

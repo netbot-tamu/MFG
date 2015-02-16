@@ -1,7 +1,4 @@
-#PROJECT(mfg)
-
-# TODO: make this an optional flag
-SET(CMAKE_BUILD_TYPE debug)
+PROJECT(mfg-src)
 
 # Subdirectories
 INCLUDE_DIRECTORIES(
