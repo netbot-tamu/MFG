@@ -126,7 +126,7 @@ int isPtInLineNeighbor (IdealLine2d line, cv::Point2d pt, double imageWidth);
 
 void matchLinesByPointPairs (double imWidth,
 	vector<IdealLine2d>& lines1,vector<IdealLine2d>& lines2,
-	vector<vector<cv::Point2d>>& pointPairs,
+	FeaturePointPairs& pointPairs,
 	vector<vector<int>>& linePairIdx)
 	// algorithm: Line Matching leveraged by Point Correspondences (CVPR2010)
 	// img1 and img2 need be gray images

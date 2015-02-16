@@ -16,7 +16,9 @@
 #include "mfgutils.h"
 #include "export.h"
 
+#include "consts.h"
 #include "utils.h"
+#include "optimize.h"
 #include "settings.h"
 
 #define THRESH_PARALLAX 7 //(12.0*IDEAL_IMAGE_WIDTH/1000.0)
@@ -48,7 +50,7 @@ void Mfg::initialize()
    View& view1 = views[1];
    K = view0.K;
 
-   vector<vector<cv::Point2d>> featPtMatches, allFeatPtMatches;
+   FeaturePointPairs featPtMatches, allFeatPtMatches;
    vector<vector<int>>			pairIdx, allPairIdx;
    vector<vector<int>>			vpPairIdx;
    vector<vector<int>>			ilinePairIdx;
@@ -65,7 +67,7 @@ void Mfg::initialize()
    vpPairIdx = matchVanishPts_withR(view0, view1, R, isRgood);
 
    if (!isRgood) { // if R is not consistent with VPs, reestimate with VPs)
-      vector<vector<cv::Mat>> vppairs;
+      VPointPairs vppairs;
       for(int i = 0; i < vpPairIdx.size(); ++i) {
          vector<cv::Mat> pair;
          pair.push_back(view0.vanishPoints[vpPairIdx[i][0]].mat());
@@ -116,7 +118,7 @@ void Mfg::initialize()
    }
    sort(prlxVec.begin(), prlxVec.end(), comparator_valIdxPair);
    vector<vector<int>>  copyPairIdx = pairIdx;
-   vector<vector<cv::Point2d>> copyFeatPtMatches = featPtMatches;
+   FeaturePointPairs copyFeatPtMatches = featPtMatches;
    pairIdx.clear();
    featPtMatches.clear();
    for(int i=prlxVec.size()-1; i >= 0; --i) {
@@ -333,7 +335,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
    double parallaxThresh = THRESH_PARALLAX;
    double parallaxDegThresh = THRESH_PARALLAX_DEGREE;
 
-   vector<vector<cv::Point2d>> featPtMatches;
+   FeaturePointPairs featPtMatches;
    vector<vector<int>> pairIdx;
 
    if(mfgSettings->getKeypointAlgorithm() <3) // sift surf
@@ -499,7 +501,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
             // when point matches are inadequate, E (R,t) are not reliable, even errant
             // if R is not consistent with VPs, reestimate with VPs)
             cout<<"R is inconsistent with vanishing point correspondences****"<<endl;
-            vector<vector<cv::Mat>> vppairs;
+            VPointPairs vppairs;
             for(int i = 0; i < vpPairIdx.size(); ++i) {
                vector<cv::Mat> pair;
                pair.push_back(prev.vanishPoints[vpPairIdx[i][0]].mat());
@@ -679,7 +681,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
                // when point matches are inadequate, E (R,t) are not reliable, even errant
                // if R is not consistent with VPs, reestimate with VPs)
                cout<<"R is inconsistent with vanishing point correspondences****"<<endl;
-               vector<vector<cv::Mat>> vppairs;
+               VPointPairs vppairs;
                for(int i = 0; i < vpPairIdx.size(); ++i) {
                   vector<cv::Mat> pair;
                   pair.push_back(prev.vanishPoints[vpPairIdx[i][0]].mat());
@@ -875,7 +877,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       }
       sort(prlxVec.begin(), prlxVec.end(), comparator_valIdxPair);
       vector<vector<int>>  copyPairIdx = pairIdx;
-      vector<vector<cv::Point2d>> copyFeatPtMatches = featPtMatches;
+      FeaturePointPairs copyFeatPtMatches = featPtMatches;
       pairIdx.clear();
       featPtMatches.clear();
       for(int i=prlxVec.size()-1; i >= 0; --i) {

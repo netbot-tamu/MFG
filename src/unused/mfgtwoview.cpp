@@ -253,7 +253,7 @@ void MfgTwoView::findPlane_3lines ()
 		}
 	}
 	vector<vector<vector<int>>> copyLnMchIdx = lineMatchesIdx;
-	vector<vector<cv::Point2d>> copyPtMchs = pointMatches;
+	FeaturePointPairs copyPtMchs = pointMatches;
 	// ===== sequential ransac for homography ======
 	//****************
 	int maxTotalIterNo = 1500*IDEAL_IMAGE_WIDTH/640.0; // for all iterations of "findPlane_3lines"
@@ -626,7 +626,7 @@ void MfgTwoView::findPlane_3lines_hilgur ()
 	double PtPrlxThresh = 2 * IDEAL_IMAGE_WIDTH/1000;
 	
 	vector<vector<vector<int>>> copyLnMchIdx = lineMatchesIdx;
-	vector<vector<cv::Point2d>> copyPtMchs = pointMatches;
+	FeaturePointPairs copyPtMchs = pointMatches;
 	cv::Mat // define 3 vanishing point direction
 		n0 = view1.camMat.inv() * view1.vanishPoints[0].matHomo(), 
 		n1 = view1.camMat.inv() * view1.vanishPoints[1].matHomo(),
@@ -1183,7 +1183,7 @@ void MfgTwoView::removePlaneFeatures(vector<MfgLineSegment>& allLs1,
 		lineMatchesIdx[grp].erase(lineMatchesIdx[grp].begin()+j);
 	}
 
-	vector<vector<cv::Point2d>> tmpcoplanarPtPair;
+	FeaturePointPairs tmpcoplanarPtPair;
 	for (int i = maxPtInliers.size()-1; i>=0; --i) {
 		tmpcoplanarPtPair.push_back( pointMatches[maxPtInliers[i]] );		
 		pointMatches.erase(pointMatches.begin()+maxPtInliers[i]);

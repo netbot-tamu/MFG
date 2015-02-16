@@ -364,7 +364,7 @@ void projectImgPt2Plane (cv::Mat imgPt, PrimPlane3d pi, cv::Mat K, cv::Mat& resu
 }
 
 
-void computeEpipolar (vector<vector<cv::Point2d>>& pointMatches, cv::Mat K,
+void computeEpipolar (FeaturePointPairs& pointMatches, cv::Mat K,
         cv::Mat& F, cv::Mat& R, cv::Mat& E, cv::Mat& t)
 // compute F, E, R, t, and prune pointmatches
 {
@@ -433,7 +433,7 @@ void computeEpipolar (vector<vector<cv::Point2d>>& pointMatches, cv::Mat K,
 	F = K.t().inv()*E*K.inv();
 }
 
-void computeEpipolar (vector<vector<cv::Point2d>>& pointMatches, vector<vector<int>>& pairIdx,
+void computeEpipolar (FeaturePointPairs& pointMatches, vector<vector<int>>& pairIdx,
         cv::Mat K,	cv::Mat& F, cv::Mat& R, cv::Mat& E, cv::Mat& t, bool useMultiE)
 // compute F, E, R, t, and prune pointmatches
 {
@@ -521,7 +521,7 @@ void computeEpipolar (vector<vector<cv::Point2d>>& pointMatches, vector<vector<i
 	F = K.t().inv()*E*K.inv();
 }
 
-void computePotenEpipolar (vector<vector<cv::Point2d>>& pointMatches, vector<vector<int>>& pairIdx,
+void computePotenEpipolar (FeaturePointPairs& pointMatches, vector<vector<int>>& pairIdx,
         cv::Mat K, vector<cv::Mat>& Fs, vector<cv::Mat>& Es, vector<cv::Mat>& Rs, vector<cv::Mat>& ts
 , bool usePrior, cv::Mat t_prior)
 // compute F, E, R, t, and prune pointmatches
@@ -628,7 +628,7 @@ void drawLineMatches(cv::Mat im1,cv::Mat im2, vector<IdealLine2d>lines1,
 }
 
 vector<vector<int>>matchKeyPoints (const vector<FeatPoint2d>& kps1,
-        const vector<FeatPoint2d>& kps2, vector<vector<cv::Point2d>>& pointMatches)
+        const vector<FeatPoint2d>& kps2, FeaturePointPairs& pointMatches)
 {
 	cv::Mat sift1(kps1[0].siftDesc.rows, kps1.size(),
            kps1[0].siftDesc.type()),

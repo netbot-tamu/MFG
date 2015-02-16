@@ -13,7 +13,7 @@ set(SOURCES
    mfg.cpp
    mfgthread.cpp
    mfgutils.cpp
-   twoview.cpp
+   optimize.cpp
    view.cpp
 )
 
@@ -21,7 +21,7 @@ set(HEADERS
    export.h
    mfg.h
    mfgutils.h
-   twoview.h
+   optimize.h
    view.h
 )
 

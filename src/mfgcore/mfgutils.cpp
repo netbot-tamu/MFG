@@ -27,7 +27,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 {
 	const View& v0 = map.views.back();
 	int ThreshPtPair = th_pair;
-	vector<vector<cv::Point2d>> ptmatches;
+	FeaturePointPairs ptmatches;
 	vector<vector<int>> pairIdx;
 	vector<int> tracked_idx; //the local id of pts in last keyframe v0 that has been tracked using LK
 	vector<cv::Point2f> add_curr_pts;
@@ -328,7 +328,7 @@ bool isKeyframe (Mfg& map, const View& v1, int th_pair, int th_overlap)
 	}
 }
 
-void drawFeatPointMatches(View& view1, View& view2, vector<vector<cv::Point2d>> featPtMatches)
+void drawFeatPointMatches(View& view1, View& view2, FeaturePointPairs featPtMatches)
 {
 	cv::Mat canv1 = view1.img.clone(),
            canv2 = view2.img.clone();
@@ -346,10 +346,95 @@ void drawFeatPointMatches(View& view1, View& view2, vector<vector<cv::Point2d>> 
 	cv::waitKey();
 }
 
+void  matchIdealLines(View& view1, View& view2, vector<vector<int>> vpPairIdx,
+	FeaturePointPairs featPtMatches, cv::Mat F, vector<vector<int>>& ilinePairIdx,
+	bool usePtMatch)
+{
+	//== gather lines into groups by vp ==
+	vector<vector<IdealLine2d>> grpLines1(view1.vpGrpIdLnIdx.size()),
+		grpLines2(view2.vpGrpIdLnIdx.size());
 
+	for (int i =0; i<view1.vpGrpIdLnIdx.size(); ++i){
+		for (int j=0; j<view1.vpGrpIdLnIdx[i].size(); ++j){
+			grpLines1[i].push_back(view1.idealLines[view1.vpGrpIdLnIdx[i][j]]);
+		}
+	}
+	for (int i =0; i<view2.vpGrpIdLnIdx.size(); ++i){
+		for (int j=0; j<view2.vpGrpIdLnIdx[i].size(); ++j){
+			grpLines2[i].push_back(view2.idealLines[view2.vpGrpIdLnIdx[i][j]]);
+		}
+	}
 
+	MyTimer t;
+	t.start();
+	//==  point based line matching ==
+	if (usePtMatch)	{
+		for (int i=0; i<vpPairIdx.size(); ++i)	{
+			int vpIdx1 = vpPairIdx[i][0], vpIdx2 = vpPairIdx[i][1];
+			matchLinesByPointPairs (view1.img.cols,	grpLines1[vpIdx1],
+				grpLines2[vpIdx2],	featPtMatches, ilinePairIdx);
+		}
+		// check gradient consistency and msld similarity
+		for (int i=0; i<ilinePairIdx.size(); ++i) {
+			if((view1.idealLines[ilinePairIdx[i][0]].gradient.dot(
+				view2.idealLines[ilinePairIdx[i][1]].gradient) < 0)
+				||(compMsldDiff(view1.idealLines[ilinePairIdx[i][0]],
+				view2.idealLines[ilinePairIdx[i][1]]) > 0.8) )
+			{
+				ilinePairIdx.erase(ilinePairIdx.begin()+i);
+				i--;
+			}
+		}
+		t.end();
+//		cout<<"point-based = "<<t.time_ms<<"\t";
+	}
 
+	// assign gid of matched lines
+	for (int i=0; i<ilinePairIdx.size(); ++i) {
+		view1.idealLines[ilinePairIdx[i][0]].lid = -1;
+		view2.idealLines[ilinePairIdx[i][1]].lid = -1;
+	}
 
+	//== again, gather lines into groups by vp, excluding matched ones ==
+	for (int i =0;  i < view1.vpGrpIdLnIdx.size(); ++i){
+		grpLines1[i].clear();
+		for (int j=0; j<view1.vpGrpIdLnIdx[i].size(); ++j){
+			if (view1.idealLines[view1.vpGrpIdLnIdx[i][j]].lid < 0)
+				continue;
+			grpLines1[i].push_back(view1.idealLines[view1.vpGrpIdLnIdx[i][j]]);
+		}
+	}
+	for (int i =0; i<view2.vpGrpIdLnIdx.size(); ++i){
+		grpLines2[i].clear();
+		for (int j=0; j<view2.vpGrpIdLnIdx[i].size(); ++j){
+			if (view2.idealLines[view2.vpGrpIdLnIdx[i][j]].lid < 0)
+				continue;
+			grpLines2[i].push_back(view2.idealLines[view2.vpGrpIdLnIdx[i][j]]);
+		}
+	}
+
+	//== F-guided linematching ==
+	vector<vector<int>> ilinePairIdx_F;
+	for (int i=0; i<vpPairIdx.size(); ++i)	{
+		int vpIdx1 = vpPairIdx[i][0], vpIdx2 = vpPairIdx[i][1];
+		if(grpLines1[vpIdx1].size()==0 || grpLines2[vpIdx2].size()==0) continue;
+		vector<vector<int>> tmpPairs;
+		tmpPairs = F_guidedLinematch (F, grpLines1[vpIdx1], grpLines2[vpIdx2],
+			view1.img, view2.img);
+		ilinePairIdx_F.insert(ilinePairIdx_F.end(),tmpPairs.begin(),tmpPairs.end());
+	}
+
+	ilinePairIdx.insert(ilinePairIdx.end(),ilinePairIdx_F.begin(),ilinePairIdx_F.end());
+
+	// ----- restore line lid ------
+	for (int i=0; i < view1.idealLines.size(); ++i) {
+		view1.idealLines[i].lid = i;
+	}
+	for (int i=0; i < view2.idealLines.size(); ++i) {
+		view2.idealLines[i].lid = i;
+	}
+
+}
 
 vector<vector<int>> matchVanishPts_withR(View& view1, View& view2, cv::Mat R, bool& goodR)
 {
