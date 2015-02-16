@@ -51,6 +51,7 @@ target_link_libraries(${PROJECT_NAME}
    ${CSPARSE_LIBRARY}
    ${OpenCV_LIBS}
 
+   # Libraries built by this project
    levmar
    lsd
    utils

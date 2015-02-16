@@ -15,8 +15,7 @@ public:
 
    QSize minimumSizeHint() const;
    QSize sizeHint() const;
-
-   Mfg*	  map;	
+   void setMfgScene(Mfg* _mfg) {mfg = _mfg;}
 
 public slots:
    void setXRotation(int angle);
@@ -38,15 +37,19 @@ protected:
    void mouseMoveEvent(QMouseEvent *event);
 
 private:
+   Mfg* mfg;
 
    int xRot;
    int yRot;
    int zRot;
    int scale;
+
    QPoint lastPos;
    QColor qtGreen;
    QColor qtPurple;
    QColor qtWhite;
+
+   void drawMfg();
 };
 
 #endif

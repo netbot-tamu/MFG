@@ -42,12 +42,12 @@ class Mfg
 {
 public:
    vector <View>				views;
-   vector <KeyPoint3d>			keyPoints;
+   vector <KeyPoint3d>		keyPoints;
    vector <IdealLine3d>		idealLines;
    vector <PrimPlane3d>		primaryPlanes;
    vector <VanishPnt3d>		vanishingPoints;
    cv::Mat						K;
-   vector <KeyPoint3d>			pointTrack;  // point track, not triangulated yet
+   vector <KeyPoint3d>		pointTrack;  // point track, not triangulated yet
    vector <IdealLine3d>		lineTrack;
 
    double angVel; // angle velocity deg/sec
@@ -83,7 +83,6 @@ public:
    void est3dIdealLine(int lnGid);
    void update3dIdealLine(vector< vector<int> > ilinePairIdx, View& nview);
    void updatePrimPlane();
-   void draw3D() const;
    bool rotateMode ();
 
    void exportAll (QString root_dir);

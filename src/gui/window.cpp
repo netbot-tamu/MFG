@@ -74,7 +74,7 @@ void Window::keyPressEvent(QKeyEvent *e)
       QWidget::keyPressEvent(e);
 }
 
-void Window::setMfgScene (Mfg* pMap)
+void Window::setMfgScene (Mfg* _mfg)
 {
-   glWidget->map = pMap;
+   glWidget->setMfgScene(_mfg);
 }
