@@ -7,11 +7,11 @@ Dependencies
 ------------
 Below is a list of all dependencies required, and links to relevant information such as downloads.  There are also instructions for installing the required packages on a Ubuntu system, specifically, but which should also work on most Debian-based systems.
 * Qt5: http://qt-project.org/
-   ```
+   ```bash
    sudo apt-get install qt5-default
    ```
 * OpenGL: freeglut (http://freeglut.sourceforge.net/)
-   ```
+   ```bash
    sudo apt-get install freeglut3-dev
    ```
 * OpenCV: http://opencv.org
@@ -27,16 +27,16 @@ Below is a list of all dependencies required, and links to relevant information 
    * Website link: http://users.ics.forth.gr/~lourakis/levmar/
    * Download link: http://users.ics.forth.gr/~lourakis/levmar/levmar-2.6.tgz
    * Requires lapack, f2c and OpenBlas
-   ```
+   ```bash
    sudo apt-get install liblapack-dev f2c libopenblas-base libopenblas-dev
    ```
    * Note that some issues have arisen during the LevMar compilation regarding an `undefined reference to symbol 'exp@@GLIBC...'`, which can be fixed by adding ` -lm` to the `TARGET_LINK_LIBRARIES` line in the levmar CMakeLists.txt file, making it look like:
-   ```
+   ```CMake
    TARGET_LINK_LIBRARIES(lmdemo ${LIBS} -lm)
    ```
    * Also note that levmar-2.6 has been included and will build with MFG, and contains a slightly modified CMakeLists.txt from the original in order to compile with our code and link correctly
 * Eigen3: http://eigen.tuxfamily.org/
-   ```
+   ```bash
    sudo apt-get install libeigen3-dev
    ```
 * g2o: A General Framework for Graph Optimization
@@ -44,7 +44,7 @@ Below is a list of all dependencies required, and links to relevant information 
    * GitHub download link: https://github.com/RainerKuemmerle/g2o
    * Note that the github code includes CSparse (http://people.sc.fsu.edu/~jburkardt/c_src/csparse/csparse.html)
    * On a UNIX system:
-   ```
+   ```bash
    git clone https://github.com/RainerKuemmerle/g2o
    cd g2o
    mkdir build
@@ -53,11 +53,21 @@ Below is a list of all dependencies required, and links to relevant information 
    make
    make install
    ```
+* QGLViewer: A simplified OpenGL visualization toolkit based on Qt
+   * Website link: http://www.libqglviewer.com
+   * GitHub download link: https://github.com/GillesDebunne/libQGLViewer
+   * The current version (2.6.2) is included as a submodule
 
 Ensure all installation paths are defined appropriately in the cmake_modules directory's Find[Library].cmake files, if they were installed manually.  If the library's path cannot be found, add a line to that library's Find[Library].cmake file for your specific installation path, but please do not commit it to the repository unless it is a generic path (is not under your home directory or in an obscure location).
 
 Build Instructions
 ------------------
+First, make sure the dependencies and submodules are up to date.  For submodules, use
+```bash
+git submodule init
+git submodule update
+```
+
 This project uses CMake (http://www.cmake.org), a cross-platform build system.
 * mkdir build
 * cd build
