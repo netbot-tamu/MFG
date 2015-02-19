@@ -36,16 +36,10 @@ include_directories(
 add_library(${PROJECT_NAME} STATIC
    ${SOURCES}
    ${LM_HEADERS}
-   ${MOC_SRC}
 )
 
 target_link_libraries(${PROJECT_NAME}
-   ${OPENGL_LIBRARIES}
    utils
-)
-
-qt5_use_modules(${PROJECT_NAME}
-   Core
 )
 
 install(FILES ${HEADERS} DESTINATION ${CMAKE_SOURCE_DIR}/includes/mfg/features)

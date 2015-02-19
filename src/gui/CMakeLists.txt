@@ -12,7 +12,6 @@ set(HEADERS
 )
 
 
-#add_library(${PROJECT_NAME} STATIC
 add_executable(${PROJECT_NAME}
    main.cpp
    ${SOURCES}
@@ -21,28 +20,23 @@ add_executable(${PROJECT_NAME}
    ${MOC_SRC}
 )
 
-# Link the ${PROJECT_NAME} to all dependencies
 target_link_libraries(${PROJECT_NAME}
    ${OPENGL_LIBRARIES}
-   ${GLUT_LIBS}
-   ${G2O_CORE_LIBRARY}
-   ${G2O_STUFF_LIBRARY}
-   ${G2O_TYPES_SLAM3D}
-   ${G2O_TYPES_SBA}
-   ${G2O_SOLVER_CSPARSE}
-   ${G2O_SOLVER_CSPARSE_EXTENSION}
-   ${Qt5OpenGL_LIBRARIES}
-   ${Qt5GUI_LIBRARIES}
+   ${GLUT_LIBRARIES}
+   ${G2O_LIBS}
    ${OpenCV_LIBS}
 
    utils
    features
+   featuresGL
    mfgcore
 )
 
 qt5_use_modules(${PROJECT_NAME}
    Core
    Widgets
+   OpenGL
+   Gui
 )
 
 #install(FILES ${HEADERS} DESTINATION ${CMAKE_SOURCE_DIR}/includes/mfg/gui)

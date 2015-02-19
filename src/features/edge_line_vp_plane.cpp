@@ -1,17 +1,10 @@
-#include "utils.h"
-
-#ifdef G2O_HAVE_OPENGL
-#include "g2o/stuff/opengl_wrapper.h"
-#endif
+#include "edge_line_vp_plane.h"
 
 #include <iostream>
 
-#ifdef G2O_HAVE_OPENGL
-#include "g2o/stuff/opengl_wrapper.h"
-#endif
+#include "utils.h"
 
 #include "Eigen/src/SVD/JacobiSVD.h"
-#include "edge_line_vp_plane.h"
 #include "vertex_vnpt.h"
 #include "vertex_plane.h"
 

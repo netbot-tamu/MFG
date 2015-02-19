@@ -36,12 +36,7 @@ add_library(${PROJECT_NAME} STATIC
 # Link the ${PROJECT_NAME} to all dependencies
 target_link_libraries(${PROJECT_NAME}
    # The following are NOT needed on OS X, but ARE needed on Linux Mint/Ubuntu
-   ${G2O_CORE_LIBRARY}
-   ${G2O_STUFF_LIBRARY}
-   ${G2O_TYPES_SLAM3D}
-   ${G2O_TYPES_SBA}
-   ${G2O_SOLVER_CSPARSE}
-   ${G2O_SOLVER_CSPARSE_EXTENSION}
+   ${G2O_LIBS}
 
    # These are needed regardless of OS
    ${Eigen3_LIBS}

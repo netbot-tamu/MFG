@@ -71,7 +71,7 @@ ENDIF(WIN32)
 
 ################################################################################
 # C++11 support
-# 
+#
 # Notes:
 # OS X 10.8 Mountain Lion and above default to using the clang compiler,
 # which does not use C++ 11 unless explicitly told to, as below.
@@ -101,7 +101,7 @@ ENDIF()
 ################################################################################
 # Add a couple custom targets to quickly make a debug or release version
 ################################################################################
-SET(CMAKE_BUILD_TYPE Debug)
+SET(CMAKE_BUILD_TYPE Release)
 
 ADD_CUSTOM_TARGET(debug
   COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
@@ -122,17 +122,8 @@ ADD_CUSTOM_TARGET(release
 FIND_PACKAGE(Qt5Core REQUIRED)
 FIND_PACKAGE(Qt5OpenGL REQUIRED)
 FIND_PACKAGE(OpenCV REQUIRED)
-
-# The OpenGL package uses GLU, which on OS X does not work properly.
-# But GLUT is the dependency for all platforms, and OpenGL is only helpful for
-# some Linux distros, and introduces graphical artifacts on OS X, thus the 
-# following switch.
-IF(UNIX AND NOT APPLE)
-   FIND_PACKAGE(OpenGL REQUIRED)
-   MESSAGE(STATUS "This is Unix, including OpenGL libraries")
-ENDIF(UNIX AND NOT APPLE)
+FIND_PACKAGE(OpenGL REQUIRED)
 FIND_PACKAGE(GLUT REQUIRED)
-
 FIND_PACKAGE(Eigen3 REQUIRED)
 FIND_PACKAGE(CSparse REQUIRED)
 FIND_PACKAGE(G2O REQUIRED)
@@ -148,11 +139,20 @@ SET(HEADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/includes)
 SET(EXTERN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext)
 SET(LSD_HEADERS ${HEADER_DIR}/lsd/lsd.h)
 SET(LM_HEADER_DIR ${HEADER_DIR}/levmar)
-SET(LM_HEADERS 
+SET(LM_HEADERS
    ${LM_HEADER_DIR}/compiler.h
    ${LM_HEADER_DIR}/levmar.h
    ${LM_HEADER_DIR}/lm.h
    ${LM_HEADER_DIR}/misc.h
+)
+
+SET(G2O_LIBS
+   ${G2O_CORE_LIBRARY}
+   ${G2O_STUFF_LIBRARY}
+   ${G2O_TYPES_SLAM3D}
+   ${G2O_TYPES_SBA}
+   ${G2O_SOLVER_CSPARSE}
+   ${G2O_SOLVER_CSPARSE_EXTENSION}
 )
 
 LINK_DIRECTORIES(${LIB_DIR})

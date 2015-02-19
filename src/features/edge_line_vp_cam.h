@@ -1,9 +1,13 @@
 #ifndef G2O_EDGE_LINE_VP_CAM_H_
 #define G2O_EDGE_LINE_VP_CAM_H_
 
-#include "g2o/core/base_multi_edge.h"
+#include <vector>
+#include <iostream>
+#include <opencv2/core/core.hpp>
 
 #include "vertex_vnpt.h"
+
+#include "g2o/core/base_multi_edge.h"
 #include "g2o/types/sba/types_sba.h"
 #include "g2o/types/slam3d/parameter_se3_offset.h"
 
