@@ -20,14 +20,14 @@ Window::Window()
    zSlider = createSlider();
    sSlider = createScaleSlider();
 
-   connect(xSlider, SIGNAL(valueChanged(int)), glWidget, SLOT(setXRotation(int)));
-   connect(glWidget, SIGNAL(xRotationChanged(int)), xSlider, SLOT(setValue(int)));
-   connect(ySlider, SIGNAL(valueChanged(int)), glWidget, SLOT(setYRotation(int)));
-   connect(glWidget, SIGNAL(yRotationChanged(int)), ySlider, SLOT(setValue(int)));
-   connect(zSlider, SIGNAL(valueChanged(int)), glWidget, SLOT(setZRotation(int)));
-   connect(glWidget, SIGNAL(zRotationChanged(int)), zSlider, SLOT(setValue(int)));
-   connect(sSlider, SIGNAL(valueChanged(int)), glWidget, SLOT(setScale(int)));
-   connect(glWidget, SIGNAL(scaleChanged(int)), sSlider, SLOT(setValue(int)));
+   connect(xSlider,  SIGNAL(valueChanged(int)),       glWidget, SLOT(setXRotation(int)));
+   connect(glWidget, SIGNAL(xRotationChanged(int)),   xSlider,  SLOT(setValue(int)));
+   connect(ySlider,  SIGNAL(valueChanged(int)),       glWidget, SLOT(setYRotation(int)));
+   connect(glWidget, SIGNAL(yRotationChanged(int)),   ySlider,  SLOT(setValue(int)));
+   connect(zSlider,  SIGNAL(valueChanged(int)),       glWidget, SLOT(setZRotation(int)));
+   connect(glWidget, SIGNAL(zRotationChanged(int)),   zSlider,  SLOT(setValue(int)));
+   connect(sSlider,  SIGNAL(valueChanged(int)),       glWidget, SLOT(setScale(int)));
+   connect(glWidget, SIGNAL(scaleChanged(int)),       sSlider,  SLOT(setValue(int)));
 
    QHBoxLayout *mainLayout = new QHBoxLayout;
    mainLayout->addWidget(glWidget);

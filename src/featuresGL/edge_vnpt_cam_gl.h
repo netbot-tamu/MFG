@@ -9,12 +9,12 @@
 namespace g2o {
 
 #ifdef G2O_HAVE_OPENGL
-  class EdgeVnptCamDrawAction: public DrawAction{
-  public:
-    EdgeVnptCamDrawAction();
-    virtual HyperGraphElementAction* operator()(HyperGraph::HyperGraphElement* element,
-            HyperGraphElementAction::Parameters* params_);
-  };
+   class EdgeVnptCamDrawAction: public DrawAction{
+   public:
+      EdgeVnptCamDrawAction();
+      virtual HyperGraphElementAction* operator()(HyperGraph::HyperGraphElement* element,
+      HyperGraphElementAction::Parameters* params_);
+   };
 #endif
 
 }

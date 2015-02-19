@@ -7,19 +7,19 @@
 #include "g2o/core/hyper_graph_action.h"
 
 namespace g2o {
-
+   
 #ifdef G2O_HAVE_OPENGL
-  class VertexVanishPointDrawAction: public DrawAction{
-    public:
+   class VertexVanishPointDrawAction: public DrawAction{
+   public:
       VertexVanishPointDrawAction();
       virtual HyperGraphElementAction* operator()(HyperGraph::HyperGraphElement* element,
-          HyperGraphElementAction::Parameters* params_);
+      HyperGraphElementAction::Parameters* params_);
 
 
-    protected:
+   protected:
       FloatProperty *_pointSize;
       virtual bool refreshPropertyPtrs(HyperGraphElementAction::Parameters* params_);
-  };
+   };
 #endif
 
 }

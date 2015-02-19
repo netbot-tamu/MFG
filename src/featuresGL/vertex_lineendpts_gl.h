@@ -10,20 +10,20 @@
 namespace g2o {
 
 #ifdef G2O_HAVE_OPENGL
-  /**
-   * \brief visualize a 3D point
-   */
-  class VertexLineEndptsDrawAction: public DrawAction{
-    public:
+   /**
+    * \brief visualize a 3D point
+    */
+   class VertexLineEndptsDrawAction: public DrawAction{
+   public:
       VertexLineEndptsDrawAction();
       virtual HyperGraphElementAction* operator()(HyperGraph::HyperGraphElement* element,
-          HyperGraphElementAction::Parameters* params_);
+      HyperGraphElementAction::Parameters* params_);
 
 
-    protected:
+   protected:
       FloatProperty *_pointSize;
       virtual bool refreshPropertyPtrs(HyperGraphElementAction::Parameters* params_);
-  };
+   };
 #endif
 
 }

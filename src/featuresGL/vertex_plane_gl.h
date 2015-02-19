@@ -11,17 +11,17 @@
 namespace g2o {
 
 #ifdef G2O_HAVE_OPENGL
-  class VertexPlane3dDrawAction: public DrawAction {
-    public:
+   class VertexPlane3dDrawAction: public DrawAction {
+   public:
       VertexPlane3dDrawAction();
       virtual HyperGraphElementAction* operator()(HyperGraph::HyperGraphElement* element,
-          HyperGraphElementAction::Parameters* params_);
+      HyperGraphElementAction::Parameters* params_);
 
 
-    protected:
+   protected:
       FloatProperty *_pointSize;
       virtual bool refreshPropertyPtrs(HyperGraphElementAction::Parameters* params_);
-  };
+   };
 #endif
 
 }

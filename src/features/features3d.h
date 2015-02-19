@@ -13,13 +13,13 @@ class KeyPoint3d
 public:
    double					x, y, z;
    int						gid;
-   int						pGid;		  // plane gid 
+   int						pGid;		  // plane gid
    std::vector< std::vector<int> > viewId_ptLid; // (viewId, lid of featpt)
    bool					is3D;
    int						estViewId;
 
    KeyPoint3d() {is3D = false; gid = -1; pGid = -1;}
-   KeyPoint3d(double x_, double y_, double z_) 
+   KeyPoint3d(double x_, double y_, double z_)
    {
       x = x_; y = y_; z = z_;
       gid = -1;
@@ -27,7 +27,7 @@ public:
       is3D = false;
       estViewId = -1;
    }
-   KeyPoint3d(double x_, double y_, double z_, int gid_, bool is3d_) 
+   KeyPoint3d(double x_, double y_, double z_, int gid_, bool is3d_)
    {
       x = x_; y = y_; z = z_;
       gid = gid_;
@@ -67,7 +67,7 @@ public:
       estViewId = -1;
       gid = -1;
    }
-   PrimPlane3d(cv::Mat nd, int _gid) 
+   PrimPlane3d(cv::Mat nd, int _gid)
    {
       gid = _gid;
       if (nd.cols*nd.rows==3) {// nd = n/d, is a 3-std::vector
@@ -79,7 +79,7 @@ public:
       }
       estViewId = -1;
    }
-   void setPlane(cv::Mat nd) 
+   void setPlane(cv::Mat nd)
    {
       if (nd.cols*nd.rows==3) {// nd = n/d, is a 3-std::vector
          n = nd/cv::norm(nd);
@@ -101,8 +101,8 @@ public:
    std::vector< std::vector<int> > viewId_vpLid;
    int						estViewId;
 
-   VanishPnt3d() {}	
-   VanishPnt3d(double x_, double y_, double z_) 
+   VanishPnt3d() {}
+   VanishPnt3d(double x_, double y_, double z_)
    {
       double len = sqrt(x_*x_+y_*y_+z_*z_);
       x = x_/len; y = y_/len; z = z_/len; w = 0;
@@ -131,7 +131,7 @@ public:
    cv::Mat					direct;  // line direction std::vector
    double					length;	 // length between endpoints
    int						gid;	// global id of line
-   int						pGid;	// global id of the associated plane	
+   int						pGid;	// global id of the associated plane
    int						vpGid;  // global id of the associated vanishing point
    std::vector< std::vector<int> > viewId_lnLid;
    bool					is3D;
@@ -139,7 +139,7 @@ public:
 
    IdealLine3d() {}
 
-   IdealLine3d(cv::Point3d mpt, cv::Mat d) 
+   IdealLine3d(cv::Point3d mpt, cv::Mat d)
    {
       midpt = mpt;
       direct = d.clone();
@@ -154,7 +154,7 @@ public:
       cv::Mat d = direct/cv::norm(direct);
       return midpt + 0.5*length*cv::Point3d(d.at<double>(0),d.at<double>(1),d.at<double>(2));
    }
-
+   
    cv::Point3d extremity2() const
    {
       cv::Mat d = direct/cv::norm(direct);

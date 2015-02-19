@@ -38,11 +38,11 @@ namespace g2o {
 				if (i!=j)
 					information()(j,i)=information()(i,j);
 			}
-			if (is.bad()) {
-				//  we overwrite the information matrix
-				information().setIdentity();
-			}
-			return true;
+      if (is.bad()) {
+         //  we overwrite the information matrix
+         information().setIdentity();
+      }
+      return true;
 	}
 
 	bool EdgeVnptCam::write(std::ostream& os) const {
@@ -51,7 +51,7 @@ namespace g2o {
 			for (int j=i; j<information().cols(); j++) {
 				os <<  information()(i,j) << " ";
 			}
-			return os.good();
+      return os.good();
 	}
 
 

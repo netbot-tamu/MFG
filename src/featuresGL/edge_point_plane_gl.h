@@ -9,12 +9,12 @@
 namespace g2o {
 
 #ifdef G2O_HAVE_OPENGL
-  class EdgePointPlane3dDrawAction: public DrawAction{
-  public:
-    EdgePointPlane3dDrawAction();
-    virtual HyperGraphElementAction* operator()(HyperGraph::HyperGraphElement* element,
-            HyperGraphElementAction::Parameters* params_);
-  };
+   class EdgePointPlane3dDrawAction: public DrawAction{
+   public:
+      EdgePointPlane3dDrawAction();
+      virtual HyperGraphElementAction* operator()(HyperGraph::HyperGraphElement* element,
+      HyperGraphElementAction::Parameters* params_);
+   };
 #endif
 
 }
