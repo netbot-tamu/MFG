@@ -39,7 +39,7 @@
 #include "edge_line_vp_cam.h"
 #include "edge_point_plane.h"
 #include "edge_line_vp_plane.h"
-#include "levmar-2.6/levmar.h"
+#include "levmar.h"
 
 using namespace Eigen;
 extern MfgSettings* mfgSettings;

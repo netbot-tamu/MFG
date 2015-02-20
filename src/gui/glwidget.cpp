@@ -19,9 +19,8 @@ GLWidget::GLWidget(QWidget *parent)
    zRot = 0;
    scale = 0.1*scale_const;// it has to equal that in sSlider->setValue(1*100);
 
-   qtGreen = QColor::fromCmykF(0.40, 0.0, 1.0, 0.0);
-   //   qtPurple = QColor::fromCmykF(0.39, 0.39, 0.0, 0.0);
-   qtPurple = QColor::fromRgb(255, 255, 255);
+   //bgColor = QColor::fromCmykF(0.39, 0.39, 0.0, 0.0);
+   bgColor = QColor::fromRgb(15, 44, 54);
 }
 
 GLWidget::~GLWidget()
@@ -89,7 +88,7 @@ void GLWidget::setScale(int s)
 
 void GLWidget::initializeGL()
 {
-   qglClearColor(qtPurple);
+   qglClearColor(bgColor);
 
    glEnable(GL_DEPTH_TEST);
    //     glEnable(GL_CULL_FACE);

@@ -37,7 +37,7 @@
 #endif
 
 #include "g2o/types/sba/sbacam.h"
-#include "levmar-2.6/levmar.h"
+#include "levmar.h"
 
 using namespace Eigen;
 using namespace std;

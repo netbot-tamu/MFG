@@ -5,6 +5,7 @@
 #include <QKeyEvent>
 #include <QSlider>
 #include <QWidget>
+#include <QTimer>
 
 #include "glwidget.h"
 
@@ -41,6 +42,13 @@ Window::Window()
    ySlider->setValue(0 * 16);
    zSlider->setValue(0 * 16);
    sSlider->setValue(0.1*scale_const);
+
+   // Start animating
+   QTimer* timer = new QTimer(this);
+   timer->setInterval(100); // interval in milliseconds
+   connect(timer, SIGNAL(timeout()), glWidget, SLOT(repaint()));
+   timer->start();
+
    setWindowTitle(tr("Multilayer Feature Graph - 3D"));
 }
 

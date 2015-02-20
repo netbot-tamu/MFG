@@ -129,15 +129,23 @@ FIND_PACKAGE(CSparse REQUIRED)
 FIND_PACKAGE(G2O REQUIRED)
 FIND_PACKAGE(BLAS REQUIRED)
 FIND_PACKAGE(LAPACK REQUIRED)
+#FIND_PACKAGE(QGLVIEWER REQUIRED)
+
+#SET(QGLVIEWER_URL https://github.com/GillesDebunne/libQGLViewer.git)
 
 
 ################################################################################
 # Variables
 ################################################################################
-SET(LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+SET(LIB_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 SET(HEADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/includes)
 SET(EXTERN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext)
-SET(LSD_HEADERS ${HEADER_DIR}/lsd/lsd.h)
+
+# LSD project includes
+SET(LSD_HEADER_DIR ${HEADER_DIR}/lsd)
+SET(LSD_HEADERS ${LSD_HEADER_DIR}/lsd.h)
+
+# LevMar (LM) project includes
 SET(LM_HEADER_DIR ${HEADER_DIR}/levmar)
 SET(LM_HEADERS
    ${LM_HEADER_DIR}/compiler.h
@@ -146,6 +154,13 @@ SET(LM_HEADERS
    ${LM_HEADER_DIR}/misc.h
 )
 
+# QGLViewer directories and project headers
+SET(QGLVIEWER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/ext/qglviewer)
+SET(QGLVIEWER_SOURCE_DIR ${EXTERN_DIR}/libQGLViewer)
+# They will be placed automatically in a QGLViewer directory under here:
+SET(QGLVIEWER_HEADER_DIR ${HEADER_DIR})
+
+# Compounded G2O libraries
 SET(G2O_LIBS
    ${G2O_CORE_LIBRARY}
    ${G2O_STUFF_LIBRARY}
@@ -158,7 +173,7 @@ SET(G2O_LIBS
 LINK_DIRECTORIES(${LIB_DIR})
 INCLUDE_DIRECTORIES(
    ${HEADER_DIR}
-   ${EXTERN_DIR}
+   ${LM_HEADER_DIR}
    ${Qt5Gui_INCLUDE_DIR}
    ${EIGEN3_INCLUDE_DIR}
    ${CSPARSE_INCLUDE_DIR}
@@ -183,9 +198,21 @@ message(STATUS "-- BLAS             = ${BLAS_LIBRARIES}")
 message(STATUS "-- LAPACK           = ${LAPACK_LIBRARIES}")
 
 
-# Make dependencies first
+# Make simple dependencies first
 ADD_SUBDIRECTORY(ext/levmar-2.6)
 ADD_SUBDIRECTORY(ext/lsd-1.5)
+
+# Make QGLViewer dependency
+INCLUDE(ExternalProject)
+ExternalProject_Add(qglviewer
+   PREFIX ${QGLVIEWER_BINARY_DIR}
+   # do not download, as this is already downloaded as a git submodule
+   DOWNLOAD_COMMAND ""
+   # We only need to build the main library, not the executables, so skip the
+   # root level build from ${QGLVIEWER_SRC_DIR}/libQGLViewer.pro.
+   CONFIGURE_COMMAND qmake ${QGLVIEWER_SOURCE_DIR}/QGLViewer/QGLViewer.pro QGLVIEWER_STATIC=yes PREFIX=${QGLVIEWER_BINARY_DIR} LIB_DIR=${LIB_DIR} INCLUDE_DIR=${QGLVIEWER_HEADER_DIR}
+   BUILD_COMMAND make
+)
 
 # Make this project
 SET(CMAKE_AUTOMOC ON)

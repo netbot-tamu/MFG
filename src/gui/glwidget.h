@@ -45,9 +45,7 @@ private:
    int scale;
 
    QPoint lastPos;
-   QColor qtGreen;
-   QColor qtPurple;
-   QColor qtWhite;
+   QColor bgColor;
 
    void drawMfg();
 };

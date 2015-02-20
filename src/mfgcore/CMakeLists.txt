@@ -22,10 +22,6 @@ set(HEADERS
    view.h
 )
 
-include_directories(
-   ${LM_HEADER_DIR}
-)
-
 add_library(${PROJECT_NAME} STATIC
    ${SOURCES}
    ${LSD_HEADERS}

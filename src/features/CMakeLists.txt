@@ -29,10 +29,6 @@ set(HEADERS
    vertex_vnpt.h
 )
 
-include_directories(
-   ${LM_HEADER_DIR}
-)
-
 add_library(${PROJECT_NAME} STATIC
    ${SOURCES}
    ${LM_HEADERS}
