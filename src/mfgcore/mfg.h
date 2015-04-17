@@ -58,14 +58,14 @@ public:
    vector<Frame> trackFrms;
    double angleSinceLastKfrm;
 
-   Mfg(){}
-   Mfg(View v0, View v1) {
+   Mfg() : angVel(0.0), linVel(0.0), fps(10.0), angleSinceLastKfrm(0.0) {}
+   Mfg(View v0, View v1) : angVel(0.0), linVel(0.0), fps(10.0), angleSinceLastKfrm(0.0) {
       views.push_back(v0);
       views.push_back(v1);
       initialize();
       //	adjustBundle();
    }
-   Mfg(View v0, View v1, double fps_) {
+   Mfg(View v0, View v1, double fps_) : angVel(0.0), linVel(0.0), fps(10.0), angleSinceLastKfrm(0.0) {
       views.push_back(v0);
       views.push_back(v1);
       fps = fps_;
