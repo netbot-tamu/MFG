@@ -68,6 +68,17 @@ git submodule init
 git submodule update
 ```
 
+Then make a copy of the configuration file (this copy should NOT be tracked by Git):
+```bash
+$ cp config/mfgSettings.ini.example config/mfgSettings.ini
+```
+
+And modify the settings as necessary.  Some key settings that should be changed:
+* Camera intrinsics
+* Camera distCoeffs
+* Initial image for the camera
+* output_dir (if you want to direct it to a specific place)
+
 This project uses CMake (http://www.cmake.org), a cross-platform build system.
 * mkdir build
 * cd build
