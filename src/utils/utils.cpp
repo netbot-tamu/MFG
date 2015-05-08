@@ -1426,6 +1426,7 @@ bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R
 
    cv::Mat inliers;
    findFundamentalMat(matches1, matches2, FM_RANSAC, 3, 0.99, inliers);
+   
    double depth_limit = 15;  
    vector<cv::Point3f> pts3;
    vector<int> idx_m1_3d;
