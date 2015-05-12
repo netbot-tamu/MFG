@@ -36,9 +36,17 @@ void MfgThread::run()
 #ifdef FIX_INCREMENT
 		trialNo = 3;
 #endif		
-	int threshPtPairNum = 200;
-	int thresh3dPtNum = 30;
+	int threshPtPairNum;
+	int thresh3dPtNum;
 	double interval_ratio = 1;
+
+	if(mfgSettings->getDetectGround()) {
+		threshPtPairNum = 200;
+		thresh3dPtNum = 30;
+	} else {
+		threshPtPairNum = 50;
+		thresh3dPtNum = 7;
+	}
 
 	MyTimer timer;
 	timer.start();
@@ -46,10 +54,18 @@ void MfgThread::run()
 	for(int i=0; !finished; ++i) {
 		if(pMap->rotateMode()||pMap->angleSinceLastKfrm > 10*PI/180) {
 			increment = max(1, mfgSettings->getFrameStep()/2);
-			interval_ratio = 0.1;
+			if(mfgSettings->getDetectGround()) {			
+				interval_ratio = 0.1;
+			} else {
+				interval_ratio = 0.5;	
+			}
 		} else {
 			increment = mfgSettings->getFrameStep();
-			interval_ratio = 0.55;
+			if(mfgSettings->getDetectGround()) {			
+				interval_ratio = 0.55;
+			} else {
+				interval_ratio = 1;	
+			}
 		}
 	
 		bool toExpand = false;

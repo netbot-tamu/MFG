@@ -332,11 +332,13 @@ Mfg::Mfg(View v0, int ini_incrt, cv::Mat dc)
    updatePrimPlane();
    cout<<endl<<" >>>>>>>>>> MFG initialized using two views <<<<<<<<<<"<<endl;
 
-#ifdef USE_GROUND_PLANE
-   need_scale_to_real = true;
-   scale_since.push_back(1);
-   camera_height = 1.65; // meter
-#endif
+//#ifdef USE_GROUND_PLANE
+   if(mfgSettings->getDetectGround()) {
+      need_scale_to_real = true;
+      scale_since.push_back(1);
+      camera_height = 1.65; // meter
+   }
+//#endif
    return;
 }
 
@@ -600,11 +602,13 @@ void Mfg::initialize()
    updatePrimPlane();
    cout<<endl<<" >>>>>>>>>> MFG initialized using two views <<<<<<<<<<"<<endl;
 
-#ifdef USE_GROUND_PLANE
-   need_scale_to_real = true;
-   scale_since.push_back(1);
-   camera_height = 1.65; // meter
-#endif
+//#ifdef USE_GROUND_PLANE
+   if(mfgSettings->getDetectGround()) {
+      need_scale_to_real = true;
+      scale_since.push_back(1);
+      camera_height = 1.65; // meter
+   }
+//#endif
    return;
 }
 
@@ -1173,7 +1177,8 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          cout<<"fallback to const-vel model ...press 1 to continue\n";    
    }
 
-#ifdef USE_GROUND_PLANE
+//#ifdef USE_GROUND_PLANE
+if(mfgSettings->getDetectGround()) {
    int n_gp_pts;
    cv::Point3f gp_norm_vec;
    double gp_depth;
@@ -1281,7 +1286,8 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          cout<<"started a new local system since view "<<nview.id<<endl; 
       }
    }
-#endif
+}
+//#endif
 
 
    ////// use const-vel to predict R t ///////
@@ -1507,10 +1513,11 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
             int pVid = keyPoints[ptGid].viewId_ptLid[p][0],
                    pLid = keyPoints[ptGid].viewId_ptLid[p][1];
                if(!views[pVid].matchable) break;    
-#ifdef USE_GROUND_PLANE
-            if(need_scale_to_real && scale_since.back()!=1 && pVid < scale_since.back())
-               continue;
-#endif
+//#ifdef USE_GROUND_PLANE
+               if(mfgSettings->getDetectGround() && 
+                  need_scale_to_real && scale_since.back()!=1 && pVid < scale_since.back())
+                  continue;
+//#endif
             for(int q = obs_size - 1; q >= p+1 && q>obs_size-3; --q) {
                // try to triangulate every pair of 2d pt
                int qVid = keyPoints[ptGid].viewId_ptLid[q][0],
@@ -1656,10 +1663,13 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
    matchIdealLines(prev, nview, vpPairIdx, featPtMatches, F, ilinePairIdx, 1);
    update3dIdealLine(ilinePairIdx, nview);
    
-#ifdef USE_GROUND_PLANE
-   if(!need_scale_to_real)
-#endif      
+//#ifdef USE_GROUND_PLANE
+   if(mfgSettings->getDetectGround()==0 || 
+      (mfgSettings->getDetectGround() && !need_scale_to_real))
+//#endif 
+   {     
       updatePrimPlane();
+   }
    // ---- write to images for debugging ----
 #ifdef PLOT_MID_RESULTS
    cv::imwrite("./tmpimg/"+num2str(views.back().id)+"_pt1.jpg", canv1);
@@ -1733,14 +1743,15 @@ void Mfg::update3dIdealLine(vector<vector<int>> ilinePairIdx, View& nview)
             // -- start a voting/ransac --
             IdealLine3d bestLine;
             int maxNumInlier = 0;
-            for (int p = 0; p < idealLines[lnGid].viewId_lnLid.size()-1; ++p) {
-                int pVid = idealLines[lnGid].viewId_lnLid[p][0],
+            for (int p = 0; p < idealLines[lnGid].viewId_lnLid.size()-1; ++p) {                
+               int pVid = idealLines[lnGid].viewId_lnLid[p][0],
                         pLid = idealLines[lnGid].viewId_lnLid[p][1];
-                 if(!views[pVid].matchable) break;
-#ifdef USE_GROUND_PLANE
-            if(need_scale_to_real && scale_since.back()!=1 && pVid < scale_since.back())
-               continue;
-#endif
+               if(!views[pVid].matchable) break;
+//#ifdef USE_GROUND_PLANE
+               if(mfgSettings->getDetectGround() && 
+                  need_scale_to_real && scale_since.back()!=1 && pVid < scale_since.back())
+                  continue;
+//#endif
                for(int q = p+1; q < idealLines[lnGid].viewId_lnLid.size(); ++q) {
                   // try to triangulate every pair of 2d line                 
                      int   qVid = idealLines[lnGid].viewId_lnLid[q][0],

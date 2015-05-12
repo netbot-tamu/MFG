@@ -71,6 +71,7 @@ public:
    int      getFrameStepInitial() const {return frameStepInitial;}
    double   getVPointAngleThresh() const {return vpointAngleThresh;}
    double   getDepthLimit() const {return depthLimit;}
+   int      getDetectGround() const {return detectGround;}
 
    // BA
    double   getBaWeightVPoint() const {return baWeightVPoint;}
@@ -145,6 +146,8 @@ private:
    int      frameStepInitial;    // first step size
    double   vpointAngleThresh;   // vpoint angle threshold (2d -> 3d mapping)
    double   depthLimit;          // if triangulated point is too far, ignore it
+
+   int      detectGround;        // detect ground plane for scale estimation:0,1
 
    //---------------------------------------------------------------------------
    // Bundle Adjustment settings

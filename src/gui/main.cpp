@@ -82,42 +82,59 @@ int main(int argc, char *argv[])
    qDebug() << "View initialized";
    view0.frameId = atoi (imgName.substr(imgName.size()-imIdLen-4, imIdLen).c_str());
    imgName = nextImgName(imgName, imIdLen, ini_incrt);
-   //   View view1(imgName, K, distCoeffs, 1, mfgSettings);
-//   view1.frameId = atoi (imgName.substr(imgName.size()-imIdLen-4, imIdLen).c_str());
 
-//   Mfg map(view0, view1, 10);
+   if(mfgSettings->getDetectGround()) {
+      Mfg map(view0, ini_incrt, distCoeffs);
+      map.fps = 10;
+      mfgSettings->setKeypointAlgorithm(KPT_GFTT); // use gftt tracking
 
-   Mfg map(view0, ini_incrt, distCoeffs);
-   map.fps = 10;
-
-
-   mfgSettings->setKeypointAlgorithm(KPT_GFTT); // use gftt tracking
-
-   MfgThread mthread(mfgSettings);
-   mthread.pMap = &map;
-   mthread.imgName = imgName;
-   mthread.increment = increment;
-   mthread.totalImg = totalImg;
-   mthread.imIdLen = imIdLen;
-   mthread.K = K;
-   mthread.distCoeffs = distCoeffs;
-
-   mthread.start();
-   // ------- plot ---------
-   //*
-   win.setMfgScene(&map);
-   int desktopArea = QApplication::desktop()->width() *
+      MfgThread mthread(mfgSettings);
+      mthread.pMap = &map;
+      mthread.imgName = imgName;
+      mthread.increment = increment;
+      mthread.totalImg = totalImg;
+      mthread.imIdLen = imIdLen;
+      mthread.K = K;
+      mthread.distCoeffs = distCoeffs;
+      mthread.start();
+      win.setMfgScene(&map);
+      QObject::connect(&mthread,SIGNAL(closeAll()),&app,SLOT(quit()));
+      int desktopArea = QApplication::desktop()->width() *
       QApplication::desktop()->height();
-   int widgetArea = win.width() * win.height();
-   if (((float)widgetArea / (float)desktopArea) < 0.75f)
-      win.show();
-   else
-      win.showMaximized();
-   // */
+      int widgetArea = win.width() * win.height();
+      if (((float)widgetArea / (float)desktopArea) < 0.75f)
+         win.show();
+      else
+         win.showMaximized();  
+      return app.exec();
+   } else {      
+      View view1(imgName, K, distCoeffs, 1, mfgSettings);
+      view1.frameId = atoi (imgName.substr(imgName.size()-imIdLen-4, imIdLen).c_str());
+      Mfg map(view0, view1, 10);      
+      mfgSettings->setKeypointAlgorithm(KPT_GFTT); // use gftt tracking
 
-   QObject::connect(&mthread,SIGNAL(closeAll()),&app,SLOT(quit()));
+      MfgThread mthread(mfgSettings);
+      mthread.pMap = &map;
+      mthread.imgName = imgName;
+      mthread.increment = increment;
+      mthread.totalImg = totalImg;
+      mthread.imIdLen = imIdLen;
+      mthread.K = K;
+      mthread.distCoeffs = distCoeffs;
+      mthread.start();
+      win.setMfgScene(&map);
+      QObject::connect(&mthread,SIGNAL(closeAll()),&app,SLOT(quit()));   
+      int desktopArea = QApplication::desktop()->width() *
+      QApplication::desktop()->height();
+      int widgetArea = win.width() * win.height();
+      if (((float)widgetArea / (float)desktopArea) < 0.75f)
+         win.show();
+      else
+         win.showMaximized();   
+      return app.exec();
 
-   return app.exec();
+   }
 
+   
 }
 

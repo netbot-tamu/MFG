@@ -207,6 +207,7 @@ void MfgSettings::loadMFGSettings()
    LOAD_INT(frameStepInitial, "frame_step_init");
    LOAD_DOUBLE(vpointAngleThresh, "vpoint_angle_thresh");
    LOAD_DOUBLE(depthLimit, "depth_limit");
+   LOAD_INT(detectGround, "detect_ground_plane");
    mfgSettings->endGroup(); // "mfg"
 }
 
