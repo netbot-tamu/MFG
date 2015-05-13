@@ -765,8 +765,11 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
    cv::Mat F, R, E, t; // relative pose between last two views
    vector<cv::Mat> Fs, Es, Rs, ts;
 
-//   computePotenEpipolar (featPtMatches,pairIdx,K, Fs, Es, Rs, ts, false, t_prev);
-   computeEpipolar(featPtMatches,pairIdx,K, Fs, Es, Rs, ts);
+   if(mfgSettings->getDetectGround()) {
+      computeEpipolar(featPtMatches,pairIdx,K, Fs, Es, Rs, ts);
+   } else {
+      computePotenEpipolar (featPtMatches,pairIdx,K, Fs, Es, Rs, ts, false, t_prev);
+   }
    R = Rs[0]; t = ts[0];
 
    // ---- find observed 3D points (and plot)  ------
