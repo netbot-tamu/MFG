@@ -20,7 +20,6 @@ extern double SIFT_THRESH;
 
 using namespace std;
 
-//#define VPDETECT_USE_JLINK
 
 View::View (string imgName, cv::Mat _K, cv::Mat dc, MfgSettings* _settings)
 : mfgSettings(_settings)
@@ -291,36 +290,6 @@ void View::detectVanishPoints ()
    // ==== 2.  horizontal VPs search =====
    int	maxHvpNo  = 2;	// number of horizontal VPs
    int minLsNoTh = 30; // minimum number of supporting ls for a hrz vp
-#ifdef VPDETECT_USE_JLINK
-   vector<unsigned int> labNo;
-   double lenThresh = img.cols/50.0;
-   vector<cv::Mat> hvpCov;
-   vector<cv::Mat> hvps =  detectVP_Jlink(ls, labNo, lenThresh, hvpCov);
-   for(int i=0; i < ls.size(); ++i) {
-      if(ls[i].vpLid >= maxHvpNo+1)
-         ls[i].vpLid = -1;
-   }
-   for(int i=0; i < hvps.size(), i < maxHvpNo; ++i) {
-      if(labNo[i] < minLsNoTh ||      // if supporting lines number too small
-            labNo[i] < labNo[0] * 0.7 || // or, smaller than the largest * ratio
-            abs(v0.dot(K.inv()*hvps[i]))/cv::norm(v0)/cv::norm(K.inv()*hvps[i]) > orthThresh) {
-         for(int j=0; j < ls.size(); ++j) {
-            if(ls[j].vpLid == (i+1))
-               ls[j].vpLid = -1;
-         }
-      } else {
-         for(int j=0; j < ls.size(); ++j) {
-            if(ls[j].vpLid == int(i+1))
-               ls[j].vpLid = vanishPoints.size();
-         }
-         int vplid = vanishPoints.size();
-         vanishPoints.push_back(VanishPnt2d(hvps[i].at<double>(0),
-                  hvps[i].at<double>(1),hvps[i].at<double>(2), vplid, -1));
-         vanishPoints.back().cov = hvpCov[i].clone();
-      }
-   }
-
-#else
 
    double vpAngleLB =	80;  //degree
    double confidence = 0.99;  // for recomputing maxIterNo.
@@ -441,7 +410,7 @@ void View::detectVanishPoints ()
    
    }
   
-#endif
+
    vpGrpIdLnIdx.resize(vanishPoints.size());
 
    for (int i=0; i<vanishPoints.size(); ++i) {

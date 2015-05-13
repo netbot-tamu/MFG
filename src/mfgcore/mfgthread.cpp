@@ -27,15 +27,10 @@
 #include "settings.h"
 #include <opencv2/nonfree/nonfree.hpp> // For opencv2.4+,
 
-#define FIX_INCREMENT
-//#define DETECT_BLUR
 void MfgThread::run()
 {
 	pMap->adjustBundle();
 	int trialNo = 3;
-#ifdef FIX_INCREMENT
-		trialNo = 3;
-#endif		
 	int threshPtPairNum;
 	int thresh3dPtNum;
 	double interval_ratio = 1;
@@ -123,32 +118,6 @@ void MfgThread::run()
 			continue;
 
 		if(toExpand) { // to avoid Motion blurred image, search around
-#ifdef DETECT_BLUR // avoiding blurred image is VERY helpful in practice!
-
-			string prev, curt, next;
-			vector<cv::KeyPoint> prevfeat, curtfeat, nextfeat;
-			cv::SurfFeatureDetector		featDetector;
-
-			prev = prevImgName(imgName, imIdLen, 1);
-			next = nextImgName(imgName, imIdLen, 1);
-
-			cv::Mat previmg = cv::imread(prev,1);
-			cv::Mat curtimg = cv::imread(imgName,1);
-			cv::Mat nextimg = cv::imread(next,1);
-
-			featDetector.detect(previmg,  prevfeat);
-			featDetector.detect(curtimg,  curtfeat);
-			featDetector.detect(nextimg,  nextfeat);
-
-			if (prevfeat.size() > 1.5* curtfeat.size() ) {
-				imgName = prev;
-	//			cout<<"blured image, select previous ";
-			}	else if (1.5* curtfeat.size() < nextfeat.size()) {
-				imgName = next;
-	//			cout<<"blured image, select next ";
-			}
-
-#endif
 			int fid = atoi (imgName.substr(imgName.size()-imIdLen-4, imIdLen).c_str());
 			cout<<"\nframe:"<<fid<<endl;
 			MyTimer tm; tm.start();
