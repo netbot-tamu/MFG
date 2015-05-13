@@ -65,19 +65,13 @@ public:
    double angleSinceLastKfrm;
 
    Mfg(){}
-   Mfg(View v0, int ini_incrt, cv::Mat dc);
-   Mfg(View v0, View v1) {
-      views.push_back(v0);
-      views.push_back(v1);
-      initialize();
-      //	adjustBundle();
-   }
+   Mfg(View v0, int ini_incrt, cv::Mat dc, double fps_);
+
    Mfg(View v0, View v1, double fps_) {
       views.push_back(v0);
       views.push_back(v1);
       fps = fps_;
       initialize();
-      //	adjustBundle();
    }
    void initialize(); // initialize with first two views
    void expand(View&, int frameId);

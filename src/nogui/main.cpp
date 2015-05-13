@@ -78,9 +78,8 @@ int main(int argc, char *argv[])
 
 //   Mfg map(view0, view1, 10);
 
-   Mfg map(view0, ini_incrt, distCoeffs);
-   map.fps = 10;
-
+   Mfg map(view0, ini_incrt, distCoeffs, 10);
+ 
    mfgSettings->setKeypointAlgorithm(KPT_GFTT); // use gftt tracking
 
    MfgThread mthread(mfgSettings);

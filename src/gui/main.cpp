@@ -84,8 +84,7 @@ int main(int argc, char *argv[])
    imgName = nextImgName(imgName, imIdLen, ini_incrt);
 
    if(mfgSettings->getDetectGround()) {
-      Mfg map(view0, ini_incrt, distCoeffs);
-      map.fps = 10;
+      Mfg map(view0, ini_incrt, distCoeffs, 10);
       mfgSettings->setKeypointAlgorithm(KPT_GFTT); // use gftt tracking
 
       MfgThread mthread(mfgSettings);

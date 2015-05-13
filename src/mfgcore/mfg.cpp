@@ -55,8 +55,13 @@ struct cvpt2dCompare
    }
 };
 
-Mfg::Mfg(View v0, int ini_incrt, cv::Mat dc) 
+Mfg::Mfg(View v0, int ini_incrt, cv::Mat dc, double fps_) 
 {
+   //// variable initialization
+   angVel = 0;
+   angleSinceLastKfrm = 0;
+   fps = fps_;
+
    views.push_back(v0);   
    // tracking 
    K = v0.K;
@@ -345,6 +350,10 @@ Mfg::Mfg(View v0, int ini_incrt, cv::Mat dc)
 // build up a mfg with first two views
 void Mfg::initialize()
 {
+   //// variable initialization
+   angVel = 0;
+   angleSinceLastKfrm = 0;
+   
    // ----- setting parameters -----
    double distThresh_PtHomography = 1;
    double vpLnAngleThrseh = 50; // degree, tolerance angle between 3d line direction and vp direction

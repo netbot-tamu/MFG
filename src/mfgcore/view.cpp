@@ -25,6 +25,7 @@ View::View (string imgName, cv::Mat _K, cv::Mat dc, MfgSettings* _settings)
 : mfgSettings(_settings)
    // only deal with points
 {
+   angVel = 0;
    filename = imgName;
    id = -2;
    cv::Mat oriImg = cv::imread(imgName,1);
@@ -56,12 +57,13 @@ View::View (string imgName, cv::Mat _K, cv::Mat dc, MfgSettings* _settings)
       detectFeatPoints ();
 
    matchable = true;
-
+  
 }
 
 View::View (string imgName, cv::Mat _K, cv::Mat dc, int _id, MfgSettings* _settings)
 : mfgSettings(_settings)
 {
+   angVel = 0;
    filename = imgName;
    id = _id;
    QString fnStr(imgName.c_str());
@@ -111,6 +113,7 @@ View::View (string imgName, cv::Mat _K, cv::Mat dc, int _id, MfgSettings* _setti
    errPtMean=0; errLnMean=0;
 
    matchable = true;
+   
 }
 
 cv::Point2d LineSegmt2d::getGradient(cv::Mat* xGradient, cv::Mat* yGradient)
