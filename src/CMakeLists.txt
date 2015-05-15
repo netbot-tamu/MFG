@@ -10,7 +10,7 @@ INCLUDE_DIRECTORIES(
 )
 
 ADD_SUBDIRECTORY(utils)
-# The 'features' module does not use Qt
+# The 'features' modules does not use Qt
 SET(CMAKE_AUTOMOC OFF)
 ADD_SUBDIRECTORY(features)
 ADD_SUBDIRECTORY(featuresGL)

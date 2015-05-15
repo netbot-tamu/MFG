@@ -119,8 +119,14 @@ ADD_CUSTOM_TARGET(release
 ################################################################################
 # Project Dependencies:
 ################################################################################
+# Qt5 via Homebrew on OS X requires some fancy PREFIX_PATH changes
+IF(APPLE)
+   SET(CMAKE_PREFIX_PATH /usr/local/opt/qt5)
+ENDIF(APPLE)
 FIND_PACKAGE(Qt5Core REQUIRED)
 FIND_PACKAGE(Qt5OpenGL REQUIRED)
+FIND_PACKAGE(Qt5Xml REQUIRED) # required for libQGLViewer
+
 FIND_PACKAGE(OpenCV REQUIRED)
 FIND_PACKAGE(OpenGL REQUIRED)
 FIND_PACKAGE(GLUT REQUIRED)
@@ -129,9 +135,6 @@ FIND_PACKAGE(CSparse REQUIRED)
 FIND_PACKAGE(G2O REQUIRED)
 FIND_PACKAGE(BLAS REQUIRED)
 FIND_PACKAGE(LAPACK REQUIRED)
-#FIND_PACKAGE(QGLVIEWER REQUIRED)
-
-#SET(QGLVIEWER_URL https://github.com/GillesDebunne/libQGLViewer.git)
 
 
 ################################################################################
@@ -154,6 +157,16 @@ SET(LM_HEADERS
    ${LM_HEADER_DIR}/misc.h
 )
 
+# We want to skip the extra apps and examples to speed the build up for G2O.
+IF(G2O_NOT_FOUND)
+   MESSAGE(STATUS "G2O was not found, will build a local version")
+
+   # G2O, BLAS, LAPACK headers and libraries
+   SET(G2O_BASE_DIR ${EXTERN_DIR}/g2o)
+   SET(G2O_HEADER_DIR ${G2O_BASE_DIR})
+   SET(G2O_LIBRARY_DIR ${G2O_BASE_DIR}/lib)
+ENDIF(G2O_NOT_FOUND)
+
 # QGLViewer directories and project headers
 SET(QGLVIEWER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/ext/qglviewer)
 SET(QGLVIEWER_SOURCE_DIR ${EXTERN_DIR}/libQGLViewer)
@@ -170,11 +183,14 @@ SET(G2O_LIBS
    ${G2O_SOLVER_CSPARSE_EXTENSION}
 )
 
-LINK_DIRECTORIES(${LIB_DIR})
+LINK_DIRECTORIES(
+   ${LIB_DIR}
+   ${G2O_LIBRARY_DIR}
+)
 INCLUDE_DIRECTORIES(
    ${HEADER_DIR}
    ${LM_HEADER_DIR}
-   ${Qt5Gui_INCLUDE_DIR}
+   ${G2O_HEADER_DIR}
    ${EIGEN3_INCLUDE_DIR}
    ${CSPARSE_INCLUDE_DIR}
 )
@@ -197,23 +213,8 @@ message(STATUS "-- G2O_CSPARSE_EXT  = ${G2O_SOLVER_CSPARSE_EXTENSION}")
 message(STATUS "-- BLAS             = ${BLAS_LIBRARIES}")
 message(STATUS "-- LAPACK           = ${LAPACK_LIBRARIES}")
 
+# Build dependencies
+ADD_SUBDIRECTORY(ext)
 
-# Make simple dependencies first
-ADD_SUBDIRECTORY(ext/levmar-2.6)
-ADD_SUBDIRECTORY(ext/lsd-1.5)
-
-# Make QGLViewer dependency
-INCLUDE(ExternalProject)
-ExternalProject_Add(qglviewer
-   PREFIX ${QGLVIEWER_BINARY_DIR}
-   # do not download, as this is already downloaded as a git submodule
-   DOWNLOAD_COMMAND ""
-   # We only need to build the main library, not the executables, so skip the
-   # root level build from ${QGLVIEWER_SRC_DIR}/libQGLViewer.pro.
-   CONFIGURE_COMMAND qmake ${QGLVIEWER_SOURCE_DIR}/QGLViewer/QGLViewer.pro QGLVIEWER_STATIC=yes PREFIX=${QGLVIEWER_BINARY_DIR} LIB_DIR=${LIB_DIR} INCLUDE_DIR=${QGLVIEWER_HEADER_DIR}
-   BUILD_COMMAND make
-)
-
-# Make this project
-SET(CMAKE_AUTOMOC ON)
+# Build MFG
 ADD_SUBDIRECTORY(src)
