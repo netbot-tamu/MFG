@@ -3,6 +3,7 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
+#include <QObject>
 #include <QCoreApplication>
 #include <QSettings>
 #include <QString>
@@ -17,10 +18,10 @@ typedef cv::Mat_<double> CoeffMatrix;
 //typedef cv::Matx41d CoeffMatrix4;
 //typedef cv::Matx51d CoeffMatrix5;
 
-class MfgSettings : QObject {
-   Q_OBJECT
+class MfgSettings : public QObject {
+
 public:
-   MfgSettings(QString _cameraID="", QObject* _parent=0);
+   MfgSettings(QString _cameraID=QString(), QObject* _parent=0);
    ~MfgSettings();
 
    void printAllSettings() const;
@@ -30,12 +31,12 @@ public:
    // Access functions
    //---------------------------------------------------------------------------
    // General settings
-   QString getOutputDir() const {return outputDir;}
-   int   getImageWidth() const {return imageWidth;}
+   QString  getOutputDir()    const {return outputDir;}
+   int      getImageWidth()   const {return imageWidth;}
 
-   QString getCameraID() const {return cameraID;}
-   QString getInitialImage() const {return initialImage;}
-   uint64_t getPRNGSeed() const {return prngSeed;}
+   QString  getCameraID()     const {return cameraID;}
+   QString  getInitialImage() const {return initialImage;}
+   uint64_t getPRNGSeed()     const {return prngSeed;}
 
    IntrinsicsMatrix  getIntrinsics() const {return cameraIntrinsics;}
    CoeffMatrix       getDistCoeffs() const {return distCoeffs;}
