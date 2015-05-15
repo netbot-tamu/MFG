@@ -67,7 +67,7 @@ This project uses CMake (http://www.cmake.org), a cross-platform build system.
 
 To run it
 ---------
-1. Modify the configuration file: config/mfgSettings.ini accordingly
+1. Modify the configuration file: config/mfgSettings.ini accordingly. 
    For example, if using KITTI 00 dataset, just copy the content of "mfgSettings-kitti00.ini" to "mfgSettings.ini"
 2. Change to the bin directory (generated after successful build) and run mfg-nogui or mfg-gui
 3. To visualize the result, use the "src/matlab/plot_mfg_traj.m".
