@@ -45,7 +45,7 @@
 
 using namespace Eigen;
 extern MfgSettings* mfgSettings;
-
+extern bool mfg_writing;
 
 void Mfg::bundle_adjust_between(int view_from, int view_to, int cam_from)
 {
@@ -567,6 +567,8 @@ void Mfg::bundle_adjust_between(int view_from, int view_to, int cam_from)
 	timer.end(); cout<<"LBA time:"<<timer.time_ms<<" ms,";	
 
 	// ----- update camera and structure parameters -----
+	mfg_writing = true;
+
 	double scale = 1;
 	bool   toScale = false;
 	for(int i = 0; i < camvertVec.size(); ++i) {
@@ -637,7 +639,7 @@ void Mfg::bundle_adjust_between(int view_from, int view_to, int cam_from)
 		Vector3d n = plvertVec[i]->estimate()/plvertVec[i]->estimate().norm();
 		primaryPlanes[plGid].n = (cv::Mat_<double>(3,1)<<n(0),n(1),n(2));
 	}
-
+	mfg_writing = false;
 	// ---- error ----
 	double errKpt = 0, errVnpt = 0, errLine = 0, errPlane = 0;
 	for(int i=0; i<vecEdgeKpt.size();++i) {
@@ -1291,6 +1293,7 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 	timer.end(); cout<<"LBA time:"<<timer.time_ms<<" ms,";	
 
 	// ----- update camera and structure parameters -----
+	mfg_writing = true;
 	double scale = 1;
 	bool   toScale = false;
 	for(int i = 0; i < camvertVec.size(); ++i) {
@@ -1361,7 +1364,7 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 		Vector3d n = plvertVec[i]->estimate()/plvertVec[i]->estimate().norm();
 		primaryPlanes[plGid].n = (cv::Mat_<double>(3,1)<<n(0),n(1),n(2));
 	}
-
+	mfg_writing = false;
 	// ---- error ----
 	double errKpt = 0, errVnpt = 0, errLine = 0, errPlane = 0;
 	for(int i=0; i<vecEdgeKpt.size();++i) {
@@ -1478,8 +1481,9 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 		}
 	}
 
-	optimizer.computeActiveErrors(); cout<<"error: "<<baerr<<" => "<<optimizer.activeRobustChi2()
-		<<" ( "<<errKpt<<" + "<<errLine << " + "<<errVnpt<<" + "<<errPlane<<" )"<<endl;
+	optimizer.computeActiveErrors(); 
+	cout<<"error: "<<baerr<<" => "<<optimizer.activeRobustChi2();
+	//	<<" ( "<<errKpt<<" + "<<errLine << " + "<<errVnpt<<" + "<<errPlane<<" )"<<endl;
 	views.back().errAll = optimizer.activeRobustChi2();
 	views.back().errPt = errKpt;
 	views.back().errLn = errLine;
@@ -1494,7 +1498,7 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 	optimizer.clear();
 
 
-toScale = false;
+	toScale = false;
 
 	if(toScale) {
 		for(int i=0; i<views.size();++i) {

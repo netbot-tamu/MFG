@@ -40,6 +40,8 @@ double SIFT_THRESH = SIFT_THRESH_HIGH;
 
 MfgSettings* mfgSettings;
 
+bool mfg_writing = false;
+
 //------------------------------- Main function -------------------------------
 int main(int argc, char *argv[])
 {

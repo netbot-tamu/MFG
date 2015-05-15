@@ -33,7 +33,7 @@ double SIFT_THRESH_LOW  = 0.03; // for turning
 double SIFT_THRESH = SIFT_THRESH_HIGH;
 
 MfgSettings* mfgSettings;
-
+bool mfg_writing = false;
 //------------------------------- Main function -------------------------------
 int main(int argc, char *argv[])
 {
@@ -45,7 +45,8 @@ int main(int argc, char *argv[])
 
 
    seed_xrand(mfgSettings->getPRNGSeed());  	
-   srand(time(NULL));
+   srand(1);
+   cv::theRNG().state = 1;
 
    string imgName;			// first image name
    cv::Mat K, distCoeffs;	// distortion coeff: k1, k2, p1, p2
@@ -73,28 +74,41 @@ int main(int argc, char *argv[])
    qDebug() << "View initialized";
    view0.frameId = atoi (imgName.substr(imgName.size()-imIdLen-4, imIdLen).c_str());
    imgName = nextImgName(imgName, imIdLen, ini_incrt);
-//   View view1(imgName, K, distCoeffs, 1, mfgSettings);
-//   view1.frameId = atoi (imgName.substr(imgName.size()-imIdLen-4, imIdLen).c_str());
 
-//   Mfg map(view0, view1, 10);
+   if(mfgSettings->getDetectGround()) {
+      Mfg map(view0, ini_incrt, distCoeffs, 10);
+      mfgSettings->setKeypointAlgorithm(KPT_GFTT); // use gftt tracking
 
-   Mfg map(view0, ini_incrt, distCoeffs, 10);
- 
-   mfgSettings->setKeypointAlgorithm(KPT_GFTT); // use gftt tracking
+      MfgThread mthread(mfgSettings);
+      mthread.pMap = &map;
+      mthread.imgName = imgName;
+      mthread.increment = increment;
+      mthread.totalImg = totalImg;
+      mthread.imIdLen = imIdLen;
+      mthread.K = K;
+      mthread.distCoeffs = distCoeffs;
+      mthread.start();
+      QObject::connect(&mthread,SIGNAL(closeAll()),&app,SLOT(quit()));
+      return app.exec();
+   } else {      
+      View view1(imgName, K, distCoeffs, 1, mfgSettings);
+      view1.frameId = atoi (imgName.substr(imgName.size()-imIdLen-4, imIdLen).c_str());
+      Mfg map(view0, view1, 10);      
+      mfgSettings->setKeypointAlgorithm(KPT_GFTT); // use gftt tracking
 
-   MfgThread mthread(mfgSettings);
-   mthread.pMap = &map;
-   mthread.imgName = imgName;
-   mthread.increment = increment;
-   mthread.totalImg = totalImg;
-   mthread.imIdLen = imIdLen;
-   mthread.K = K;
-   mthread.distCoeffs = distCoeffs;
+      MfgThread mthread(mfgSettings);
+      mthread.pMap = &map;
+      mthread.imgName = imgName;
+      mthread.increment = increment;
+      mthread.totalImg = totalImg;
+      mthread.imIdLen = imIdLen;
+      mthread.K = K;
+      mthread.distCoeffs = distCoeffs;
+      mthread.start();
+      QObject::connect(&mthread,SIGNAL(closeAll()),&app,SLOT(quit()));   
+      return app.exec();
 
-   mthread.start();
-
-   QObject::connect(&mthread,SIGNAL(closeAll()),&app,SLOT(quit()));
-   return app.exec();
+   }
 
 }
 

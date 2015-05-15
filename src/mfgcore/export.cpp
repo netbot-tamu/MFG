@@ -28,26 +28,6 @@ void exportCamPose(Mfg& m, string fname) {
               << m.views[i].errLnMean << '\n';
    }  
    file.close();
-/*
-   string fname2 = "kitti.txt"; 
-   ofstream file2(fname2);
-   for (int i = 0; i < m.views.size(); ++i) {
-      cv::Mat pos = -m.views[i].R.t() * m.views[i].t;
-      file2<<m.views[i].R.at<double>(0, 0)<<'\t'
-           <<m.views[i].R.at<double>(1, 0)<<'\t'
-           <<m.views[i].R.at<double>(2, 0)<<'\t'
-           <<pos.at<double>(0)<<'\t'
-           <<m.views[i].R.at<double>(0, 1)<<'\t'
-           <<m.views[i].R.at<double>(1, 1)<<'\t'
-           <<m.views[i].R.at<double>(2, 1)<<'\t'
-           <<pos.at<double>(1)<<'\t'
-           <<m.views[i].R.at<double>(0, 2)<<'\t'
-           <<m.views[i].R.at<double>(1, 2)<<'\t'
-           <<m.views[i].R.at<double>(2, 2)<<'\t'
-           <<pos.at<double>(2)<<'\n';
-   }
-   file2.close();
-*/
 }
 
 void exportMfgNode(Mfg& m, string fname)

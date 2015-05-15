@@ -44,6 +44,8 @@
 extern double THRESH_POINT_MATCH_RATIO, SIFT_THRESH, SIFT_THRESH_HIGH, SIFT_THRESH_LOW;
 extern int IDEAL_IMAGE_WIDTH;
 extern MfgSettings* mfgSettings;
+extern bool mfg_writing;
+
 struct cvpt2dCompare
 {
    bool operator() (const cv::Point2d& lhs, const cv::Point2d& rhs) const
@@ -313,7 +315,7 @@ Mfg::Mfg(View v0, int ini_incrt, cv::Mat dc, double fps_)
          pair.push_back(ilinePairIdx[i][1]);
          line.viewId_lnLid.push_back(pair);
          idealLines.push_back(line);
-         cout<<line.gid<<'\t';
+         
 #ifdef PLOT_MID_RESULTS
          cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
          cv::line(canv1, a.extremity1, a.extremity2, color, 2);
@@ -337,13 +339,12 @@ Mfg::Mfg(View v0, int ini_incrt, cv::Mat dc, double fps_)
    updatePrimPlane();
    cout<<endl<<" >>>>>>>>>> MFG initialized using two views <<<<<<<<<<"<<endl;
 
-//#ifdef USE_GROUND_PLANE
    if(mfgSettings->getDetectGround()) {
       need_scale_to_real = true;
       scale_since.push_back(1);
       camera_height = 1.65; // meter
    }
-//#endif
+
    return;
 }
 
@@ -353,7 +354,7 @@ void Mfg::initialize()
    //// variable initialization
    angVel = 0;
    angleSinceLastKfrm = 0;
-   
+
    // ----- setting parameters -----
    double distThresh_PtHomography = 1;
    double vpLnAngleThrseh = 50; // degree, tolerance angle between 3d line direction and vp direction
@@ -611,13 +612,12 @@ void Mfg::initialize()
    updatePrimPlane();
    cout<<endl<<" >>>>>>>>>> MFG initialized using two views <<<<<<<<<<"<<endl;
 
-//#ifdef USE_GROUND_PLANE
    if(mfgSettings->getDetectGround()) {
       need_scale_to_real = true;
       scale_since.push_back(1);
       camera_height = 1.65; // meter
    }
-//#endif
+
    return;
 }
 
@@ -1189,7 +1189,6 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
          cout<<"fallback to const-vel model ...press 1 to continue\n";    
    }
 
-//#ifdef USE_GROUND_PLANE
 if(mfgSettings->getDetectGround()) {
    int n_gp_pts;
    cv::Point3f gp_norm_vec;
@@ -1299,7 +1298,6 @@ if(mfgSettings->getDetectGround()) {
       }
    }
 }
-//#endif
 
 
    ////// use const-vel to predict R t ///////
@@ -1525,11 +1523,11 @@ if(mfgSettings->getDetectGround()) {
             int pVid = keyPoints[ptGid].viewId_ptLid[p][0],
                    pLid = keyPoints[ptGid].viewId_ptLid[p][1];
                if(!views[pVid].matchable) break;    
-//#ifdef USE_GROUND_PLANE
+
                if(mfgSettings->getDetectGround() && 
                   need_scale_to_real && scale_since.back()!=1 && pVid < scale_since.back())
                   continue;
-//#endif
+
             for(int q = obs_size - 1; q >= p+1 && q>obs_size-3; --q) {
                // try to triangulate every pair of 2d pt
                int qVid = keyPoints[ptGid].viewId_ptLid[q][0],
@@ -1675,10 +1673,10 @@ if(mfgSettings->getDetectGround()) {
    matchIdealLines(prev, nview, vpPairIdx, featPtMatches, F, ilinePairIdx, 1);
    update3dIdealLine(ilinePairIdx, nview);
    
-//#ifdef USE_GROUND_PLANE
+
    if(mfgSettings->getDetectGround()==0 || 
       (mfgSettings->getDetectGround() && !need_scale_to_real))
-//#endif 
+ 
    {     
       updatePrimPlane();
    }
@@ -1689,7 +1687,7 @@ if(mfgSettings->getDetectGround()) {
    views.back().drawAllLineSegments(true);
 #endif
 
-   tm2.end(); cout<<"expand_keyPoints time "<<tm2.time_ms<<" ms"<<endl;
+//   tm2.end(); cout<<"expand_keyPoints time "<<tm2.time_ms<<" ms"<<endl;
 }
 
 void Mfg::update3dIdealLine(vector<vector<int>> ilinePairIdx, View& nview)
@@ -1759,11 +1757,11 @@ void Mfg::update3dIdealLine(vector<vector<int>> ilinePairIdx, View& nview)
                int pVid = idealLines[lnGid].viewId_lnLid[p][0],
                         pLid = idealLines[lnGid].viewId_lnLid[p][1];
                if(!views[pVid].matchable) break;
-//#ifdef USE_GROUND_PLANE
+
                if(mfgSettings->getDetectGround() && 
                   need_scale_to_real && scale_since.back()!=1 && pVid < scale_since.back())
                   continue;
-//#endif
+
                for(int q = p+1; q < idealLines[lnGid].viewId_lnLid.size(); ++q) {
                   // try to triangulate every pair of 2d line                 
                      int   qVid = idealLines[lnGid].viewId_lnLid[q][0],
@@ -1926,6 +1924,8 @@ void Mfg::updatePrimPlane()
 
 void Mfg::draw3D() const
 {
+   if(mfg_writing)
+      return;
    // plot first camera, small
    glLineWidth(1);
    glBegin(GL_LINES);

@@ -1341,7 +1341,6 @@ bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R
                            3,
                            false
                            );
-   	//	featpts1.insert(featpts1.end(), featptsA.begin(), featptsA.end());
    		vvpt[i*c_bucket+j] = featptsA;
    	}
    }
@@ -1383,8 +1382,6 @@ bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R
    	cv::Mat 							descs1, descs2;
 	cv::FeatureDetector * pfeatDetector = new cv::SIFT(0,3,0.01,10);    
     cv::DescriptorExtractor * pfeatExtractor = new cv::SIFT();
-//    cv::FeatureDetector * pfeatDetector = new cv::SURF();    
-//    cv::DescriptorExtractor * pfeatExtractor = new cv::SURF();
    
    	#pragma omp parallel sections 
    	{
@@ -1422,7 +1419,6 @@ bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R
 	matches1.insert(matches1.end(),siftmatch1.begin(),siftmatch1.end());
 	matches2.insert(matches2.end(),siftmatch2.begin(),siftmatch2.end());
 	}
-//	tm.end(); cout<<"sif match "<<tm.time_ms<<endl;
 
    cv::Mat inliers;
    cv::Mat Fmat = findFundamentalMat(matches1, matches2, FM_RANSAC, 3, 0.99, inliers);
@@ -1444,7 +1440,6 @@ bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R
          } 
       }
    }
-//   cout<<featpts1.size()<<"\t"<<matches1.size()<<"\t"<<cv::norm(inliers)*cv::norm(inliers)<<"\t"<<pts3.size()<<endl;
    if(pts3.size()<10) {
    	return false;
    }
@@ -1482,7 +1477,6 @@ bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R
       			}
       		}
       	}
-    //  	cout<<"invalid grids "<<(vertsA[3].y-vertsA[0].y)*(vertsA[0].x-tl.x)/grid_width/grid_height <<endl;
       	quality = n_valid_grid/(n_cols*n_rows-((vertsA[3].y-vertsA[0].y)*(vertsA[0].x-tl.x)/grid_width/grid_height/2));
       	cv::putText(roi, "Ground point number "+num2str(n_ptsin_grids), cv::Point2f(10,50), FONT_HERSHEY_PLAIN, 3, cv::Scalar(200,0,0));
       	cv::putText(roi, "n_low = "+num2str(n_low), cv::Point2f(10,100), FONT_HERSHEY_PLAIN, 3, cv::Scalar(200,0,0));
@@ -1502,10 +1496,10 @@ bool detectGroundPlane (const cv::Mat& im1, const cv::Mat& im2, const cv::Mat& R
       depth = d/cv::norm(n);
       normal = n*(1/cv::norm(n));
       n_pts = gp_idx.size();
-  		
+#ifdef PLOT_MID_RESULTS  		
       showImage("roi", &roi);
-      if (quality > 0.4) {      
-      
+#endif
+      if (quality > 0.4) {            
       	return true;
       }
       else 
