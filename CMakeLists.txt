@@ -15,7 +15,7 @@ ENDIF(POLICY CMP0043)
 # Set the version of the kernel project
 ################################################################################
 set(mfg_MAJOR_VERSION 0)
-set(mfg_MINOR_VERSION 4)
+set(mfg_MINOR_VERSION 5)
 set(mfg_PATCH_VERSION 0)
 set(mfg_VERSION ${mfg_MAJOR_VERSION}.${mfg_MINOR_VERSION}.${mfg_PATCH_VERSION})
 
