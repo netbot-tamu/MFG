@@ -5,6 +5,7 @@
 #include <QKeyEvent>
 #include <QSlider>
 #include <QWidget>
+#include <QTimer>
 
 #include "glwidget.h"
 
@@ -20,14 +21,14 @@ Window::Window()
    zSlider = createSlider();
    sSlider = createScaleSlider();
 
-   connect(xSlider, SIGNAL(valueChanged(int)), glWidget, SLOT(setXRotation(int)));
-   connect(glWidget, SIGNAL(xRotationChanged(int)), xSlider, SLOT(setValue(int)));
-   connect(ySlider, SIGNAL(valueChanged(int)), glWidget, SLOT(setYRotation(int)));
-   connect(glWidget, SIGNAL(yRotationChanged(int)), ySlider, SLOT(setValue(int)));
-   connect(zSlider, SIGNAL(valueChanged(int)), glWidget, SLOT(setZRotation(int)));
-   connect(glWidget, SIGNAL(zRotationChanged(int)), zSlider, SLOT(setValue(int)));
-   connect(sSlider, SIGNAL(valueChanged(int)), glWidget, SLOT(setScale(int)));
-   connect(glWidget, SIGNAL(scaleChanged(int)), sSlider, SLOT(setValue(int)));
+   connect(xSlider,  SIGNAL(valueChanged(int)),       glWidget, SLOT(setXRotation(int)));
+   connect(glWidget, SIGNAL(xRotationChanged(int)),   xSlider,  SLOT(setValue(int)));
+   connect(ySlider,  SIGNAL(valueChanged(int)),       glWidget, SLOT(setYRotation(int)));
+   connect(glWidget, SIGNAL(yRotationChanged(int)),   ySlider,  SLOT(setValue(int)));
+   connect(zSlider,  SIGNAL(valueChanged(int)),       glWidget, SLOT(setZRotation(int)));
+   connect(glWidget, SIGNAL(zRotationChanged(int)),   zSlider,  SLOT(setValue(int)));
+   connect(sSlider,  SIGNAL(valueChanged(int)),       glWidget, SLOT(setScale(int)));
+   connect(glWidget, SIGNAL(scaleChanged(int)),       sSlider,  SLOT(setValue(int)));
 
    QHBoxLayout *mainLayout = new QHBoxLayout;
    mainLayout->addWidget(glWidget);
@@ -41,6 +42,13 @@ Window::Window()
    ySlider->setValue(0 * 16);
    zSlider->setValue(0 * 16);
    sSlider->setValue(0.1*scale_const);
+
+   // Start animating
+   QTimer* timer = new QTimer(this);
+   timer->setInterval(100); // interval in milliseconds
+   connect(timer, SIGNAL(timeout()), glWidget, SLOT(repaint()));
+   timer->start();
+
    setWindowTitle(tr("Multilayer Feature Graph - 3D"));
 }
 
@@ -74,7 +82,7 @@ void Window::keyPressEvent(QKeyEvent *e)
       QWidget::keyPressEvent(e);
 }
 
-void Window::setMfgScene (Mfg* pMap)
+void Window::setMfgScene (Mfg* _mfg)
 {
-   glWidget->map = pMap;
+   glWidget->setMfgScene(_mfg);
 }

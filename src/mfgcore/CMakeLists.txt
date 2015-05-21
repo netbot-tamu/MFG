@@ -1,9 +1,6 @@
 # project is defined in the parent CMakeLists
 project(mfgcore)
 
-# TODO: make this an optional flag
-set(CMAKE_BUILD_TYPE debug)
-
 set(SOURCES
    est3dpt.cpp
    estfundm.cpp
@@ -13,7 +10,7 @@ set(SOURCES
    mfg.cpp
    mfgthread.cpp
    mfgutils.cpp
-   twoview.cpp
+   optimize.cpp
    view.cpp
 )
 
@@ -21,12 +18,8 @@ set(HEADERS
    export.h
    mfg.h
    mfgutils.h
-   twoview.h
+   optimize.h
    view.h
-)
-
-include_directories(
-   ${LM_HEADER_DIR}
 )
 
 add_library(${PROJECT_NAME} STATIC
@@ -39,19 +32,14 @@ add_library(${PROJECT_NAME} STATIC
 # Link the ${PROJECT_NAME} to all dependencies
 target_link_libraries(${PROJECT_NAME}
    # The following are NOT needed on OS X, but ARE needed on Linux Mint/Ubuntu
-   ${OPENGL_LIBRARIES}
-   ${G2O_CORE_LIBRARY}
-   ${G2O_STUFF_LIBRARY}
-   ${G2O_TYPES_SLAM3D}
-   ${G2O_TYPES_SBA}
-   ${G2O_SOLVER_CSPARSE}
-   ${G2O_SOLVER_CSPARSE_EXTENSION}
+   ${G2O_LIBS}
 
    # These are needed regardless of OS
    ${Eigen3_LIBS}
    ${CSPARSE_LIBRARY}
    ${OpenCV_LIBS}
 
+   # Libraries built by this project
    levmar
    lsd
    utils

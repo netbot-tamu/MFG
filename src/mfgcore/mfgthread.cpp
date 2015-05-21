@@ -1,26 +1,9 @@
 
-#include "mfg.h"
-
-//#include <QtGui>
-//#include <QtOpenGL/QtOpenGL>
-
-//#include <gl/GLU.h>
-// replaced with:
-#ifdef __APPLE__
-#include <GLUT/glut.h>
-#include <OpenGL/gl.h>
-#elif __linux__
-#include <GL/glut.h>
-#include <GL/gl.h>
-#else
-#include <gl/glut.h>
-#include <gl/gl.h>
-#endif
+#include "mfgthread.h"
 
 #include <math.h>
-#include <fstream>
 
-//#include "glwidget.h"
+#include "mfg.h"
 #include "mfgutils.h"
 #include "export.h"
 #include "utils.h"
@@ -128,8 +111,9 @@ void MfgThread::run()
 	}
 	timer.end();
 	cout<<"total time = "<<timer.time_s<<"s"<<endl;
-	exportCamPose (*pMap, "camPose.txt") ;
-//	pMap->exportAll("MFG");
+   QString exportDir = mfgSettings->getOutputDir();
+	exportCamPose (*pMap, exportDir + "/camPose.txt");
+//	pMap->exportAll(exportDir);
 	emit closeAll();
 }
 

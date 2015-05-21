@@ -37,11 +37,7 @@
 #endif
 
 #include "g2o/types/sba/sbacam.h"
-//#include "edge_se3_lineendpts.h"
-#include <fstream>
-//#include "levmar-2.6\lm.h"
-#include "levmar-2.6/levmar.h"
-//#include <Windows.h>
+#include "levmar.h"
 
 using namespace Eigen;
 using namespace std;
@@ -67,7 +63,7 @@ void costFun_EST3D(double *p, double *error, int numPara, int numMeas, void *ada
 		cost = cost + error[i*2]*error[i*2] + error[i*2+1]*error[i*2+1];
 
 	}
-	
+
 }
 
 
@@ -87,7 +83,7 @@ void costFun_EST3D2(double *p, double *error, int numPara, int numMeas, void *ad
 //		cost = cost + error[i*2]*error[i*2] + error[i*2+1]*error[i*2+1];
 
 	}
-	
+
 }
 
 void est3dpt (vector<cv::Mat> Rs, vector<cv::Mat> ts, cv::Mat K, vector<cv::Point2d> pt, cv::Mat& X, int maxIter)
@@ -295,7 +291,7 @@ void costFun_Scale(double *p, double *error, int numPara, int numMeas, void *ada
 
 		cost += error[i*2]*error[i*2] + error[i*2+1]*error[i*2+1];
 	}
-	
+
 }
 
 double optimizeScale (vector<cv::Point3d> X, vector<cv::Point2d> x, cv::Mat K,

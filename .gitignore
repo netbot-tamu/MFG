@@ -28,8 +28,10 @@
 *(busy)
 [Bb]uild/
 bin/
+lib/
 nbproject/
 includes/mfg/
+includes/QGLViewer/
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
@@ -60,6 +62,7 @@ cmake_install.cmake
 camPose.txt
 debug.txt
 mfgNode.txt
+output/
 
 # OS generated files #
 ######################

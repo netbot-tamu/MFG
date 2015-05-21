@@ -1,12 +1,6 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-//#include <Windows.h>
-// C++ 11
-//#include <chrono>
-// Boost Chrono
-//#include <boost/chrono/system_clocks.hpp>
-// Qt QTime
 #include <QTime>
 #include <string>
 #include <vector>
@@ -17,6 +11,7 @@
 #include "features2d.h"
 #include "features3d.h"
 
+#include "consts.h"
 #include "random.h"
 using namespace std;
 
@@ -108,7 +103,7 @@ double aveLine2LineDist (IdealLine2d a, IdealLine2d b);
 
 void matchLinesByPointPairs (double imWidth,
 	std::vector<IdealLine2d>& lines1,std::vector<IdealLine2d>& lines2,
-	std::vector< std::vector<cv::Point2d> >& pointPairs,
+	FeaturePointPairs& pointPairs,
 	std::vector< std::vector<int> >& linePairIdx);
 
 std::vector<cv::Point2d> sampleFromLine (IdealLine2d l, double stepSize);
@@ -118,14 +113,14 @@ double ln2LnDist_H(IdealLine2d& l1,IdealLine2d& l2,cv::Mat& H);
 
 void projectImgPt2Plane (cv::Mat imgPt, PrimPlane3d pi, cv::Mat K, cv::Mat& result);
 
-void computeEpipolar (std::vector< std::vector<cv::Point2d> >& pointMatches, cv::Mat K,
+void computeEpipolar (FeaturePointPairs& pointMatches, cv::Mat K,
 						cv::Mat& F, cv::Mat& R,cv::Mat& E,cv::Mat& t);
-void computeEpipolar (std::vector< std::vector<cv::Point2d> >& pointMatches,
+void computeEpipolar (FeaturePointPairs& pointMatches,
 	std::vector< std::vector<int> >& pairIdx, cv::Mat K, cv::Mat& F, cv::Mat& R,cv::Mat& E,cv::Mat& t, bool useMultiE = false);
 void computeEpipolar (vector<vector<cv::Point2d>>& pointMatches, vector<vector<int>>& pairIdx,
         cv::Mat K,	vector<cv::Mat>& Fs, vector<cv::Mat>& Es, vector<cv::Mat>& Rs, vector<cv::Mat>& ts) ;
 
-void computePotenEpipolar (std::vector< std::vector<cv::Point2d> >& pointMatches, std::vector< std::vector<int> >& pairIdx,
+void computePotenEpipolar (FeaturePointPairs& pointMatches, std::vector< std::vector<int> >& pairIdx,
  	cv::Mat K, std::vector<cv::Mat>& Fs, std::vector<cv::Mat>& Es, std::vector<cv::Mat>& Rs, std::vector<cv::Mat>& ts,
 	bool usePrior=false, cv::Mat t_prior = cv::Mat(0,0,CV_8U));
 
@@ -134,7 +129,7 @@ void drawLineMatches(cv::Mat im1,cv::Mat im2, std::vector<IdealLine2d>lines1,
 	std::vector<IdealLine2d>lines2, std::vector< std::vector<int> > pairs);
 
 std::vector< std::vector<int> > matchKeyPoints (const std::vector<FeatPoint2d>& kps1,
-	const std::vector<FeatPoint2d>& kps2, std::vector< std::vector<cv::Point2d> >& ptmatch);
+	const std::vector<FeatPoint2d>& kps2, FeaturePointPairs& ptmatch);
 
 
 double compParallax (cv::Point2d x1, cv::Point2d x2, cv::Mat K, cv::Mat R1, cv::Mat R2);
@@ -157,13 +152,6 @@ cv::Mat triangulatePoint_nonlin (const cv::Mat& R1, const cv::Mat& t1, const cv:
 
 
 double fund_samperr (cv::Mat x1, cv::Mat x2, cv::Mat F) ;
-
-void optimizeRt_withVP (cv::Mat K, std::vector< std::vector<cv::Mat> > vppairs,  double weightVP,
-						std::vector< std::vector<cv::Point2d> >& featPtMatches,
-						cv::Mat R, cv::Mat t);
-
-void optimize_t_givenR (cv::Mat K, cv::Mat R, std::vector< std::vector<cv::Point2d> >& featPtMatches,
-						cv::Mat t);
 
 bool isEssnMatSimilar(cv::Mat E1, cv::Mat E2);
 
@@ -217,7 +205,7 @@ double optimizeScale (std::vector<cv::Point3d> X, std::vector<cv::Point2d> x, cv
 
 cv::Mat inhomogeneous(cv::Mat x);
 
-void twoview_ba (cv::Mat K, cv::Mat& R, cv::Mat& t, std::vector<KeyPoint3d>& pt3d, std::vector< std::vector<cv::Point2d> > pt2d);
+void twoview_ba (cv::Mat K, cv::Mat& R, cv::Mat& t, std::vector<KeyPoint3d>& pt3d, FeaturePointPairs pt2d);
 
 cv::Mat pantilt(cv::Mat vp, cv::Mat K) ;
 

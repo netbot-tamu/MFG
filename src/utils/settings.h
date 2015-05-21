@@ -3,6 +3,7 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
+#include <QObject>
 #include <QCoreApplication>
 #include <QSettings>
 #include <QString>
@@ -17,16 +18,10 @@ typedef cv::Mat_<double> CoeffMatrix;
 //typedef cv::Matx41d CoeffMatrix4;
 //typedef cv::Matx51d CoeffMatrix5;
 
-class MfgSettings : QObject {
-   Q_OBJECT
+class MfgSettings : public QObject {
+
 public:
-   //---------------------------------------------------------------------------
-   // TODO: move this out of here
-   //---------------------------------------------------------------------------
-   //double   angle_thresh_vp2d3d; // degree, match local 2d vp to existing 3d vp
-
-
-   MfgSettings(QString _cameraID="", QObject* _parent=0);
+   MfgSettings(QString _cameraID=QString(), QObject* _parent=0);
    ~MfgSettings();
 
    void printAllSettings() const;
@@ -36,11 +31,12 @@ public:
    // Access functions
    //---------------------------------------------------------------------------
    // General settings
-   int   getImageWidth() const {return imageWidth;}
+   QString  getOutputDir()    const {return outputDir;}
+   int      getImageWidth()   const {return imageWidth;}
 
-   QString getCameraID() const {return cameraID;}
-   QString getInitialImage() const {return initialImage;}
-   uint64_t getPRNGSeed() const {return prngSeed;}
+   QString  getCameraID()     const {return cameraID;}
+   QString  getInitialImage() const {return initialImage;}
+   uint64_t getPRNGSeed()     const {return prngSeed;}
 
    IntrinsicsMatrix  getIntrinsics() const {return cameraIntrinsics;}
    CoeffMatrix       getDistCoeffs() const {return distCoeffs;}
@@ -86,11 +82,18 @@ public:
 
 private:
    //---------------------------------------------------------------------------
-   // General settings
+   // Private settings
    //---------------------------------------------------------------------------
+   QString     mfgRootDir;    // path to mfg root directory
+   QString     userHomeDir;   // path to user home directory, with no trailing /
    QString     configDir;     // path to config directory
    QString     settingsFile;  // path to settings file
    QSettings*  mfgSettings;   // settings object
+
+   //---------------------------------------------------------------------------
+   // General settings
+   //---------------------------------------------------------------------------
+   QString     outputDir;     // path to output/export directory
 
    // Camera settings
    QString           cameraID;
@@ -168,6 +171,7 @@ private:
    // Private functions
    //---------------------------------------------------------------------------
    void loadSettings();
+   void loadInitialImage();
    void loadSIFTSettings();
    void loadSURFSettings();
    void loadGFTTSettings();

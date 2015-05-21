@@ -7,7 +7,7 @@
 using namespace std;
 
 void refineVanishPt (const vector<LineSegmt2d>& allLs, vector<int>& lsIdx,
-						cv::Mat& vp )
+        cv::Mat& vp )
 // input: line segments supposed to pass one vp ()
 // output: refined vp and line segment classification
 {
@@ -37,7 +37,7 @@ void refineVanishPt (const vector<LineSegmt2d>& allLs, vector<int>& lsIdx,
 	}
 	// 2. filter out outliers
 	for (int i=0; i<ls.size(); ++i)	{
-	//	if (mleVp2LineDist (vp, ls[i]) > distThresh) {
+      //	if (mleVp2LineDist (vp, ls[i]) > distThresh) {
 		if (mleVp2LineDist (vp, ls[i])/ls[i].length() > vp2LineDistThresh) {
 			// if dist too large, discard from group
 			ls.erase(ls.begin()+i);
@@ -48,7 +48,7 @@ void refineVanishPt (const vector<LineSegmt2d>& allLs, vector<int>& lsIdx,
 }
 
 void refineVanishPt (const vector<LineSegmt2d>& allLs, vector<int>& lsIdx,
-						cv::Mat& vp, cv::Mat& cov, cv::Mat& covhomo )
+        cv::Mat& vp, cv::Mat& cov, cv::Mat& covhomo )
 // input: line segments supposed to pass one vp ()
 // output: refined vp and line segment classification
 {
@@ -79,7 +79,7 @@ void refineVanishPt (const vector<LineSegmt2d>& allLs, vector<int>& lsIdx,
 
 	// 2. filter out outliers
 	for (int i=0; i<ls.size(); ++i)	{
-	//	if (mleVp2LineDist (vp, ls[i]) > distThresh) {
+      //	if (mleVp2LineDist (vp, ls[i]) > distThresh) {
 		if (mleVp2LineDist (vp, ls[i])/ls[i].length() > vp2LineDistThresh) {
 			// if dist too large, discard from group
 			ls.erase(ls.begin()+i);
@@ -103,7 +103,7 @@ void costFun_VpMleEst(double *p, double *error, int m, int n, void *adata)
 	for (int i=0; i<n; ++i) {
 		error[i] = mleVp2LineDist(vp, ls[i]);
 	}
-//	cout<<p[0]<<" "<<p[1]<<"==>"<<cost<<endl;
+   //	cout<<p[0]<<" "<<p[1]<<"==>"<<cost<<endl;
 }
 
 void optimizeVainisingPoint (vector<LineSegmt2d>& lines, cv::Mat& vp)
@@ -129,13 +129,13 @@ void optimizeVainisingPoint (vector<LineSegmt2d>& lines, cv::Mat& vp)
 	dataMle.ls = lines;
 
 	int ret = dlevmar_dif(costFun_VpMleEst, para, measurement, 3, n,
-							maxIter, opts, info, NULL, cov, (void*)&dataMle);
+   maxIter, opts, info, NULL, cov, (void*)&dataMle);
 	vp.at<double>(0) = para[0];
 	vp.at<double>(1) = para[1];
 	vp.at<double>(2) = para[2];
 	cv::Mat covar(3,3,CV_64F, cov);
 	cv::Mat J = (cv::Mat_<double>(2,3) << 1/para[2], 0, -para[0]/para[2]/para[2],
-										  0, 1/para[2], -para[1]/para[2]/para[2]);
+   0, 1/para[2], -para[1]/para[2]/para[2]);
 	cv::Mat COV = J*covar*J.t();
 
 	delete[] measurement;
@@ -164,7 +164,7 @@ void optimizeVainisingPoint (vector<LineSegmt2d>& lines, cv::Mat& vp, cv::Mat& c
 	dataMle.ls = lines;
 
 	int ret = dlevmar_dif(costFun_VpMleEst, para, measurement, 3, n,
-							maxIter, opts, info, NULL, cov, (void*)&dataMle);
+   maxIter, opts, info, NULL, cov, (void*)&dataMle);
 	vp.at<double>(0) = para[0];
 	vp.at<double>(1) = para[1];
 	vp.at<double>(2) = para[2];
@@ -172,7 +172,7 @@ void optimizeVainisingPoint (vector<LineSegmt2d>& lines, cv::Mat& vp, cv::Mat& c
 	cv::Mat covar(3,3,CV_64F, cov);
 	covHomo = covar;
 	cv::Mat J = (cv::Mat_<double>(2,3) << 1/para[2], 0, -para[0]/para[2]/para[2],
-										  0, 1/para[2], -para[1]/para[2]/para[2]);
+   0, 1/para[2], -para[1]/para[2]/para[2]);
 	// cov in inhomog image coord
 	covMat = J*covar*J.t();
 	delete[] measurement;
@@ -186,27 +186,27 @@ double mleVp2LineDist (cv::Mat vp, LineSegmt2d l)
 // distance is the returned value.
 // vp is 3x1 vector, homogeneous vector
 {
-	double x1 = l.endpt1.x,
-		   y1 = l.endpt1.y,
-		   x2 = l.endpt2.x,
-		   y2 = l.endpt2.y,
-		   vx = vp.at<double>(0),
-		   vy = vp.at<double>(1),
-	       vw = vp.at<double>(2);
+	double  x1 = l.endpt1.x,
+           y1 = l.endpt1.y,
+           x2 = l.endpt2.x,
+           y2 = l.endpt2.y,
+           vx = vp.at<double>(0),
+           vy = vp.at<double>(1),
+           vw = vp.at<double>(2);
 
 	double sum_square_dist;
 	if (vw!=0 && abs(vx/vw) < 1e10 && abs(vy/vw) < 1e10 ) {  // finite vp
 		vx = vx/vw; // convert to inhomogeneous vector
 		vy = vy/vw;
-		double	A = pow(x1-vx,2)+pow(x2-vx,2),
-		B = pow(y1-vy,2)+pow(y2-vy,2),
-		C = 2*((x1-vx)*(y1-vy)+(x2-vx)*(y2-vy));
+		double  A = pow(x1-vx,2)+pow(x2-vx,2),
+              B = pow(y1-vy,2)+pow(y2-vy,2),
+              C = 2*((x1-vx)*(y1-vy)+(x2-vx)*(y2-vy));
 		sum_square_dist = (A+B-sqrt((A-B)*(A-B)+C*C))/2;
 	} else {	// inifinite vp
-		double	si = vy/sqrt(vx*vx+vy*vy),
-				co = vx/sqrt(vx*vx+vy*vy);
+		double  si = vy/sqrt(vx*vx+vy*vy),
+              co = vx/sqrt(vx*vx+vy*vy);
 		sum_square_dist = pow(x1*si-y1*co,2)+pow(x2*si-y2*co,2)
-							+pow(x1*si-y1*co+x2*si-y2*co,2)/2;
+              +pow(x1*si-y1*co+x2*si-y2*co,2)/2;
 	}
 
 	return sqrt(abs(sum_square_dist)/2);

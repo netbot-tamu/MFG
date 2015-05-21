@@ -1,0 +1,6 @@
+[submodule "ext/libQGLViewer"]
+	path = ext/libQGLViewer
+	url = https://github.com/GillesDebunne/libQGLViewer.git
+[submodule "ext/g2o"]
+	path = ext/g2o
+	url = https://github.com/RainerKuemmerle/g2o.git

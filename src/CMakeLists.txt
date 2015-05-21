@@ -1,20 +1,19 @@
-#PROJECT(mfg)
-
-# TODO: make this an optional flag
-SET(CMAKE_BUILD_TYPE debug)
+PROJECT(mfg-src)
 
 # Subdirectories
 INCLUDE_DIRECTORIES(
    utils
    features
+   featuresGL
    mfgcore
    gui
 )
 
 ADD_SUBDIRECTORY(utils)
-# The 'features' module does not use Qt
+# The 'features' modules does not use Qt
 SET(CMAKE_AUTOMOC OFF)
 ADD_SUBDIRECTORY(features)
+ADD_SUBDIRECTORY(featuresGL)
 SET(CMAKE_AUTOMOC ON)
 ADD_SUBDIRECTORY(mfgcore)
 ADD_SUBDIRECTORY(nogui)

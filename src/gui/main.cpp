@@ -23,6 +23,7 @@
 #include "view.h"
 #include "window.h"
 #include "mfg.h"
+#include "mfgthread.h"
 #include "utils.h"
 #include "random.h"
 //#include "mfgutils.h"
@@ -53,7 +54,6 @@ int main(int argc, char *argv[])
    //MfgSettings mfgSettings; // TODO: arg-parse a cameraID (optional arg)
    mfgSettings = new MfgSettings();
 
-   
    seed_xrand(mfgSettings->getPRNGSeed());
    srand(1);
    cv::theRNG().state = 1;
@@ -65,19 +65,9 @@ int main(int argc, char *argv[])
    int increment = mfgSettings->getFrameStep();
    int totalImg = 12500;
 
-   // *** TODO: UPDATING ***
    imgName     = mfgSettings->getInitialImage().toStdString();
    K           = cv::Mat(mfgSettings->getIntrinsics()); // TODO: remove conversion
    distCoeffs  = cv::Mat(mfgSettings->getDistCoeffs()); // TODO: remove conversion
-   std::cout << "K =\n" << K << std::endl;
-   std::cout << "distCoeffs =\n" << distCoeffs << std::endl;
-   std::cout << "getImageWidth() = " << mfgSettings->getImageWidth() << std::endl;
-
-   // *** END UPDATING ***
-
-   // Fix problem with image name ending in '\r'
-   if (imgName[imgName.size()-1] == '\r')
-      imgName.erase(imgName.size()-1);
 
    //------- initialize -------
    View view0(imgName, K, distCoeffs, 0, mfgSettings);

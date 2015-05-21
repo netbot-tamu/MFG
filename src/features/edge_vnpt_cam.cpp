@@ -1,18 +1,11 @@
-#include "utils.h"
-#include "g2o/types/slam3d/parameter_se3_offset.h"
-
-#ifdef G2O_HAVE_OPENGL
-#include "g2o/stuff/opengl_wrapper.h"
-#endif
+#include "edge_vnpt_cam.h"
 
 #include <iostream>
 
-#ifdef G2O_HAVE_OPENGL
-#include "g2o/stuff/opengl_wrapper.h"
-#endif
+#include "utils.h"
+#include "g2o/types/slam3d/parameter_se3_offset.h"
 
 #include "Eigen/src/SVD/JacobiSVD.h"
-#include "edge_vnpt_cam.h"
 
 namespace g2o {
 	using namespace std;
@@ -45,11 +38,11 @@ namespace g2o {
 				if (i!=j)
 					information()(j,i)=information()(i,j);
 			}
-			if (is.bad()) {
-				//  we overwrite the information matrix
-				information().setIdentity();
-			}
-			return true;
+      if (is.bad()) {
+         //  we overwrite the information matrix
+         information().setIdentity();
+      }
+      return true;
 	}
 
 	bool EdgeVnptCam::write(std::ostream& os) const {
@@ -58,7 +51,7 @@ namespace g2o {
 			for (int j=i; j<information().cols(); j++) {
 				os <<  information()(i,j) << " ";
 			}
-			return os.good();
+      return os.good();
 	}
 
 

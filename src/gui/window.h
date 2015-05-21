@@ -13,7 +13,7 @@ class Window : public QWidget
 
 public:
 	Window();
-	void setMfgScene(Mfg* pMap);
+	void setMfgScene(Mfg* _mfg);
 
 protected:
 	void keyPressEvent(QKeyEvent *event);

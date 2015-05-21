@@ -1,9 +1,6 @@
 # project is defined in the parent CMakeLists
 project(features)
 
-# TODO: make this an optional flag
-set(CMAKE_BUILD_TYPE debug)
-
 set(SOURCES
    edge_line_vp_cam.cpp
    edge_line_vp_plane.cpp
@@ -34,22 +31,13 @@ set(HEADERS
    vertex_vnpt.h
 )
 
-include_directories(
-   ${LM_HEADER_DIR}
-)
-
 add_library(${PROJECT_NAME} STATIC
    ${SOURCES}
    ${LM_HEADERS}
-   ${MOC_SRC}
 )
 
 target_link_libraries(${PROJECT_NAME}
    utils
-)
-
-qt5_use_modules(${PROJECT_NAME}
-   Core
 )
 
 install(FILES ${HEADERS} DESTINATION ${CMAKE_SOURCE_DIR}/includes/mfg/features)

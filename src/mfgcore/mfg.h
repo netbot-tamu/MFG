@@ -6,7 +6,6 @@
 #define MFG_HEADER
 
 #include <iostream>
-#include <fstream>
 #include <opencv/cv.h>
 #include <opencv/cxcore.h>
 #include <opencv/highgui.h>
@@ -15,6 +14,7 @@
 #include <Eigen/Eigenvalues>
 #include <Eigen/Geometry>
 #include <QThread>
+#include <QString>
 
 #include "view.h"
 #include "features2d.h"
@@ -47,7 +47,7 @@ public:
    vector <PrimPlane3d>		primaryPlanes;
    vector <VanishPnt3d>		vanishingPoints;
    cv::Mat						K;
-   vector <KeyPoint3d>			pointTrack;  // point track, not triangulated yet
+   vector <KeyPoint3d>		pointTrack;  // point track, not triangulated yet
    vector <IdealLine3d>		lineTrack;
 
    double angVel; // angle velocity deg/sec
@@ -64,10 +64,9 @@ public:
    vector<Frame> trackFrms;
    double angleSinceLastKfrm;
 
-   Mfg(){}
+   Mfg() : angVel(0.0), linVel(0.0), fps(10.0), angleSinceLastKfrm(0.0) {}
    Mfg(View v0, int ini_incrt, cv::Mat dc, double fps_);
-
-   Mfg(View v0, View v1, double fps_) {
+   Mfg(View v0, View v1, double fps_) : angVel(0.0), linVel(0.0), fps(10.0), angleSinceLastKfrm(0.0) {
       views.push_back(v0);
       views.push_back(v1);
       fps = fps_;
@@ -84,40 +83,13 @@ public:
    void est3dIdealLine(int lnGid);
    void update3dIdealLine(vector< vector<int> > ilinePairIdx, View& nview);
    void updatePrimPlane();
-   void draw3D() const;
    bool rotateMode ();
 
-   void exportAll (string root_dir);
+   void exportAll (QString root_dir);
 
    void scaleLocalMap(int from_view_id, int to_view_id, double, bool);
    void cleanup(int n_keep);
    void bundle_adjust_between(int from_view, int to_view, int);
-
-};
-
-
-class MfgThread : public QThread
-{
-   Q_OBJECT
-
-signals:
-     void closeAll();
-protected:
-   void run();
-
-public:
-   Mfg* pMap;
-   string imgName;			// first image name
-   cv::Mat K, distCoeffs;	// distortion coeff: k1, k2, p1, p2
-   int imIdLen;			// n is the image number length,
-   int ini_incrt;
-   int increment;
-   int totalImg;
-
-   MfgThread(MfgSettings* _settings) : mfgSettings(_settings) {}
-
-private:
-   MfgSettings* mfgSettings;
 };
 
 #endif //MFG_HEADER

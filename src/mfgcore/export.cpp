@@ -2,8 +2,10 @@
 #include "export.h"
 #include <fstream>
 #include <QDir>
-void exportCamPose(Mfg& m, string fname) {
-   ofstream file(fname);
+#include <QString>
+
+void exportCamPose(Mfg& m, QString fname) {
+   ofstream file(fname.toLocal8Bit().data());
    file.precision(18);
    // ----- camera poses -----
    for (int i = 0; i < m.views.size(); ++i) {
@@ -26,14 +28,15 @@ void exportCamPose(Mfg& m, string fname) {
               << m.views[i].errAll << '\t'
               << m.views[i].errPl << '\t'
               << m.views[i].errLnMean << '\n';
-   }  
+   }
+
    file.close();
 }
 
-void exportMfgNode(Mfg& m, string fname)
+void exportMfgNode(Mfg& m, QString fname)
 // output mfg nodes to file
 {
-   ofstream file(fname);
+   ofstream file(fname.toLocal8Bit().data());
 
    // point
    int kpNum = 0;
@@ -75,16 +78,15 @@ void exportMfgNode(Mfg& m, string fname)
    file.close();
 }
 
-void Mfg::exportAll (string root_dir)
+void Mfg::exportAll (QString root_dir)
 {
-  QString qroot_dir = QString::fromStdString(root_dir);
   //======== 0. make/check directory ========
-  if(!QDir(qroot_dir).exists()) {
-    QDir().mkdir(qroot_dir);
-  } 
+  if(!QDir(root_dir).exists()) {
+    QDir().mkdir(root_dir);
+  }
   //======== 1. export 3D features ========
-  string feat3d_fname = root_dir + "/features3d.txt";
-  ofstream feat3d_ofs(feat3d_fname.c_str());
+  QString feat3d_fname = root_dir + "/features3d.txt";
+  ofstream feat3d_ofs(feat3d_fname.toLocal8Bit().data());
 
   feat3d_ofs<<"keyframe_number: "<<views.size()<<'\n';
   feat3d_ofs<<"intrinsic_camera_param: "<<K.at<double>(0,0)<<'\t'<<K.at<double>(0,1)<<'\t'<<K.at<double>(0,2)<<'\t'
@@ -101,13 +103,13 @@ void Mfg::exportAll (string root_dir)
   feat3d_ofs <<"#format: global_id\tx\ty\tz\tplane_id\test_view_id\tviewId_ptLid_number\tviewId_ptLid_pairs\n";
   for (int i = 0; i < keyPoints.size(); ++i) {
     if (!keyPoints[i].is3D || keyPoints[i].gid < 0) continue; // only output 3d pt
-    feat3d_ofs<< keyPoints[i].gid <<'\t' << keyPoints[i].x << '\t' << keyPoints[i].y << '\t' << keyPoints[i].z << '\t' 
+    feat3d_ofs<< keyPoints[i].gid <<'\t' << keyPoints[i].x << '\t' << keyPoints[i].y << '\t' << keyPoints[i].z << '\t'
        << keyPoints[i].pGid <<'\t' << keyPoints[i].estViewId << '\t';
     feat3d_ofs<<keyPoints[i].viewId_ptLid.size()<<'\t';
     for(int j=0; j<keyPoints[i].viewId_ptLid.size(); ++j) {
       feat3d_ofs<<keyPoints[i].viewId_ptLid[j][0]<<'\t'<<keyPoints[i].viewId_ptLid[j][1]<<'\t';
     }
-    feat3d_ofs<<'\n';  
+    feat3d_ofs<<'\n';
   }
 
     // === lines ===
@@ -120,28 +122,28 @@ void Mfg::exportAll (string root_dir)
   feat3d_ofs <<"#format: global_id\tx1\ty1\tz1\tx2\ty2\tz2\tplane_id\tvp_id\test_view_id\tviewId_lnLid_number\tviewId_lnLid_pairs\n";
   for (int i = 0; i < idealLines.size(); ++i) {
     if (!idealLines[i].is3D || idealLines[i].gid < 0) continue; // only output 3d pt
-    feat3d_ofs<< idealLines[i].gid <<'\t' << idealLines[i].extremity1().x << '\t' << idealLines[i].extremity1().y << '\t' << idealLines[i].extremity1().z << '\t' 
-        << idealLines[i].extremity2().x <<'\t'<< idealLines[i].extremity2().y <<'\t'<< idealLines[i].extremity2().z <<'\t' 
+    feat3d_ofs<< idealLines[i].gid <<'\t' << idealLines[i].extremity1().x << '\t' << idealLines[i].extremity1().y << '\t' << idealLines[i].extremity1().z << '\t'
+        << idealLines[i].extremity2().x <<'\t'<< idealLines[i].extremity2().y <<'\t'<< idealLines[i].extremity2().z <<'\t'
         << idealLines[i].pGid<<'\t'<< idealLines[i].vpGid << '\t'<< idealLines[i].estViewId << '\t';
     feat3d_ofs<<idealLines[i].viewId_lnLid.size()<<'\t';
     for(int j=0; j<idealLines[i].viewId_lnLid.size(); ++j) {
       feat3d_ofs<<idealLines[i].viewId_lnLid[j][0]<<'\t'<<idealLines[i].viewId_lnLid[j][1]<<'\t';
     }
-    feat3d_ofs<<'\n';  
+    feat3d_ofs<<'\n';
   }
 
   // === vanishing points ===
   feat3d_ofs <<"3D_vanishing_point_number: "<< vanishingPoints.size() <<'\n';
   feat3d_ofs <<"#format: global_id\tx\ty\tz\tw\test_view_id\tviewId_vpLid_number\tviewId_vpLid_pairs\n";
   for (int i = 0; i < vanishingPoints.size(); ++i) {
-    feat3d_ofs << vanishingPoints[i].gid <<'\t' 
-      << vanishingPoints[i].x << '\t' << vanishingPoints[i].y << '\t' << vanishingPoints[i].z << '\t'<<vanishingPoints[i].w<<'\t' 
+    feat3d_ofs << vanishingPoints[i].gid <<'\t'
+      << vanishingPoints[i].x << '\t' << vanishingPoints[i].y << '\t' << vanishingPoints[i].z << '\t'<<vanishingPoints[i].w<<'\t'
       << vanishingPoints[i].estViewId<<'\t';
     feat3d_ofs<<vanishingPoints[i].viewId_vpLid.size()<<'\t';
     for(int j=0; j<vanishingPoints[i].viewId_vpLid.size(); ++j) {
       feat3d_ofs<<vanishingPoints[i].viewId_vpLid[j][0]<<'\t'<<vanishingPoints[i].viewId_vpLid[j][1]<<'\t';
     }
-    feat3d_ofs<<'\n';  
+    feat3d_ofs<<'\n';
   }
 
   // === planes ===
@@ -154,28 +156,27 @@ void Mfg::exportAll (string root_dir)
     feat3d_ofs<<primaryPlanes[i].kptGids.size()<<'\t';
     for(int j=0; j<primaryPlanes[i].kptGids.size();++j) feat3d_ofs<<primaryPlanes[i].kptGids[j]<<'\t';
     feat3d_ofs<<primaryPlanes[i].ilnGids.size()<<'\t';
-    for(int j=0; j<primaryPlanes[i].ilnGids.size();++j) feat3d_ofs<<primaryPlanes[i].ilnGids[j]<<'\t';   
-    feat3d_ofs<<'\n'; 
+    for(int j=0; j<primaryPlanes[i].ilnGids.size();++j) feat3d_ofs<<primaryPlanes[i].ilnGids[j]<<'\t';
+    feat3d_ofs<<'\n';
   }
 
   //======== 2. export views =========
-  string views_dir = root_dir + "/views";
-  QString qviews_dir = QString::fromStdString(views_dir);
-  if(QDir(qviews_dir).exists()) {
-    QDir(qviews_dir).removeRecursively();
+  QString views_dir = root_dir + "/views";
+  if(QDir(views_dir).exists()) {
+    QDir(views_dir).removeRecursively();
   }
-  QDir().mkdir(qviews_dir);
+  QDir().mkdir(views_dir);
 
-  for(int i=0; i<views.size(); ++i) {    
-    string view_fname = views_dir + "/view_" + num2str(i) + ".txt";
-    ofstream view_ofs(view_fname.c_str());
+  for(int i=0; i<views.size(); ++i) {
+    QString view_fname = views_dir + QString("/views_%1.txt").arg(i, 3, 10, QChar('0'));
+    ofstream view_ofs(view_fname.toLocal8Bit().data());
     view_ofs<<"keyframe_id:\t"<<views[i].id<<'\n';
     view_ofs<<"rawframe_id:\t"<<views[i].frameId<<'\n';
     view_ofs<<"image_path:\t"<<views[i].filename<<'\n';
     view_ofs<<"rotation_mat:\t"<<views[i].R.at<double>(0,0)<<'\t'<<views[i].R.at<double>(0,1)<<'\t'<<views[i].R.at<double>(0,2)<<'\t'
         <<views[i].R.at<double>(1,0)<<'\t'<<views[i].R.at<double>(1,1)<<'\t'<<views[i].R.at<double>(1,2)<<'\t'
         <<views[i].R.at<double>(2,0)<<'\t'<<views[i].R.at<double>(2,1)<<'\t'<<views[i].R.at<double>(2,2)<<'\n';
-    view_ofs<<"translation:\t"<<views[i].t.at<double>(0)<<'\t'<<views[i].t.at<double>(1)<<'\t'<<views[i].t.at<double>(2)<<'\n';         
+    view_ofs<<"translation:\t"<<views[i].t.at<double>(0)<<'\t'<<views[i].t.at<double>(1)<<'\t'<<views[i].t.at<double>(2)<<'\n';
 
     // === 2d points ===
     view_ofs<<"feat_pts_number: "<<views[i].featurePoints.size()<<'\n';
@@ -190,8 +191,8 @@ void Mfg::exportAll (string root_dir)
         for(int k=0; k<desc_dim; ++k) view_ofs<<views[i].featurePoints[j].siftDesc.at<double>(k)<<'\t';
       else {
         cout<<"pt descriptor type error in exportAll\n"; exit(0);
-      }  
-      view_ofs<<'\n';  
+      }
+      view_ofs<<'\n';
     }
 
     // === line segments ===
@@ -210,7 +211,7 @@ void Mfg::exportAll (string root_dir)
         for(int k=0; k<desc_dim;++k) view_ofs<<views[i].lineSegments[j].msldDesc.at<double>(k)<<'\t';
       else {
         cout<<"line descriptor type error in exportAll\n"; exit(0);
-      }  
+      }
       view_ofs<<'\n';
     }
 
@@ -220,7 +221,7 @@ void Mfg::exportAll (string root_dir)
     for(int j=0; j<views[i].idealLines.size();++j) {
       view_ofs<<views[i].idealLines[j].lid<<'\t'<<views[i].idealLines[j].gid<<'\t'<<views[i].idealLines[j].vpLid<<'\t'<<views[i].idealLines[j].pGid<<'\t'
         <<views[i].idealLines[j].extremity1.x<<'\t'<<views[i].idealLines[j].extremity1.y<<'\t'<<views[i].idealLines[j].extremity2.x<<'\t'<<views[i].idealLines[j].extremity2.y<<'\t'
-        <<views[i].idealLines[j].gradient.x<<'\t'<<views[i].idealLines[j].gradient.y<<'\t';  
+        <<views[i].idealLines[j].gradient.x<<'\t'<<views[i].idealLines[j].gradient.y<<'\t';
       view_ofs<<views[i].idealLines[j].lsLids.size()<<'\t';
       for(int k=0; k<views[i].idealLines[j].lsLids.size();++k) view_ofs<<views[i].idealLines[j].lsLids[k]<<'\t';
       view_ofs<<'\n';

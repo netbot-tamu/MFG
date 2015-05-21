@@ -5,36 +5,20 @@
 
 #include "mfg.h"
 
-//#include <QtGui>
-//#include <QtOpenGL/QtOpenGL>
-
-//#include <gl/GLU.h>
-// replaced with:
-#ifdef __APPLE__
-#include <GLUT/glut.h>
-#include <OpenGL/gl.h>
-#elif __linux__
-#include <GL/glut.h>
-#include <GL/gl.h>
-#else
-#include <gl/glut.h>
-#include <gl/gl.h>
-#endif
-
 #include <math.h>
-#include <fstream>
 #ifdef _MSC_VER
 #include <unordered_map>
 #else
 // TODO: FIXME
 #include <unordered_map>
 #endif
-//#include "glwidget.h"
 
 #include "mfgutils.h"
 #include "export.h"
 
+#include "consts.h"
 #include "utils.h"
+#include "optimize.h"
 #include "settings.h"
 
 #define THRESH_PARALLAX 7 //(12.0*IDEAL_IMAGE_WIDTH/1000.0)
@@ -364,14 +348,14 @@ void Mfg::initialize()
    View& view1 = views[1];
    K = view0.K;
 
-   vector<vector<cv::Point2d>> featPtMatches, allFeatPtMatches;
+   FeaturePointPairs featPtMatches, allFeatPtMatches;
    vector<vector<int>>			pairIdx, allPairIdx;
    vector<vector<int>>			vpPairIdx;
    vector<vector<int>>			ilinePairIdx;
    cv::Mat F, R, E, t;
 
    pairIdx = matchKeyPoints (view0.featurePoints, view1.featurePoints, featPtMatches);
-   
+
    allFeatPtMatches = featPtMatches;
    allPairIdx = pairIdx;
    computeEpipolar (featPtMatches, pairIdx, K, F, R, E, t, true);
@@ -381,7 +365,7 @@ void Mfg::initialize()
    vpPairIdx = matchVanishPts_withR(view0, view1, R, isRgood);
 
    if (!isRgood) { // if R is not consistent with VPs, reestimate with VPs)
-      vector<vector<cv::Mat>> vppairs;
+      VPointPairs vppairs;
       for(int i = 0; i < vpPairIdx.size(); ++i) {
          vector<cv::Mat> pair;
          pair.push_back(view0.vanishPoints[vpPairIdx[i][0]].mat());
@@ -431,7 +415,7 @@ void Mfg::initialize()
    }
    sort(prlxVec.begin(), prlxVec.end(), comparator_valIdxPair);
    vector<vector<int>>  copyPairIdx = pairIdx;
-   vector<vector<cv::Point2d>> copyFeatPtMatches = featPtMatches;
+   FeaturePointPairs copyFeatPtMatches = featPtMatches;
    pairIdx.clear();
    featPtMatches.clear();
    for(int i=prlxVec.size()-1; i >= 0; --i) {
@@ -442,7 +426,7 @@ void Mfg::initialize()
 #ifdef PLOT_MID_RESULTS
    cv::Mat canv1 = view0.img.clone();
    cv::Mat canv2 = view1.img.clone();
-#endif   
+#endif
    // --- set up 3d key points ---
    int numNew3dPt = 0;
    cv::Mat X(4,1,CV_64F);
@@ -521,7 +505,7 @@ void Mfg::initialize()
    }
 
    matchIdealLines(view0, view1, vpPairIdx, featPtMatches, F, ilinePairIdx, 1);
-   
+
    for(int i=0; i < keyPoints.size(); ++i) {
       if(! keyPoints[i].is3D || keyPoints[i].gid<0) continue;
       FeatPoint2d p0 = view0.featurePoints[keyPoints[i].viewId_ptLid[0][1]];
@@ -593,7 +577,7 @@ void Mfg::initialize()
          cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
          cv::line(canv1, a.extremity1, a.extremity2, color, 2);
          cv::line(canv2, b.extremity1, b.extremity2, color, 2);
-#endif         
+#endif
       }
    }
 
@@ -659,7 +643,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
    double parallaxDegThresh = THRESH_PARALLAX_DEGREE;
    double accel_max = 10; // m/s/s
 
-   vector<vector<cv::Point2d>> featPtMatches;
+   FeaturePointPairs featPtMatches;
    vector<vector<int>> pairIdx;
    if(mfgSettings->getKeypointAlgorithm() <3) // sift surf
       pairIdx = matchKeyPoints (prev.featurePoints, nview.featurePoints, featPtMatches);
@@ -785,7 +769,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
    vector<cv::Point3d> pt3d, pt3d_old;
    vector<cv::Point2d> pt2d, pt2d_old;
    for(int i=0; i < featPtMatches.size(); ++i) {
-      int gid = prev.featurePoints[pairIdx[i][0]].gid;      
+      int gid = prev.featurePoints[pairIdx[i][0]].gid;
 #ifdef PLOT_MID_RESULTS
       cv::Scalar color(rand()%255,rand()%255,rand()%255,0);
       if (gid >= 0 && keyPoints[gid].is3D) { // observed 3d pts
@@ -977,7 +961,7 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       } else {
          scale = bestScale;
       }
-      ///// compare with pnp result /////   
+      ///// compare with pnp result /////
       if(pt3d.size()>3) {
          cout<<", "<<cv::norm(t_pnp)<<"("<<pt3d.size()<<")\n";
       } 
@@ -1173,9 +1157,9 @@ void Mfg::expand_keyPoints (View& prev, View& nview)
       } else {       
       // use pnp or const vel
          if(pt3d.size() > 7) {
-            cout<<"fallback to pnp : "<< cv::norm(t_pnp) <<endl;            
+            cout<<"fallback to pnp : "<< cv::norm(t_pnp) <<endl;
             nview.R = Rn_pnp;
-            nview.t = tn_pnp;  
+            nview.t = tn_pnp;
             R = R_pnp;
             t = t_pnp/cv::norm(t_pnp);
             nview.R_loc = R;
@@ -1329,13 +1313,11 @@ if(mfgSettings->getDetectGround()) {
             nview.t = R*prev.t + cv::norm(t_const)*t;
          else 
             nview.t = R*prev.t - cv::norm(t_const)*t;
-               
       } else {
          nview.R = R_const * prev.R;
          nview.t = R_const*prev.t + t_const;
          R = R_const;
          t = t_const/cv::norm(t_const);  
-
       }
       nview.R_loc = R;
       nview.t_loc = cv::Mat::zeros(3,1,CV_64F);
@@ -1394,7 +1376,7 @@ if(mfgSettings->getDetectGround()) {
       }
       sort(prlxVec.begin(), prlxVec.end(), comparator_valIdxPair);
       vector<vector<int>>  copyPairIdx = pairIdx;
-      vector<vector<cv::Point2d>> copyFeatPtMatches = featPtMatches;
+      FeaturePointPairs copyFeatPtMatches = featPtMatches;
       pairIdx.clear();
       featPtMatches.clear();
       for(int i=prlxVec.size()-1; i >= 0; --i) {
@@ -1490,7 +1472,7 @@ if(mfgSettings->getDetectGround()) {
       }
    }
 
-   #pragma omp parallel for
+   //#pragma omp parallel for
    for (int i=0; i < featPtMatches.size(); ++i) {
       vector<int> view_point;
       int ptGid = prev.featurePoints[pairIdx[i][0]].gid;
@@ -1922,78 +1904,6 @@ void Mfg::updatePrimPlane()
 
 }
 
-void Mfg::draw3D() const
-{
-   if(mfg_writing)
-      return;
-   // plot first camera, small
-   glLineWidth(1);
-   glBegin(GL_LINES);
-   glColor3f(1,0,0); // x-axis
-   glVertex3f(0,0,0);
-   glVertex3f(1,0,0);
-   glColor3f(0,1,0);
-   glVertex3f(0,0,0);
-   glVertex3f(0,1,0);
-   glColor3f(0,0,1);// z axis
-   glVertex3f(0,0,0);
-   glVertex3f(0,0,1);
-   glEnd();
-
-   cv::Mat xw = (cv::Mat_<double>(3,1)<< 0.5,0,0),
-      yw = (cv::Mat_<double>(3,1)<< 0,0.5,0),
-      zw = (cv::Mat_<double>(3,1)<< 0,0,0.5);
-
-   for (int i=1; i<views.size(); ++i) {
-      if(!(views[i].R.dims==2)) continue; // handle the in-process view
-      cv::Mat c = -views[i].R.t()*views[i].t;
-      cv::Mat x_ = views[i].R.t() * (xw-views[i].t),
-         y_ = views[i].R.t() * (yw-views[i].t),
-         z_ = views[i].R.t() * (zw-views[i].t);
-      glBegin(GL_LINES);
-
-      glColor3f(1,0,0);
-      glVertex3f(c.at<double>(0),c.at<double>(1),c.at<double>(2));
-      glVertex3f(x_.at<double>(0),x_.at<double>(1),x_.at<double>(2));
-      glColor3f(0,1,0);
-      glVertex3f(c.at<double>(0),c.at<double>(1),c.at<double>(2));
-      glVertex3f(y_.at<double>(0),y_.at<double>(1),y_.at<double>(2));
-      glColor3f(0,0,1);
-      glVertex3f(c.at<double>(0),c.at<double>(1),c.at<double>(2));
-      glVertex3f(z_.at<double>(0),z_.at<double>(1),z_.at<double>(2));
-      glEnd();
-   }
-
-   glPointSize(3.0);
-   glBegin(GL_POINTS);
-   for (int i=0; i<keyPoints.size(); ++i){
-      if(!keyPoints[i].is3D || keyPoints[i].gid<0) continue;
-      if(keyPoints[i].pGid < 0) // red
-         glColor3f(0.6, 0.6, 0.6);
-      else { // coplanar green
-         glColor3f(0.0, 1.0, 0.0);
-      }
-      glVertex3f(keyPoints[i].x, keyPoints[i].y, keyPoints[i].z);
-   }
-   glEnd();
-
-   glColor3f(0,1,1);
-   glLineWidth(2);
-   glBegin(GL_LINES);
-   for(int i=0; i<idealLines.size(); ++i) {
-      if(!idealLines[i].is3D || idealLines[i].gid<0) continue;
-      if(idealLines[i].pGid < 0) {
-         glColor3f(0,0,0);
-      } else {
-         glColor3f(0.0,1.0,0.0);
-      }
-
-      glVertex3f(idealLines[i].extremity1().x,idealLines[i].extremity1().y,idealLines[i].extremity1().z);
-      glVertex3f(idealLines[i].extremity2().x,idealLines[i].extremity2().y,idealLines[i].extremity2().z);
-   }
-   glEnd();
-}
-
 void Mfg::adjustBundle()
 {
    int numPos = 8, numFrm = 10;
@@ -2003,8 +1913,9 @@ void Mfg::adjustBundle()
    
    adjustBundle_G2O(numPos, numFrm);
    // write to file
-   exportCamPose (*this, "camPose.txt");
-   exportMfgNode (*this, "mfgNode.txt");
+   QString exportDir = mfgSettings->getOutputDir();
+   exportCamPose (*this, exportDir + "/camPose.txt");
+   exportMfgNode (*this, exportDir + "/mfgNode.txt");
 }
 
 

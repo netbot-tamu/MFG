@@ -234,7 +234,7 @@ void View::compMsld4AllSegments (cv::Mat grayImg) {
    int ddepth = CV_64F;
    cv::Sobel(grayImg, xGradImg, ddepth, 1, 0, 5); // Gradient X
    cv::Sobel(grayImg, yGradImg, ddepth, 0, 1, 5); // Gradient Y
-   #pragma omp parallel for
+   //#pragma omp parallel for
    for (int i=0; i<lineSegments.size(); ++i)  {
       computeMSLD(lineSegments[i], &xGradImg, &yGradImg);
    }

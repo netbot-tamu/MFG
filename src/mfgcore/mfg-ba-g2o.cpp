@@ -41,7 +41,7 @@
 #include "edge_line_vp_plane.h"
 #include "edge_cam_cam_dist.h"
 #include <fstream>
-#include "levmar-2.6/levmar.h"
+#include "levmar.h"
 
 using namespace Eigen;
 extern MfgSettings* mfgSettings;
@@ -1455,7 +1455,7 @@ void Mfg::adjustBundle_G2O (int numPos, int numFrm)
 						for(int k=0; k < views[fid].idealLines[lid].lsEndpoints.size(); k=k+2) {
 							cv::line(canv, views[fid].idealLines[lid].lsEndpoints[k], views[fid].idealLines[lid].lsEndpoints[k+1],
 								cv::Scalar(200,100, 1, 0), 3);
-						}					
+						}
 					}
 				}
 

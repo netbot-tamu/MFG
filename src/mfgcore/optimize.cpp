@@ -1,142 +1,19 @@
+
+#include "optimize.h"
+
 #include <iostream>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/calib3d/calib3d.hpp>
-
-// replaced with:
-#ifdef __APPLE__
-#include <GLUT/glut.h>
-#include <OpenGL/gl.h>
-#elif __linux__
-#include <GL/glut.h>
-#include <GL/gl.h>
-#else
-#include <gl/glut.h>
-#include <gl/gl.h>
-#endif
-
-#include <math.h>
-#include <fstream>
-
-#include "utils.h"
-#include "consts.h"
-#include "mfgutils.h"
+#include <eigen3/Eigen/Geometry>
 #include "levmar.h"
-#include "view.h"
-#include "features2d.h"
-#include "features3d.h"
-
+#include "utils.h"
 
 using namespace std;
 
-extern int IDEAL_IMAGE_WIDTH;
-extern double THRESH_POINT_MATCH_RATIO;
-
-
-
-void  matchIdealLines(View& view1, View& view2, vector<vector<int>> vpPairIdx,
-	vector<vector<cv::Point2d>> featPtMatches, cv::Mat F, vector<vector<int>>& ilinePairIdx,
-	bool usePtMatch)
-{
-
-	//== gather lines into groups by vp ==
-	vector<vector<IdealLine2d>> grpLines1(view1.vpGrpIdLnIdx.size()),
-		grpLines2(view2.vpGrpIdLnIdx.size());
-
-	for (int i =0; i<view1.vpGrpIdLnIdx.size(); ++i){
-		for (int j=0; j<view1.vpGrpIdLnIdx[i].size(); ++j){
-			grpLines1[i].push_back(view1.idealLines[view1.vpGrpIdLnIdx[i][j]]);
-		}
-	}
-	for (int i =0; i<view2.vpGrpIdLnIdx.size(); ++i){
-		for (int j=0; j<view2.vpGrpIdLnIdx[i].size(); ++j){
-			grpLines2[i].push_back(view2.idealLines[view2.vpGrpIdLnIdx[i][j]]);
-		}
-	}
-
-	MyTimer t;
-	t.start();
-	//==  point based line matching ==
-	if (usePtMatch)	{
-		for (int i=0; i<vpPairIdx.size(); ++i)	{
-			int vpIdx1 = vpPairIdx[i][0], vpIdx2 = vpPairIdx[i][1];
-			matchLinesByPointPairs (view1.img.cols,	grpLines1[vpIdx1],
-				grpLines2[vpIdx2],	featPtMatches, ilinePairIdx);
-		}
-		// check gradient consistency and msld similarity
-		for (int i=0; i<ilinePairIdx.size(); ++i) {
-			if((view1.idealLines[ilinePairIdx[i][0]].gradient.dot(
-				view2.idealLines[ilinePairIdx[i][1]].gradient) < 0)
-				||(compMsldDiff(view1.idealLines[ilinePairIdx[i][0]],
-				view2.idealLines[ilinePairIdx[i][1]]) > 0.8) )
-			{
-				ilinePairIdx.erase(ilinePairIdx.begin()+i);
-				i--;
-			}
-		}
-		t.end();
-	//	cout<<"point-based = "<<t.time_ms<<"\t";
-	}
-
-	// assign gid of matched lines
-	for (int i=0; i<ilinePairIdx.size(); ++i) {
-		view1.idealLines[ilinePairIdx[i][0]].lid = -1;
-		view2.idealLines[ilinePairIdx[i][1]].lid = -1;
-	}
-
-	//== again, gather lines into groups by vp, excluding matched ones ==
-	for (int i =0;  i < view1.vpGrpIdLnIdx.size(); ++i){
-		grpLines1[i].clear();
-		for (int j=0; j<view1.vpGrpIdLnIdx[i].size(); ++j){
-			if (view1.idealLines[view1.vpGrpIdLnIdx[i][j]].lid < 0)
-				continue;
-			grpLines1[i].push_back(view1.idealLines[view1.vpGrpIdLnIdx[i][j]]);
-		}
-	}
-	for (int i =0; i<view2.vpGrpIdLnIdx.size(); ++i){
-		grpLines2[i].clear();
-		for (int j=0; j<view2.vpGrpIdLnIdx[i].size(); ++j){
-			if (view2.idealLines[view2.vpGrpIdLnIdx[i][j]].lid < 0)
-				continue;
-			grpLines2[i].push_back(view2.idealLines[view2.vpGrpIdLnIdx[i][j]]);
-		}
-	}
-
-	//== F-guided linematching ==
-	vector<vector<int>> ilinePairIdx_F;
-	for (int i=0; i<vpPairIdx.size(); ++i)	{
-		int vpIdx1 = vpPairIdx[i][0], vpIdx2 = vpPairIdx[i][1];
-		if(grpLines1[vpIdx1].size()==0 || grpLines2[vpIdx2].size()==0) continue;
-		vector<vector<int>> tmpPairs;
-		tmpPairs = F_guidedLinematch (F, grpLines1[vpIdx1], grpLines2[vpIdx2],
-			view1.img, view2.img);
-		ilinePairIdx_F.insert(ilinePairIdx_F.end(),tmpPairs.begin(),tmpPairs.end());
-	}
-
-	ilinePairIdx.insert(ilinePairIdx.end(),ilinePairIdx_F.begin(),ilinePairIdx_F.end());
-
-	// ----- restore line lid ------
-	for (int i=0; i < view1.idealLines.size(); ++i) {
-		view1.idealLines[i].lid = i;
-	}
-	for (int i=0; i < view2.idealLines.size(); ++i) {
-		view2.idealLines[i].lid = i;
-	}
-
-}
-
-
-
-struct Data_optimizeRt_withVP
-{
-	vector<vector<cv::Point2d>> pointPairs;
-	cv::Mat K;
-	vector<vector<cv::Mat>>		vpPairs;
-	double weightVP;
-};
-
+////////////////////////////////////////////////////////////////////////////////
+// Optimization of R^T with Vanishing Points
+////////////////////////////////////////////////////////////////////////////////
+// M measurement size
+// N para size
 void costFun_optimizeRt_withVP (double *p, double *error, int N, int M, void *adata)
-	// M measurement size
-	// N para size
 {
 	struct Data_optimizeRt_withVP* dptr = (struct Data_optimizeRt_withVP *) adata;
 
@@ -178,12 +55,11 @@ void costFun_optimizeRt_withVP (double *p, double *error, int N, int M, void *ad
 //	cout<<cost<<'\t';
 }
 
-void optimizeRt_withVP (cv::Mat K, vector<vector<cv::Mat>> vppairs, double weightVP,
-						vector<vector<cv::Point2d>>& featPtMatches,
-						cv::Mat R, cv::Mat t)
 // optimize relative pose (from 5-point alg) using vanishing point correspondences
 // input: K, vppairs, featPtMatches
 // output: R, t
+void optimizeRt_withVP (cv::Mat K, VPointPairs vppairs, double weightVP,
+						FeaturePointPairs& featPtMatches, cv::Mat R, cv::Mat t)
 {
 	int numMeasure = vppairs.size() + featPtMatches.size();
 	double* measurement = new double[numMeasure];
@@ -234,19 +110,14 @@ void optimizeRt_withVP (cv::Mat K, vector<vector<cv::Mat>> vppairs, double weigh
 	t.at<double>(0) = para[4];
 	t.at<double>(1) = para[5];
 	t.at<double>(2) = para[6];
-
 }
 
-
-struct Data_optimize_t_givenR
-{
-	vector<vector<cv::Point2d>> pointPairs;
-	cv::Mat K, R;
-};
-
+////////////////////////////////////////////////////////////////////////////////
+// Optimization of T Given R
+////////////////////////////////////////////////////////////////////////////////
+// M measurement size
+// N para size
 void costFun_optimize_t_givenR (double *p, double *error, int N, int M, void *adata)
-	// M measurement size
-	// N para size
 {
 	struct Data_optimize_t_givenR* dptr = (struct Data_optimize_t_givenR *) adata;
 
@@ -274,11 +145,11 @@ void costFun_optimize_t_givenR (double *p, double *error, int N, int M, void *ad
 	cout<<cost<<'\t';
 }
 
-void optimize_t_givenR (cv::Mat K, cv::Mat R, vector<vector<cv::Point2d>>& featPtMatches,
-						cv::Mat t)
 // optimize relative pose (from 5-point alg) using vanishing point correspondences
 // input: K, R, vppairs, featPtMatches
 // output: t
+void optimize_t_givenR (cv::Mat K, cv::Mat R, FeaturePointPairs& featPtMatches,
+						cv::Mat t)
 {
 	int numMeasure = featPtMatches.size();
 	double* measurement = new double[numMeasure];

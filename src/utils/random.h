@@ -24,6 +24,7 @@ typedef unsigned __int64 uint64_t;
 #define UINT64_C(val) (val##ui64)
 #else // _MSC_VER
 #include <stdint.h>
+
 // if UINT64_C is already defined in stdint.h, there is no need to redefine it
 #ifndef UINT64_C
 #define UINT64_C(val) (val##ULL)

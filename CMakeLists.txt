@@ -1,18 +1,21 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11)
 PROJECT(mfg)
 
-#SET(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 # Set search directory for looking for our custom CMake scripts to
 # look for SuiteSparse, QGLViewer, and Eigen3.
 LIST(APPEND CMAKE_MODULE_PATH ${mfg_SOURCE_DIR}/cmake_modules)
+
+# for CMake 3.0 and above, this will suppress warnings about old policies
+IF(POLICY CMP0043)
+CMAKE_POLICY(SET CMP0043 OLD)
+ENDIF(POLICY CMP0043)
 
 
 ################################################################################
 # Set the version of the kernel project
 ################################################################################
 set(mfg_MAJOR_VERSION 0)
-set(mfg_MINOR_VERSION 1)
+set(mfg_MINOR_VERSION 4)
 set(mfg_PATCH_VERSION 0)
 set(mfg_VERSION ${mfg_MAJOR_VERSION}.${mfg_MINOR_VERSION}.${mfg_PATCH_VERSION})
 
@@ -68,7 +71,7 @@ ENDIF(WIN32)
 
 ################################################################################
 # C++11 support
-# 
+#
 # Notes:
 # OS X 10.8 Mountain Lion and above default to using the clang compiler,
 # which does not use C++ 11 unless explicitly told to, as below.
@@ -96,10 +99,34 @@ ENDIF()
 
 
 ################################################################################
+# Add a couple custom targets to quickly make a debug or release version
+################################################################################
+SET(CMAKE_BUILD_TYPE Release)
+
+ADD_CUSTOM_TARGET(debug
+  COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
+  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
+  COMMENT "Switch CMAKE_BUILD_TYPE to Debug"
+)
+
+ADD_CUSTOM_TARGET(release
+  COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release ${CMAKE_SOURCE_DIR}
+  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
+  COMMENT "Switch CMAKE_BUILD_TYPE to Release"
+)
+
+
+################################################################################
 # Project Dependencies:
 ################################################################################
+# Qt5 via Homebrew on OS X requires some fancy PREFIX_PATH changes
+IF(APPLE)
+   SET(CMAKE_PREFIX_PATH /usr/local/opt/qt5)
+ENDIF(APPLE)
 FIND_PACKAGE(Qt5Core REQUIRED)
 FIND_PACKAGE(Qt5OpenGL REQUIRED)
+FIND_PACKAGE(Qt5Xml REQUIRED) # required for libQGLViewer
+
 FIND_PACKAGE(OpenCV REQUIRED)
 FIND_PACKAGE(OpenGL REQUIRED)
 FIND_PACKAGE(GLUT REQUIRED)
@@ -119,30 +146,65 @@ add_definitions(-DUSE_GROUND_PLANE)#use ground plane
 ################################################################################
 # Variables
 ################################################################################
-SET(LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+SET(LIB_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 SET(HEADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/includes)
 SET(EXTERN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext)
-SET(LSD_HEADERS ${HEADER_DIR}/lsd/lsd.h)
+
+# LSD project includes
+SET(LSD_HEADER_DIR ${HEADER_DIR}/lsd)
+SET(LSD_HEADERS ${LSD_HEADER_DIR}/lsd.h)
+
+# LevMar (LM) project includes
 SET(LM_HEADER_DIR ${HEADER_DIR}/levmar)
-SET(LM_HEADERS 
+SET(LM_HEADERS
    ${LM_HEADER_DIR}/compiler.h
    ${LM_HEADER_DIR}/levmar.h
    ${LM_HEADER_DIR}/lm.h
    ${LM_HEADER_DIR}/misc.h
 )
 
-LINK_DIRECTORIES(${LIB_DIR})
+# We want to skip the extra apps and examples to speed the build up for G2O.
+IF(G2O_NOT_FOUND)
+   MESSAGE(STATUS "G2O was not found, will build a local version")
+
+   # G2O, BLAS, LAPACK headers and libraries
+   SET(G2O_BASE_DIR ${EXTERN_DIR}/g2o)
+   SET(G2O_HEADER_DIR ${G2O_BASE_DIR})
+   SET(G2O_LIBRARY_DIR ${G2O_BASE_DIR}/lib)
+ENDIF(G2O_NOT_FOUND)
+
+# QGLViewer directories and project headers
+SET(QGLVIEWER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/ext/qglviewer)
+SET(QGLVIEWER_SOURCE_DIR ${EXTERN_DIR}/libQGLViewer)
+# They will be placed automatically in a QGLViewer directory under here:
+SET(QGLVIEWER_HEADER_DIR ${HEADER_DIR})
+
+# Compounded G2O libraries
+SET(G2O_LIBS
+   ${G2O_CORE_LIBRARY}
+   ${G2O_STUFF_LIBRARY}
+   ${G2O_TYPES_SLAM3D}
+   ${G2O_TYPES_SBA}
+   ${G2O_SOLVER_CSPARSE}
+   ${G2O_SOLVER_CSPARSE_EXTENSION}
+)
+
+LINK_DIRECTORIES(
+   ${LIB_DIR}
+   ${G2O_LIBRARY_DIR}
+)
 INCLUDE_DIRECTORIES(
    ${HEADER_DIR}
-   ${EXTERN_DIR}
-   ${Qt5Gui_INCLUDE_DIR}
+   ${LM_HEADER_DIR}
+   ${G2O_HEADER_DIR}
    ${EIGEN3_INCLUDE_DIR}
    ${CSPARSE_INCLUDE_DIR}
 )
 
 
-#message(STATUS "csparse_include_dir = ${CSPARSE_INCLUDE_DIR}")
-#message(STATUS "qt_include_dir***** = ${Qt5OpenGL_INCLUDE_DIR}")
+################################################################################
+# Print out dependencies so we can confirm they were found
+################################################################################
 message(STATUS "Searching for Dependencies...")
 message(STATUS "-- Qt5              = ${Qt5OpenGL_LIBRARIES}")
 message(STATUS "-- OpenGL           = ${OPENGL_LIBRARIES}")
@@ -157,11 +219,8 @@ message(STATUS "-- G2O_CSPARSE_EXT  = ${G2O_SOLVER_CSPARSE_EXTENSION}")
 message(STATUS "-- BLAS             = ${BLAS_LIBRARIES}")
 message(STATUS "-- LAPACK           = ${LAPACK_LIBRARIES}")
 
+# Build dependencies
+ADD_SUBDIRECTORY(ext)
 
-# Make dependencies first
-ADD_SUBDIRECTORY(ext/levmar-2.6)
-ADD_SUBDIRECTORY(ext/lsd-1.5)
-
-# Make this project
-SET(CMAKE_AUTOMOC ON)
+# Build MFG
 ADD_SUBDIRECTORY(src)

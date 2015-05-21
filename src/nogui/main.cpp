@@ -20,6 +20,7 @@
 #include "view.h"
 #include "mfg.h"
 #include "utils.h"
+#include "mfgthread.h"
 
 using namespace std;
 
@@ -42,7 +43,6 @@ int main(int argc, char *argv[])
 
    //MfgSettings mfgSettings; // TODO: arg-parse a cameraID (optional arg)
    mfgSettings = new MfgSettings();
-
 
    seed_xrand(mfgSettings->getPRNGSeed());  	
    srand(1);
