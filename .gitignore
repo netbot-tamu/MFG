@@ -1,0 +1,75 @@
+# Compiled source #
+###################
+*.com
+*.class
+*.dll
+*.slo
+*.lo
+*.o
+*.obj
+*.so
+# unix libraries
+*.lai
+*.la
+*.lib
+*.a
+
+# Build generated files #
+#########################
+*.swp
+*.swo
+*.bak
+*.aux
+*.exe
+*.out
+*.app
+*.lof
+*.toc
+*(busy)
+[Bb]uild/
+bin/
+nbproject/
+includes/mfg/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+# for python
+*.pyc
+
+# Packages #
+############
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Logs and databases #
+######################
+*.log
+*.sql
+*.sqlite
+
+# MFG Generated logs #
+######################
+camPose.txt
+debug.txt
+mfgNode.txt
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+
+*~
