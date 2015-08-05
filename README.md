@@ -1,7 +1,15 @@
 MFG
 ===
 Visual SLAM using Multilayer Feature Graph (MFG)
-Tested on Ubuntu 12.04 or newer versions
+
+This is the source code to go along with the IEEE Transactions on Robotics (T-RO) paper by Yan Lu and Dezhen Song, titled 
+"Visual Navigation Using Heterogeneous Landmarks and Unsupervised Geometric Constraints" and published at http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=7103351.
+
+Full citation:
+
+Yan Lu and Dezhen Song, "Visual Navigation Using Heterogeneous Landmarks and Unsupervised Geometric Constraints", IEEE Transactions on Robotics (T-RO), vol. 31, no. 3, June 2015, pp. 736 – 749
+
+This code has been tested on Ubuntu 12.04 and should work on 12.04 or newer versions.
 
 
 Dependencies
