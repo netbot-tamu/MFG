@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
 //  Multilayer Feature Graph (MFG), version 1.0
-//  Copyright (C) 2011-2015 Yan Lu, Dezhen Song
+//  Copyright (C) 2011-2015 Yan Lu, Madison Treat, Dezhen Song
 //  Netbot Laboratory, Texas A&M University, USA
 //
 //  This program is free software; you can redistribute it and/or modify
@@ -25,11 +25,6 @@
  ********************************************************************************/
 
 /*
- * File:   random.c
- * Author: madtreat
- *
- * Created on December 17, 2014, 4:12 PM
- *
  * Our implementation of 2 Psuedo-Random Number Generators, both variants of the
  * XOR Shift PRNG algorithm.  Both variants here were copied directly from
  * Wikipedia (http://en.wikipedia.org/wiki/Xorshift), which copied them directly

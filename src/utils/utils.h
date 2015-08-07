@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////////////
 //
 //  Multilayer Feature Graph (MFG), version 1.0
-//  Copyright (C) 2011-2015 Yan Lu, Dezhen Song
+//  Copyright (C) 2011-2015 Yan Lu, Madison Treat, Dezhen Song
 //  Netbot Laboratory, Texas A&M University, USA
 //
 //  This program is free software; you can redistribute it and/or modify
