@@ -46,8 +46,6 @@
 #include "random.h"
 using namespace std;
 
-cv::Mat *grayImage(cv::Mat *); // output GRAY scale images
-
 ntuple_list callLsd(cv::Mat *); // detect line segments by LSD
 
 double point2LineDist(double l[3], cv::Point2d p);

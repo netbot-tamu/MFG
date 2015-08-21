@@ -200,6 +200,8 @@ void View::detectFeatPoints()
         pfeatDetector->detect(img, poses);
         cv::DescriptorExtractor *pfeatExtractor = new cv::SIFT();
         pfeatExtractor->compute(img, poses, descs);
+        delete pfeatDetector;
+        delete pfeatExtractor;
     }
     break;
 

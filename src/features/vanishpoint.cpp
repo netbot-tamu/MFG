@@ -185,6 +185,7 @@ void optimizeVainisingPoint(vector<LineSegmt2d> &lines, cv::Mat &vp)
     cv::Mat COV = J * covar * J.t();
 
     delete[] measurement;
+    delete cov;
 }
 
 void optimizeVainisingPoint(vector<LineSegmt2d> &lines, cv::Mat &vp, cv::Mat &covMat, cv::Mat &covHomo)
@@ -224,6 +225,7 @@ void optimizeVainisingPoint(vector<LineSegmt2d> &lines, cv::Mat &vp, cv::Mat &co
     // cov in inhomog image coord
     covMat = J * covar * J.t();
     delete[] measurement;
+    delete cov;
 }
 
 double mleVp2LineDist(cv::Mat vp, LineSegmt2d l)

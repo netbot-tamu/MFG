@@ -1017,8 +1017,7 @@ void Mfg::bundle_adjust_between(int view_from, int view_to, int cam_from)
     cout << "error: " << baerr << " => " << optimizer.activeRobustChi2()
          << " ( " << errKpt << " + " << errLine << " + " << errVnpt << " + " << errPlane << " )" << endl;
 
-    optimizer.clear();
-
+    optimizer.clear(); //this releases the memory of all vertices and edges in the graph   
 }
 
 void Mfg::adjustBundle_G2O(int numPos, int numFrm)
@@ -1959,36 +1958,5 @@ void Mfg::adjustBundle_G2O(int numPos, int numFrm)
     views.back().errLn = errLine;
     views.back().errPl = errPlane;
 
-    optimizer.clear();
-
-
-    toScale = false;
-
-    if (toScale)
-    {
-        for (int i = 0; i < views.size(); ++i)
-            views[i].t = views[i].t * scale;
-
-        for (int i = 0; i < keyPoints.size(); ++i)
-        {
-            if (keyPoints[i].is3D && keyPoints[i].gid >= 0)
-            {
-                keyPoints[i].x = keyPoints[i].x * scale;
-                keyPoints[i].y = keyPoints[i].y * scale;
-                keyPoints[i].z = keyPoints[i].z * scale;
-            }
-        }
-
-        for (int i = 0; i < idealLines.size(); ++i)
-        {
-            if (idealLines[i].is3D && idealLines[i].gid >= 0)
-            {
-                idealLines[i].length = idealLines[i].length * scale;
-                idealLines[i].midpt = idealLines[i].midpt * scale;
-            }
-        }
-
-        for (int i = 0; i < primaryPlanes.size(); ++i)
-            primaryPlanes[i].d = primaryPlanes[i].d * scale;
-    }
+    optimizer.clear(); //this releases the memory of all vertices and edges in the graph
 }

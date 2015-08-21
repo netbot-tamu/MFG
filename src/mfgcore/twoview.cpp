@@ -168,7 +168,7 @@ void optimizeRt_withVP(cv::Mat K, vector<vector<cv::Mat>> vppairs, double weight
     t.at<double>(0) = para[4];
     t.at<double>(1) = para[5];
     t.at<double>(2) = para[6];
-
+    delete[] para;
 }
 
 
@@ -245,5 +245,6 @@ void optimize_t_givenR(cv::Mat K, cv::Mat R, vector<vector<cv::Point2d>> &featPt
     t.at<double>(0) = para[0];
     t.at<double>(1) = para[1];
     t.at<double>(2) = para[2];
+    delete[] para;
 }
 

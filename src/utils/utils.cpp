@@ -62,29 +62,22 @@ extern MfgSettings *mfgSettings;
 using namespace std;
 using namespace cv;
 
-
-// output GRAY scale images
-Mat *grayImage(Mat *src)
-{
-    if (src->channels() == 3)
-    {
-        unsigned int width  = src->size().width;
-        unsigned int height = src->size().height;
-        Mat *dst = new Mat(width, height, CV_8UC1);
-        // CV_RGB2GRAY: convert RGB image to grayscale
-        cvtColor(*src, *dst, CV_RGB2GRAY);
-        return dst;
-    }
-    else
-        return src;
-}
-
 // use LSD to extract line segments from an image
 // input : an image color/grayscale
 // output: a list of line segments - endpoint x-y coords + ...
 ntuple_list callLsd(Mat *src)
 {
-    Mat *src_gray = grayImage(src);
+    Mat *src_gray;
+    if (src->channels() == 3)
+    {
+        unsigned int width  = src->size().width;
+        unsigned int height = src->size().height;
+        src_gray = new Mat(width, height, CV_8UC1);
+        // CV_RGB2GRAY: convert RGB image to grayscale
+        cvtColor(*src, *src_gray, CV_RGB2GRAY);
+    } else 
+        src_gray = src;
+
     image_double image; //image_double is a struct defined in 'lsd.h'
     ntuple_list lsd_out;
     unsigned int w = src->size().width;
@@ -103,6 +96,9 @@ ntuple_list callLsd(Mat *src)
 
     lsd_out = lsd(image);
     free_image_double(image);
+
+    if (src->channels() == 3) delete src_gray;
+    
     return lsd_out;
 }
 
@@ -1676,6 +1672,8 @@ bool detectGroundPlane(const cv::Mat &im1, const cv::Mat &im2, const cv::Mat &R,
 
         matches1.insert(matches1.end(), siftmatch1.begin(), siftmatch1.end());
         matches2.insert(matches2.end(), siftmatch2.begin(), siftmatch2.end());
+        delete pfeatExtractor;
+        delete pfeatDetector;
     }
 
     cv::Mat inliers;
