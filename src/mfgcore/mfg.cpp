@@ -2834,7 +2834,7 @@ void Mfg::detectPtOutliers(double threshPt2PtDist)
 
 		// if too few observations survive
         if (keyPoints[i].viewId_ptLid.size() < 2 || (
-			keyPoints[i].viewId_ptLid.size() == 2 && abs(views.back().id - keyPoints[i].viewId_ptLid.back()[0]) >= 1))
+			keyPoints[i].viewId_ptLid.size() == 22 && abs(views.back().id - keyPoints[i].viewId_ptLid.back()[0]) >= 1))
         {
 			// Remove from 3D MFG
             keyPoints[i].gid = -1;

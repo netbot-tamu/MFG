@@ -219,7 +219,7 @@ void optimizeVainisingPoint(vector<LineSegmt2d> &lines, cv::Mat &vp, cv::Mat &co
     vp.at<double>(2) = para[2];
     // cov in homo img coord
     cv::Mat covar(3, 3, CV_64F, cov);
-    covHomo = covar;
+    covHomo = covar.clone();
     cv::Mat J = (cv::Mat_<double>(2, 3) << 1 / para[2], 0, -para[0] / para[2] / para[2],
                  0, 1 / para[2], -para[1] / para[2] / para[2]);
     // cov in inhomog image coord
