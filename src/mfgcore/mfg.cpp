@@ -2258,7 +2258,7 @@ void Mfg::expand_keyPoints(View &prev, View &nview)
     }
 
     if (F.empty())
-        F = K.t().inv() * R * vec2SkewMat(t) * K.inv();
+        F = K.t().inv() * vec2SkewMat(t) * R * K.inv();
 
 	// Update ideal lines
     vector<vector<int>>	ilinePairIdx;
